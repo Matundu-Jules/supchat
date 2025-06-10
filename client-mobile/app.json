@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "client-mobile",
+    "slug": "client-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo-supchat-primary.png",
+    "scheme": "supchat",
+    "userInterfaceStyle": "automatic",
+    "jsEngine": "hermes",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo-supchat-primary.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "statusBar": {
+        "backgroundColor": "#FFFFFF",
+        "barStyle": "dark-content"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

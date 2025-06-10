@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
+
+/* ========== PALETTE COULEURS PRINCIPALE ========== */
+:root {
+  /* Backgrounds */
+  --color-bg: #f9fafb; /* Fond principal (pages) */
+  --color-bg-secondary: #e5e7eb; /* Fonds secondaires, encadrés */
+  --color-bg-card: #ffffff; /* Cartes/blocs, défaut = blanc */
+  --color-bg-card-alt: rgba(31, 41, 55, 0.03); /* Léger contraste */
+  --color-bg-form: #f9fafb; /* Fond formulaires */
+  --color-bg-input: #f3f4f6; /* Fond inputs */
+
+  /* Textes */
+  --color-text: #1f2937; /* Texte principal */
+  --color-text-inverse: #f9fafb; /* Texte inversé (boutons, dark bg) */
+  --color-text-btn-socials: #1f2937; /* Fond boutons sociaux */
+
+  /* Bordures & séparateurs */
+  --color-border: #e5e7eb;
+  --color-border-card: rgba(31, 41, 55, 0.15);
+
+  /* Ombres */
+  --shadow-sm: 0 1px 2px 0 rgba(31, 41, 55, 0.05);
+  --shadow-md: 0px 0px 4px 0px rgba(31, 41, 55, 0.1);
+  --shadow-lg: 0px 2px 18px 0px rgba(0, 0, 0, 0.22);
+
+  /* Liens */
+  --color-link: #3b82f6;
+  --color-link-hover: #60a5fa;
+  --color-link-visited: #7c3aed;
+
+  /* États */
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-primary: #2563eb; /* Boutons principaux, accents */
+  --color-secondary: #f59e0b; /* Boutons secondaires, hover, accent */
+
+  /* Layout */
+  --header-height: 10rem;
+  --footer-height: 12rem;
+
+  /* Typographie */
+  --font-title: "Montserrat", sans-serif;
+  --font-body: "Open Sans", Arial, sans-serif;
+  --font-code: "Roboto Mono", monospace;
+}
+
+/* ========== DARK MODE ========== */
+[data-theme="dark"] {
+  --color-bg: #111827;
+  --color-bg-secondary: #1e293b;
+  --color-bg-card: #1e293b;
+  --color-bg-card-alt: rgba(148, 163, 184, 0.03);
+  --color-bg-form: #1f2937;
+  --color-bg-input: #232b3a;
+
+  --color-text: #f8fafc;
+  --color-text-inverse: #111827;
+
+  --color-border: #475569;
+  --color-border-card: rgba(148, 163, 184, 0.2);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+  --shadow-md: 0px 0px 4px 0px rgba(255, 255, 255, 0.05);
+  --shadow-lg: 0px 2px 18px 0px rgba(0, 0, 0, 0.6);
+
+  --color-link: #60a5fa;
+  --color-link-hover: #93c5fd;
+  --color-link-visited: #a78bfa;
+
+  --color-primary: #3b82f6; /* Accent bleu plus clair en dark */
+  --color-secondary: #fde68a; /* Jaune pastel plus doux en dark */
+}

@@ -1,0 +1,108 @@
+services:
+  # Monitoring service (cAdvisor for container metrics)
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "127.0.0.1:8005:8080" # expose only on localhost to restrict access
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Backend API service
+  api:
+    build:
+      context: ./supchat-server
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${PORT}:${PORT}" # bind API port to localhost only
+    volumes:
+      - ./supchat-server:/usr/src/app
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_AUTH_SOURCE=${MONGO_AUTH_SOURCE}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH=${JWT_REFRESH}
+      - CSRF_SECRET=${CSRF_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # Web client (React)
+  web:
+    build:
+      context: ./client-web
+      dockerfile: Dockerfile
+    ports:
+      - "80:80" # expose publicly for web access
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - VITE_REACT_APP_API_URL=${VITE_REACT_APP_API_URL}
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Mobile client (React Native)
+  mobile:
+    build:
+      context: ./client-mobile
+      dockerfile: Dockerfile
+    volumes:
+      - ./client-mobile:/app
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - REACT_NATIVE_API_URL=${REACT_NATIVE_API_URL}
+      - REACT_NATIVE_ENV=${REACT_NATIVE_ENV}
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # MongoDB database service
+  db:
+    image: mongo:6.0
+    volumes:
+      - mongo-data:/data/db # persist database data
+    networks:
+      - supchat-network
+    ports:
+      - "127.0.0.1:27017:27017" # bind MongoDB to localhost only
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    restart: unless-stopped
+
+# Define separate networks for app services and monitoring
+networks:
+  supchat-network:
+    driver: bridge
+  monitoring:
+    driver: bridge
+
+# Named volume for persistent MongoDB data
+volumes:
+  mongo-data:
+    driver: local
