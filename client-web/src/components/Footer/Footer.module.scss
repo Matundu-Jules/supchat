@@ -1,0 +1,100 @@
+// src/components/Footer/Footer.module.scss
+
+footer {
+  width: 100%;
+  height: var(--footer-height);
+  border-top: 1px solid var(--color-border-card);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  font-family: var(--font-body);
+
+  p {
+    margin-top: 1rem;
+    margin-bottom: 0;
+    text-align: center;
+  }
+}
+
+.footer-social {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2rem;
+
+  a {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  i {
+    width: 100%;
+    height: 100%;
+    font-size: 3rem;
+    color: var(--color-primary);
+
+    &:hover {
+      color: var(--color-link-hover);
+    }
+
+    &:visited {
+      color: var(--color-link-visited);
+    }
+  }
+
+  .github {
+    margin-right: 0.5rem;
+  }
+
+  .supinfo {
+    width: 4rem;
+    height: 4rem;
+
+    .supinfo-logo {
+      background-image: url("/assets/images/logo-supinfo.png");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      display: inline-block;
+      filter: brightness(0) saturate(100%) invert(26%) sepia(95%)
+        saturate(2477%) hue-rotate(211deg) brightness(98%) contrast(95%);
+      transition: filter 0.2s ease;
+    }
+
+    &:hover {
+      filter: brightness(0) saturate(100%) invert(45%) sepia(91%)
+        saturate(1051%) hue-rotate(194deg) brightness(94%) contrast(92%);
+      transform: scale(1.03);
+    }
+  }
+}
+
+.themeToggleBtn {
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: var(--color-link);
+
+  &:hover {
+    transform: scale(1.13) rotate(-10deg);
+    color: var(--color-link-hover);
+  }
+}

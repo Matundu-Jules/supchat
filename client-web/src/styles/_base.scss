@@ -1,0 +1,82 @@
+// src/utils/_base.scss
+
+:root {
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 62.5%;
+  box-sizing: border-box;
+  color: var(--color-text);
+  background: var(--color-bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-size: 1.6rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--color-primary);
+  font-family: var(--font-title);
+}
+
+h1 {
+  font-size: 3.5rem;
+}
+h2 {
+  font-size: 3rem;
+}
+h3 {
+  font-size: 2.4rem;
+}
+h4 {
+  font-size: 2rem;
+}
+
+ul {
+  list-style: none;
+  padding-left: 0px;
+  margin: 0;
+}
+
+img {
+  max-width: 100%;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+    transform: scale(1.03);
+  }
+
+  &:visited {
+    color: var(--color-link-visited);
+  }
+}

@@ -1,0 +1,78 @@
+// src/utils/axiosInstance.ts
+
+import axios from 'axios';
+import { store } from '@store/store';
+import { logout, setAuth } from '@store/authSlice';
+
+const api = axios.create({
+  baseURL: '/api',
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export async function fetchCsrfToken() {
+  const res = await api.get('/csrf-token');
+  return res.data.csrfToken;
+}
+
+let refreshSubscribers: Function[] = [];
+
+function onRefreshed() {
+  refreshSubscribers.forEach((callback) => callback());
+  refreshSubscribers = [];
+}
+
+function addSubscriber(callback: Function) {
+  refreshSubscribers.push(callback);
+}
+
+api.interceptors.request.use((cfg) => {
+  const csrf = getCookie('XSRF-TOKEN');
+  if (csrf && /post|put|patch|delete/i.test(cfg.method || '')) {
+    cfg.headers['X-CSRF-TOKEN'] = csrf;
+  }
+  return cfg;
+});
+
+let isRefreshing = false;
+api.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    const orig = err.config;
+    if (err.response?.status === 401 && !orig._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          addSubscriber(() => resolve(api(orig)));
+        });
+      }
+
+      orig._retry = true;
+      isRefreshing = true;
+
+      try {
+        await api.post('/auth/refresh');
+        await fetchCsrfToken();
+        store.dispatch(setAuth());
+        onRefreshed();
+        return api(orig);
+      } catch (e) {
+        isRefreshing = false;
+        store.dispatch(logout());
+        return Promise.reject(e);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+function getCookie(name: string) {
+  return document.cookie
+    .split('; ')
+    .find((c) => c.startsWith(name + '='))
+    ?.split('=')[1];
+}
+
+export default api;
