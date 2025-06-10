@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+npm-debug.log
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Docker
+**/node_modules
+**/npm-debug.log
+**/.env
+
+# Build output
+client-web/dist
+client-mobile/.expo
+
+# Scripts
+reset-docker.sh
+run-project.sh
+start-db.sh

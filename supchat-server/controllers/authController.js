@@ -1,0 +1,375 @@
+// conntrollers/authController.js
+
+const User = require('../models/User')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
+const crypto = require('crypto')
+const { OAuth2Client } = require('google-auth-library')
+const axios = require('axios')
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+const { generateCsrfToken } = require('../src/csrf')
+
+const ACCESS_EXPIRE = 15 * 60 // 15 min (sec)
+const REFRESH_EXPIRE = 7 * 24 * 60 * 60 // 7 jours (sec)
+const isProd = process.env.NODE_ENV === 'production'
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+    path: '/',
+}
+const refreshCookieOptions = {
+    ...cookieOptions,
+    path: '/api/auth/refresh',
+    maxAge: REFRESH_EXPIRE * 1000,
+}
+const accessCookieOptions = {
+    ...cookieOptions,
+    maxAge: ACCESS_EXPIRE * 1000,
+}
+
+// Génération du token JWT (access)
+const generateAccessToken = (user) =>
+    jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: ACCESS_EXPIRE,
+    })
+const generateRefreshToken = (user) =>
+    jwt.sign({ id: user._id }, process.env.JWT_REFRESH, {
+        expiresIn: REFRESH_EXPIRE,
+    })
+
+// ================== REGISTER ==================
+exports.register = async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body
+        let user = await User.findOne({ email })
+        if (user) return res.status(400).json({ message: 'Email déjà utilisé' })
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+        user = new User({ name, email, password: hashedPassword, role })
+        await user.save()
+
+        // (Optionnel) Générer le CSRF ici si tu connectes direct après register
+        // generateCsrfToken(req, res, { overwrite: true })
+
+        res.status(201).json({ message: 'Utilisateur créé avec succès', user })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
+// ================== LOGIN (COOKIE MODE) ==================
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body
+        const user = await User.findOne({ email })
+
+        if (!user)
+            return res.status(404).json({ message: 'Utilisateur non trouvé' })
+        const isMatch = await bcrypt.compare(password, user.password)
+        if (!isMatch)
+            return res.status(400).json({ message: 'Mot de passe incorrect' })
+
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user)
+
+        // Set HttpOnly cookies
+        res.cookie('access', accessToken, accessCookieOptions)
+        res.cookie('refresh', refreshToken, refreshCookieOptions)
+
+        // Génère un nouveau token CSRF à chaque login
+        generateCsrfToken(req, res, { overwrite: true })
+
+        const { _id, name, email: user_email, role, createdAt } = user
+
+        return res
+            .status(200)
+            .json({ user: { _id, name, email: user_email, role, createdAt } })
+    } catch (error) {
+        console.error('Erreur login:', error)
+        res.status(500).json({
+            message: 'Erreur serveur',
+            error: error.message,
+        })
+    }
+}
+
+// ================== LOGOUT ==================
+exports.logout = (req, res) => {
+    res.clearCookie('access', accessCookieOptions)
+    res.clearCookie('refresh', refreshCookieOptions)
+    res.clearCookie('XSRF-TOKEN', {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: 'strict',
+        path: '/',
+    })
+
+    res.status(200).json({ message: 'Déconnexion réussie' })
+}
+
+// ================== GET USER DATA ==================
+exports.getUser = async (req, res) => {
+    try {
+        // Désactive tout le cache dès le début de la route
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+        res.set('Pragma', 'no-cache')
+        res.set('Expires', '0')
+
+        // req.user est injecté par le authMiddleware
+        if (!req.user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        }
+        const { _id, name, email, role, createdAt } = req.user
+
+        res.status(200).json({ _id, name, email, role, createdAt })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// ================== CHANGE PASSWORD (utilisateur connecté) ==================
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.user.id
+        const { oldPassword, newPassword } = req.body
+        const user = await User.findById(userId)
+        if (!user)
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        const isMatch = await bcrypt.compare(oldPassword, user.password)
+        if (!isMatch)
+            return res
+                .status(400)
+                .json({ message: 'Ancien mot de passe incorrect.' })
+        user.password = await bcrypt.hash(newPassword, 10)
+        await user.save()
+        res.status(200).json({ message: 'Mot de passe modifié avec succès.' })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// ================== DELETE ACCOUNT ==================
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.user.id // L'utilisateur connecté
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        }
+        await User.findByIdAndDelete(userId)
+
+        // Déconnexion côté serveur (suppression des cookies)
+        res.clearCookie('access', accessCookieOptions)
+        res.clearCookie('refresh', refreshCookieOptions)
+        res.clearCookie('XSRF-TOKEN', {
+            httpOnly: false,
+            secure: isProd,
+            sameSite: 'strict',
+            path: '/',
+        })
+
+        return res
+            .status(200)
+            .json({ message: 'Compte supprimé et déconnecté avec succès.' })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// ================== GOOGLE LOGIN (cookie) ==================
+exports.googleLogin = async (req, res) => {
+    try {
+        const { tokenId } = req.body
+        const ticket = await client.verifyIdToken({
+            idToken: tokenId,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        })
+
+        const { email, name, sub } = ticket.getPayload()
+        let user = await User.findOne({ email })
+
+        if (!user) {
+            user = new User({ name, email, googleId: sub })
+            await user.save()
+        }
+
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user)
+
+        res.cookie('access', accessToken, accessCookieOptions)
+        res.cookie('refresh', refreshToken, refreshCookieOptions)
+
+        // Génère un nouveau token CSRF à chaque Google login
+        generateCsrfToken(req, res, { overwrite: true })
+
+        return res.status(200).json({ user })
+    } catch (error) {
+        res.status(500).json({
+            message: "Erreur d'authentification Google",
+            error,
+        })
+    }
+}
+
+// ================== FACEBOOK LOGIN (cookie) ==================
+exports.facebookLogin = async (req, res) => {
+    try {
+        const { accessToken } = req.body
+        const response = await axios.get(
+            `https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`
+        )
+
+        const { id, name, email } = response.data
+        if (!email) {
+            return res.status(400).json({
+                message:
+                    "Facebook ne retourne pas d'email pour cet utilisateur.",
+            })
+        }
+
+        let user = await User.findOne({ email })
+        if (!user) {
+            user = new User({ name, email, facebookId: id })
+            await user.save()
+        }
+
+        const jwtAccess = generateAccessToken(user)
+        const jwtRefresh = generateRefreshToken(user)
+
+        res.cookie('access', jwtAccess, accessCookieOptions)
+        res.cookie('refresh', jwtRefresh, refreshCookieOptions)
+
+        // Génère un nouveau token CSRF à chaque Facebook login
+        generateCsrfToken(req, res, { overwrite: true })
+
+        return res.status(200).json({ user })
+    } catch (error) {
+        res.status(500).json({
+            message: "Erreur d'authentification Facebook",
+            error,
+        })
+    }
+}
+
+// ================== REFRESH ACCESS TOKEN ==================
+exports.refreshToken = (req, res) => {
+    try {
+        const { refresh } = req.cookies
+        if (!refresh) return res.sendStatus(401)
+        let payload
+        try {
+            payload = jwt.verify(refresh, process.env.JWT_REFRESH)
+        } catch {
+            return res.sendStatus(403)
+        }
+
+        User.findById(payload.id).then((user) => {
+            if (!user) return res.sendStatus(404)
+
+            const newAccess = generateAccessToken(user)
+            res.cookie('access', newAccess, accessCookieOptions)
+
+            // Génère un nouveau token CSRF à chaque refresh
+            generateCsrfToken(req, res, { overwrite: true })
+
+            return res.sendStatus(204)
+        })
+    } catch {
+        return res.sendStatus(500)
+    }
+}
+
+// ================== FORGOT PASSWORD (init) ==================
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email })
+        if (!user)
+            return res
+                .status(404)
+                .json({ message: 'Aucun compte avec cet email.' })
+
+        // Génère un token de reset
+        const resetToken = crypto.randomBytes(32).toString('hex')
+        user.resetPasswordToken = resetToken
+        user.resetPasswordExpires = Date.now() + 3600 * 1000 // 1h
+        await user.save()
+
+        // Création transporteur Ethereal (automatique pour test)
+        let testAccount = await nodemailer.createTestAccount()
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            auth: {
+                user: testAccount.user,
+                pass: testAccount.pass,
+            },
+        })
+
+        // Envoi du mail (pas délivré IRL)
+        let info = await transporter.sendMail({
+            from: '"Support SupChat" <no-reply@supchat.fr>',
+            to: user.email,
+            subject: 'Réinitialisation du mot de passe',
+            html: `<a href="http://localhost:5173/reset-password?token=${resetToken}">Clique ici pour réinitialiser ton mot de passe</a>`,
+        })
+
+        // Lien de prévisualisation (affiché en console)
+        const previewUrl = nodemailer.getTestMessageUrl(info)
+        console.log("Lien d'aperçu mail Ethereal :", previewUrl)
+
+        // Réponse API propre pour la démo
+        res.status(200).json({
+            message:
+                "Lien de réinitialisation généré (regarde la console serveur pour le lien d'aperçu).",
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// ================== RESET PASSWORD ==================
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body
+        if (!token || !newPassword) {
+            return res
+                .status(400)
+                .json({ message: 'Token et nouveau mot de passe requis.' })
+        }
+
+        // Recherche l'utilisateur avec un token valide et non expiré
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() },
+        })
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: 'Token invalide ou expiré.' })
+        }
+
+        // interdiction de réutiliser d'anciens mots de passe
+        if (await bcrypt.compare(newPassword, user.password)) {
+            return res.status(400).json({
+                message: "Utilise un mot de passe différent de l'ancien.",
+            })
+        }
+
+        // Mise à jour du mot de passe (hashé)
+        user.password = await bcrypt.hash(newPassword, 10)
+        user.resetPasswordToken = undefined
+        user.resetPasswordExpires = undefined
+        await user.save()
+
+        res.status(200).json({
+            message: 'Mot de passe réinitialisé avec succès.',
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}

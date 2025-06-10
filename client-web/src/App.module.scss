@@ -1,0 +1,19 @@
+// App.module.scss
+
+.appContainer {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-container {
+  width: 100%;
+  flex: 1 1 auto;
+  margin-top: var(--header-size);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

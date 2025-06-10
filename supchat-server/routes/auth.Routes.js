@@ -1,0 +1,56 @@
+// /routes/auth.Routes.js
+
+const express = require('express')
+const {
+    register,
+    login,
+    logout,
+    getUser,
+    changePassword,
+    deleteUser,
+    googleLogin,
+    facebookLogin,
+    forgotPassword,
+    resetPassword,
+    refreshToken,
+} = require('../controllers/authController')
+const { authMiddleware } = require('../middlewares/authMiddleware')
+
+const router = express.Router()
+
+// Inscription d'un utilisateur
+router.post('/register', register)
+
+// Connexion d'un utilisateur
+router.post('/login', login)
+
+// Déconnexion de l'utilisateur
+router.post('/logout', logout)
+
+// Récupération des informations de l'utilisateur connecté
+router.get('/me', authMiddleware, getUser)
+
+// Changement des informations de l'utilisateur connecté
+
+// Changement du mot de passe de l'utilisateur connecté
+router.patch('/me/password', authMiddleware, changePassword)
+
+// Suppression du compte utilisateur
+router.delete('/me', authMiddleware, deleteUser)
+
+// Connexion via Google
+router.post('/google-login', googleLogin)
+
+// Connexion via Facebook
+router.post('/facebook-login', facebookLogin)
+
+// Mot de passe oublié
+router.post('/forgot-password', forgotPassword)
+
+// Reset mot de passe
+router.post('/reset-password', resetPassword)
+
+// Refresh JWT
+router.post('/refresh', refreshToken)
+
+module.exports = router

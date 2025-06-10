@@ -1,0 +1,221 @@
+// src/components/Header/Header.module.scss
+
+@use "../../styles/breakpoints" as *;
+
+.header {
+  width: 100%;
+  height: var(--header-height);
+  padding: 2rem;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-card);
+  color: var(--color-text);
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  .logo {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 2rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-family: var(--font-title);
+    letter-spacing: 0;
+    transition: color 0.2s;
+    margin-top: 0;
+
+    img {
+      width: 7rem;
+      margin-right: 0.9rem;
+      vertical-align: middle;
+    }
+
+    &:hover {
+      color: var(--color-link);
+    }
+  }
+
+  .hamburger {
+    order: 2;
+    background: none;
+    border: none;
+    color: var(--color-link);
+    cursor: pointer;
+    font-size: 2.5rem;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+    z-index: 11;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+
+    @include mediaquery(md) {
+      display: none;
+    }
+  }
+
+  .menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: var(--header-height);
+    right: 0;
+    width: 100vw;
+    background: var(--color-bg-secondary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem 0 1.5rem 0;
+    border-bottom: 1px solid var(--color-border-card);
+
+    &.open {
+      display: flex;
+      animation: fadeIn 0.2s;
+    }
+
+    .navLink {
+      color: var(--color-primary);
+      text-decoration: none;
+      padding: 1.2rem 2rem;
+      font-weight: 600;
+      font-family: var(--font-title);
+      text-align: center;
+      transition: color 0.2s;
+
+      &.active,
+      &:hover {
+        color: var(--color-link);
+      }
+    }
+
+    .logoutMobile {
+      display: block;
+      width: 100%;
+      margin-top: 1.2rem;
+      text-align: center;
+    }
+
+    @include mediaquery(md) {
+      display: flex;
+      position: static;
+      flex-direction: row;
+      width: auto;
+      background: none;
+      box-shadow: none;
+      border: none;
+      padding: 0;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+
+      .navLink {
+        padding: 0 1.4rem;
+
+        @include mediaquery(md) {
+          margin-top: 0;
+        }
+      }
+
+      .logoutMobile {
+        display: none;
+      }
+    }
+  }
+
+  .userSection {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-left: 1.5rem;
+
+    .themeToggleBtn {
+      background: transparent;
+      border: none;
+      font-size: 1.4rem;
+      margin-right: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      &:hover {
+        transform: scale(1.13) rotate(-10deg);
+      }
+    }
+
+    .username {
+      font-family: var(--font-body);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-right: 0.6rem;
+      letter-spacing: 0;
+      display: none;
+      @include mediaquery(md) {
+        display: inline;
+      }
+    }
+
+    .logoutBtn,
+    .loginBtn {
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      padding: 0.7rem 1.4rem;
+      margin-left: 0.2rem;
+      cursor: pointer;
+      transition: background 0.16s;
+      font-family: var(--font-body);
+
+      &:hover {
+        background: var(--color-link);
+      }
+    }
+
+    .logoutDesktop {
+      display: none;
+      @include mediaquery(md) {
+        display: inline-block;
+      }
+    }
+  }
+}
+
+.logoutMobile {
+  @include mediaquery(md) {
+    display: none !important;
+  }
+}
+
+.logoutHamburgerBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.7rem 1.4rem;
+  margin-left: 0.2rem;
+  cursor: pointer;
+  transition: background 0.16s;
+  font-family: var(--font-body);
+
+  &:hover {
+    background: var(--color-link);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

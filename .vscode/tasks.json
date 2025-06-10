@@ -1,0 +1,106 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Backend",
+      "type": "shell",
+      "command": "cd supchat-server && npm start",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": { "group": "SUPCHAT - API" }
+    },
+    {
+      "label": "Start Frontend Web",
+      "type": "shell",
+      "command": "cd client-web && npm run dev",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": { "group": "SUPCHAT - WEB" }
+    },
+    {
+      "label": "Start Mobile",
+      "type": "shell",
+      "command": "cd client-mobile && npm start",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": { "group": "SUPCHAT - MOBILE" }
+    },
+    {
+      "label": "Start DB (Docker Compose)",
+      "type": "shell",
+      "command": "docker-compose up db",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: API + Web",
+      "dependsOn": ["Start Backend", "Start Frontend Web"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: API + Mobile",
+      "dependsOn": ["Start Backend", "Start Mobile"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: API + Web + Mobile",
+      "dependsOn": ["Start Backend", "Start Frontend Web", "Start Mobile"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: API + Web + DB",
+      "dependsOn": [
+        "Start Backend",
+        "Start Frontend Web",
+        "Start DB (Docker Compose)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: API + Mobile + DB",
+      "dependsOn": [
+        "Start Backend",
+        "Start Mobile",
+        "Start DB (Docker Compose)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: API + Web + Mobile + DB",
+      "dependsOn": [
+        "Start Backend",
+        "Start Frontend Web",
+        "Start Mobile",
+        "Start DB (Docker Compose)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Stop All Dev Services",
+      "type": "shell",
+      "command": "docker-compose stop",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
