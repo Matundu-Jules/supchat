@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { login as reduxLogin } from '@store/authSlice';
 import { loginApi } from '@services/authApi';
 import { loginSchema } from '@utils/validation';
+import { googleLogin } from '@services/authApi';
+import { facebookLogin } from '@services/authApi';
 
 type LoginFormFields = {
   email: string;
@@ -89,6 +91,34 @@ export function useLogin() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      const res = await googleLogin(credentialResponse.credential);
+      if (res && res.user) {
+        dispatch(reduxLogin(res.user));
+        navigate('/');
+      } else {
+        alert('Erreur lors de la connexion Google : utilisateur non trouvé');
+      }
+    } catch (err) {
+      alert('Erreur lors de la connexion Google');
+    }
+  };
+
+  const handleFacebookSuccess = async (response: any) => {
+    try {
+      const res = await facebookLogin(response.accessToken);
+      if (res && res.user) {
+        dispatch(reduxLogin(res.user));
+        navigate('/');
+      } else {
+        alert('Erreur lors de la connexion Facebook : utilisateur non trouvé');
+      }
+    } catch (err) {
+      alert('Erreur lors de la connexion Facebook');
+    }
+  };
+
   return {
     form,
     handleChange,
@@ -97,5 +127,7 @@ export function useLogin() {
     loading,
     emailRef,
     passwordRef,
+    handleGoogleSuccess,
+    handleFacebookSuccess,
   };
 }

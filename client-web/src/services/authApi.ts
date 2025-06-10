@@ -37,6 +37,30 @@ export async function loginApi(data: LoginData) {
   }
 }
 
+export async function googleLogin(tokenId: string) {
+  try {
+    await fetchCsrfToken();
+    const { data: res } = await api.post('/auth/google-login', { tokenId });
+    return res;
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err.message || 'Unknown error';
+    throw new Error(msg);
+  }
+}
+
+export async function facebookLogin(accessToken: string) {
+  try {
+    await fetchCsrfToken();
+    const { data: res } = await api.post('/auth/facebook-login', {
+      accessToken,
+    });
+    return res;
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err.message || 'Unknown error';
+    throw new Error(msg);
+  }
+}
+
 export const forgotPassword = (email: string) =>
   api.post('/auth/forgot-password', { email });
 
