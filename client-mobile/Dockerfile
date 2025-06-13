@@ -1,13 +1,20 @@
 # Use a lightweight Node.js image for production
-FROM node:18-alpine
+FROM node:18-alpine3.19
 
-# Install React Native CLI globally
-RUN npm install -g expo
+# Update Alpine packages to address vulnerabilities
+RUN apk update && apk upgrade --no-cache
+
+# Set environment variables to disable prompts
+ENV CI=true \
+    EXPO_NO_INTERACTIVE=true
+
+# Install global CLI tools
+RUN npm install -g expo @expo/ngrok
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json for dependency installation
+# Copy dependency files first for efficient Docker caching
 COPY package*.json ./
 
 # Install project dependencies
@@ -16,11 +23,12 @@ RUN npm install
 # Install TypeScript types
 RUN npm install --save-dev @types/react-native
 
-# Copy the rest of the project files
+# Copy the rest of the app files
 COPY . .
 
-# Expose the development port for React Native
+# Expose the Metro Bundler port
 EXPOSE 8081
 
-# Start the React Native development server
-CMD ["npx", "expo", "start", "--tunnel"]
+# Start the Expo development server with tunneling
+CMD ["npx", "expo", "start", "--clear", "--tunnel"]
+
