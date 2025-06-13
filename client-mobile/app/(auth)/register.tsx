@@ -26,6 +26,8 @@ export default function RegisterScreen() {
         username: values.name,
         email: values.email,
         password: values.password,
+        role: "admin  ", // ou "user" selon ton besoin
+        // role: "user" si tu veux un rôle utilisateur par défaut
       });
       router.replace("/(auth)/login");
     } catch (err) {
