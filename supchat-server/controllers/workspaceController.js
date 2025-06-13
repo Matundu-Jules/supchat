@@ -1,5 +1,4 @@
-const Workspace = require('../models/Workspace')
-const Permission = require('../models/Permission')
+const workspaceService = require('../services/workspaceService')
 const nodemailer = require('nodemailer')
 const React = require('react')
 const { renderToStaticMarkup } = require('react-dom/server')
@@ -15,32 +14,8 @@ function isGlobalAdmin(user) {
 // ✅ Tout le monde voit les workspaces publics, privés visibles seulement par owner ou admin global
 exports.getAllWorkspaces = async (req, res) => {
     try {
-        const userId = req.user.id
-
-        if (isGlobalAdmin(req.user)) {
-            // Admin global : accès à tous les workspaces
-            const allWorkspaces = await Workspace.find()
-            return res.status(200).json(allWorkspaces)
-        }
-
-        // Workspaces publics (tout le monde peut voir)
-        const publicWorkspaces = await Workspace.find({ isPublic: true })
-
-        // Workspaces privés où l'utilisateur est owner
-        const privateWorkspaces = await Workspace.find({
-            isPublic: false,
-            owner: userId,
-        })
-
-        // Fusionner et supprimer les doublons (normalement pas de doublons ici)
-        const allWorkspaces = [
-            ...publicWorkspaces,
-            ...privateWorkspaces.filter(
-                (ws) => !publicWorkspaces.some((pub) => pub._id.equals(ws._id))
-            ),
-        ]
-
-        res.status(200).json(allWorkspaces)
+        const workspaces = await workspaceService.findByUser(req.user)
+        res.status(200).json(workspaces)
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
     }
@@ -60,25 +35,10 @@ exports.createWorkspace = async (req, res) => {
             return res.status(400).json({ message: 'Le nom est requis' })
         }
 
-        const workspace = new Workspace({
+        const workspace = await workspaceService.create({
             name,
             description,
             owner: req.user.id,
-            members: [req.user.id],
-        })
-        await workspace.save()
-
-        // Assigner l'utilisateur comme admin du workspace
-        await Permission.create({
-            userId: req.user.id,
-            workspaceId: workspace._id,
-            role: 'admin',
-            permissions: {
-                canPost: true,
-                canDeleteMessages: true,
-                canManageMembers: true,
-                canManageChannels: true,
-            },
         })
 
         res.status(201).json({ message: 'Espace de travail créé', workspace })
@@ -91,10 +51,7 @@ exports.createWorkspace = async (req, res) => {
 exports.getWorkspaceById = async (req, res) => {
     try {
         const { id } = req.params
-        const workspace = await Workspace.findById(id).populate(
-            'owner',
-            'username email'
-        )
+        const workspace = await workspaceService.findById(id)
 
         if (!workspace) {
             return res
@@ -124,8 +81,7 @@ exports.updateWorkspace = async (req, res) => {
         const { id } = req.params
         const { name, description } = req.body
 
-        // Vérifier si le workspace existe
-        const workspace = await Workspace.findById(id)
+        const workspace = await workspaceService.findById(id)
         if (!workspace) {
             return res
                 .status(404)
@@ -146,13 +102,11 @@ exports.updateWorkspace = async (req, res) => {
             })
         }
 
-        workspace.name = name || workspace.name
-        workspace.description = description || workspace.description
-        await workspace.save()
+        const updated = await workspaceService.update(id, { name, description })
 
         res.status(200).json({
             message: 'Espace de travail mis à jour',
-            workspace,
+            workspace: updated,
         })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
@@ -164,8 +118,7 @@ exports.deleteWorkspace = async (req, res) => {
     try {
         const { id } = req.params
 
-        // Vérifier si le workspace existe
-        const workspace = await Workspace.findById(id)
+        const workspace = await workspaceService.findById(id)
         if (!workspace) {
             return res.status(404).json({ message: 'Espace non trouvé' })
         }
@@ -185,8 +138,7 @@ exports.deleteWorkspace = async (req, res) => {
             })
         }
 
-        await Workspace.findByIdAndDelete(id)
-        await Permission.deleteMany({ workspaceId: id })
+        await workspaceService.remove(id)
 
         res.status(200).json({ message: 'Espace de travail supprimé' })
     } catch (error) {
@@ -199,37 +151,26 @@ exports.inviteToWorkspace = async (req, res) => {
     try {
         const { id } = req.params // workspaceId
         const { email } = req.body
-
-        let isAdmin = false
-        if (isGlobalAdmin(req.user)) {
-            isAdmin = true
-        } else {
-            isAdmin = await Permission.findOne({
-                userId: req.user.id,
-                workspaceId: id,
-                role: 'admin',
-            })
+        let workspace
+        try {
+            workspace = await workspaceService.invite(id, email, req.user)
+        } catch (err) {
+            if (err.message === 'NOT_ALLOWED') {
+                return res.status(403).json({
+                    message:
+                        'Accès refusé. Seuls les admins peuvent inviter des membres.',
+                })
+            }
+            if (err.message === 'NOT_FOUND') {
+                return res.status(404).json({ message: 'Espace non trouvé' })
+            }
+            if (err.message === 'ALREADY_INVITED') {
+                return res
+                    .status(400)
+                    .json({ message: 'Cet email est déjà invité.' })
+            }
+            throw err
         }
-
-        if (!isAdmin) {
-            return res.status(403).json({
-                message:
-                    'Accès refusé. Seuls les admins peuvent inviter des membres.',
-            })
-        }
-
-        // Ajoute l'email à la liste des invitations si pas déjà invité
-        const workspace = await Workspace.findById(id)
-        if (!workspace) {
-            return res.status(404).json({ message: 'Espace non trouvé' })
-        }
-        if (workspace.invitations.includes(email)) {
-            return res
-                .status(400)
-                .json({ message: 'Cet email est déjà invité.' })
-        }
-        workspace.invitations.push(email)
-        await workspace.save()
 
         // Envoi de l'email d'invitation
         const WorkspaceInviteEmail = require('../emails/WorkspaceInviteEmail')
@@ -268,38 +209,22 @@ exports.inviteToWorkspace = async (req, res) => {
 exports.joinWorkspace = async (req, res) => {
     try {
         const { inviteCode } = req.body
-        // Ici tu dois retrouver le workspace à partir du code d'invitation
-        // Exemple simple : recherche par _id (à adapter selon ta logique d'invitation)
-        const workspace = await Workspace.findById(inviteCode)
-        if (!workspace) {
-            return res
-                .status(404)
-                .json({ message: 'Invitation invalide ou expirée' })
+        let workspace
+        try {
+            workspace = await workspaceService.join(inviteCode, req.user)
+        } catch (err) {
+            if (err.message === 'INVALID_INVITE') {
+                return res
+                    .status(404)
+                    .json({ message: 'Invitation invalide ou expirée' })
+            }
+            if (err.message === 'ALREADY_MEMBER') {
+                return res
+                    .status(400)
+                    .json({ message: 'Vous êtes déjà membre de cet espace.' })
+            }
+            throw err
         }
-
-        // Vérifier si l'utilisateur est déjà membre
-        const alreadyMember = await Permission.findOne({
-            userId: req.user.id,
-            workspaceId: workspace._id,
-        })
-        if (alreadyMember) {
-            return res
-                .status(400)
-                .json({ message: 'Vous êtes déjà membre de cet espace.' })
-        }
-
-        // Ajouter l'utilisateur comme membre simple
-        await Permission.create({
-            userId: req.user.id,
-            workspaceId: workspace._id,
-            role: 'member',
-            permissions: {
-                canPost: true,
-                canDeleteMessages: false,
-                canManageMembers: false,
-                canManageChannels: false,
-            },
-        })
 
         res.status(200).json({
             message: "Vous avez rejoint l'espace de travail",
