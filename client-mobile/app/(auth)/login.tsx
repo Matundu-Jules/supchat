@@ -16,17 +16,25 @@ import { loginSchema } from "../../utils/validation";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
   const router = useRouter();
 
   const handleLogin = async (values: any) => {
     try {
-      await axios.post("http://localhost:3000/api/auth/login", {
-        email: values.email,
-        password: values.password,
-      });
-      router.replace("/(drawer)/channels");
+      const response = await axios.post(
+        "http://localhost:3000/api/auth/login",
+        {
+          email: values.email,
+          password: values.password,
+        }
+      );
+
+      const token = (response.data as { token: string }).token; // selon la structure exacte de ta réponse
+      await AsyncStorage.setItem("authToken", token);
+      // Redirection après succès
+      router.replace("../workspace.tsx");
     } catch (err) {
       Alert.alert("Erreur", "Email ou mot de passe invalide");
     }

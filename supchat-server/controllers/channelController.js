@@ -11,7 +11,7 @@ exports.createChannel = async (req, res) => {
 
     const newChannel = new Channel({
       name,
-      workspaceId,
+      workspace: workspaceId,
       description: description || "",
     });
 
