@@ -1,12 +1,7 @@
 // src/components/Header/Header.tsx
 
-import api from "@utils/axiosInstance";
-import { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-
-import { RootState, AppDispatch } from "@store/store";
-import { logout } from "@store/authSlice";
+import { NavLink } from "react-router-dom";
+import { useHeaderLogic } from "@hooks/useHeaderLogic";
 
 import styles from "./Header.module.scss";
 
@@ -16,47 +11,21 @@ type HeaderProps = {
 };
 
 const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((state: RootState) => state.auth.user);
-
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const hamburgerRef = useRef<HTMLButtonElement | null>(null);
-
-  const toggleMenu = () => setMenuOpen((prev) => !prev);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isMenuOpen &&
-        menuRef.current &&
-        hamburgerRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        !hamburgerRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [isMenuOpen]);
-
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch (e) {
-      console.error("Erreur lors de la connexion :", e);
-    }
-    dispatch(logout());
-    navigate("/login");
-  };
+  const {
+    isMenuOpen,
+    setMenuOpen,
+    menuRef,
+    hamburgerRef,
+    toggleMenu,
+    handleLogout,
+    user,
+    navigate,
+  } = useHeaderLogic();
 
   return (
     <header className={styles["header"]}>
       {/* Logo section (left) - ready for logo image */}
       <NavLink to="/" className={styles["logo"]} title="Back to dashboard">
-        {/* If you want to add an image, just uncomment below */}
         <img
           src="/assets/images/logo-supchat-simplified-without-text-primary.png"
           alt="SupChat Logo"
@@ -137,7 +106,6 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           <>
             {/* Username is only visible on desktop */}
             <span className={styles["username"]}>{user.name}</span>
-            {/* Logout button only visible on desktop (see CSS media queries) */}
             <button
               className={styles["logoutBtn"] + " " + styles["logoutDesktop"]}
               onClick={handleLogout}

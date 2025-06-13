@@ -61,6 +61,16 @@ export async function facebookLogin(accessToken: string) {
   }
 }
 
+export async function logoutApi() {
+  try {
+    await fetchCsrfToken();
+    await api.post('/auth/logout');
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err.message || 'Unknown error';
+    throw new Error(msg);
+  }
+}
+
 export const forgotPassword = (email: string) =>
   api.post('/auth/forgot-password', { email });
 

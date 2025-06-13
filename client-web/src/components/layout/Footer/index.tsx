@@ -1,5 +1,7 @@
 // src/components/Footer/Footer.tsx
 
+import { useSelector } from "react-redux";
+import { RootState } from "@store/store";
 import styles from "./Footer.module.scss";
 
 type FooterProps = {
@@ -8,6 +10,8 @@ type FooterProps = {
 };
 
 const Footer: React.FC<FooterProps> = ({ theme, toggleTheme }) => {
+  const user = useSelector((state: RootState) => state.auth.user);
+
   return (
     <footer className={styles["footer"]}>
       <div className={styles["footer-social"]}>
@@ -25,16 +29,19 @@ const Footer: React.FC<FooterProps> = ({ theme, toggleTheme }) => {
         </a>
       </div>
 
-      <button
-        className={styles["themeToggleBtn"]}
-        onClick={toggleTheme}
-        title={
-          theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"
-        }
-        aria-label="Changer de thème"
-      >
-        {theme === "dark" ? "☀️" : "🌙"}
-      </button>
+      {/* Affiche le bouton uniquement si l'utilisateur n'est PAS connecté */}
+      {!user && (
+        <button
+          className={styles["themeToggleBtn"]}
+          onClick={toggleTheme}
+          title={
+            theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"
+          }
+          aria-label="Changer de thème"
+        >
+          {theme === "dark" ? "☀️" : "🌙"}
+        </button>
+      )}
 
       <p>© 2025 Tous droits réservés.</p>
     </footer>

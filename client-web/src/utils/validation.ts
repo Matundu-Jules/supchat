@@ -62,3 +62,17 @@ export const resetPasswordSchema = yup.object().shape({
     .required('Confirmation requise')
     .oneOf([yup.ref('password')], 'Les mots de passe ne correspondent pas'),
 });
+
+export const workspaceCreateSchema = yup.object().shape({
+  name: yup
+    .string()
+    .trim()
+    .required("Le nom de l'espace est requis")
+    .min(3, 'Le nom doit faire au moins 3 caractères')
+    .max(50, 'Le nom doit faire 50 caractères max'),
+  description: yup
+    .string()
+    .min(10, 'La description doit faire au moins 10 caractères')
+    .max(200, 'La description doit faire 200 caractères max'),
+  isPublic: yup.boolean(),
+});

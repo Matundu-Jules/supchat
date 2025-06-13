@@ -72,8 +72,16 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ csrfToken: token })
 })
 
-// Place CSRF protection after parsers, before protected API routes
-app.use(csrfMiddleware)
+// Exclure CSRF sur les routes publiques de reset
+app.use((req, res, next) => {
+    if (
+        req.path === '/api/auth/forgot-password' ||
+        req.path === '/api/auth/reset-password'
+    ) {
+        return next()
+    }
+    return csrfMiddleware(req, res, next)
+})
 
 // ==== MONGODB ==== //
 const {
