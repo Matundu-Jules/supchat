@@ -185,6 +185,10 @@ button.submit {
   margin: 3rem 0;
   font-weight: bold;
   font-family: var(--font-body);
+
+  i {
+    margin-left: 0.5rem;
+  }
 }
 
 /* ========= Socials Buttons ========= */

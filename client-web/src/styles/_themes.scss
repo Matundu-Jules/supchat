@@ -1,4 +1,4 @@
-// src/utils/_themes.scss
+// /client-web/src/utils/_themes.scss
 
 @use "./base";
 @use "./breakpoints" as *;
@@ -13,131 +13,11 @@
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   font-family: var(--font-body);
+  font-size: var(--font-size-m);
 
   &:hover {
     background-color: var(--color-link-hover);
   }
-}
-
-.btn.social {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  font-family: var(--font-body);
-
-  i {
-    margin-right: 1rem;
-    font-size: 2rem;
-  }
-}
-
-// Forms
-input {
-  background-color: var(--color-bg-card);
-  color: var(--color-text);
-
-  &:focus {
-    border-color: var(--color-primary);
-    border-width: 0.2rem;
-    outline: none;
-  }
-}
-
-// Google Button (gsi)
-.gsi-material-button {
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  appearance: none;
-  -webkit-appearance: none;
-  // background-color: var(--color-bg-secondary);
-  background-image: none;
-  border: 1px solid var(--color-bg-secondary);
-  border-radius: 0.5rem;
-  box-sizing: border-box;
-  color: var(--color-text-btn-socials);
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 14px;
-  height: 40px;
-  letter-spacing: 0.25px;
-  outline: none;
-  overflow: hidden;
-  padding: 0 12px;
-  position: relative;
-  text-align: center;
-  transition: background-color 0.218s, border-color 0.218s, box-shadow 0.218s;
-  vertical-align: middle;
-  white-space: nowrap;
-  width: auto;
-  max-width: 400px;
-  min-width: min-content;
-}
-
-.gsi-material-button .gsi-material-button-icon {
-  height: 20px;
-  margin-right: 12px;
-  min-width: 20px;
-  width: 20px;
-}
-
-.gsi-material-button .gsi-material-button-content-wrapper {
-  align-items: center;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  height: 100%;
-  justify-content: space-between;
-  position: relative;
-  width: 100%;
-}
-
-.gsi-material-button .gsi-material-button-contents {
-  flex-grow: 1;
-  font-family: var(--font-body);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: top;
-}
-
-.gsi-material-button .gsi-material-button-state {
-  transition: opacity 0.218s;
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.gsi-material-button:disabled {
-  cursor: default;
-  background-color: #ffffff61;
-  border-color: var(--color-border);
-}
-
-.gsi-material-button:disabled .gsi-material-button-contents,
-.gsi-material-button:disabled .gsi-material-button-icon {
-  opacity: 38%;
-}
-
-.gsi-material-button:not(:disabled):active .gsi-material-button-state,
-.gsi-material-button:not(:disabled):focus .gsi-material-button-state {
-  background-color: var(--color-bg-card-alt);
-  opacity: 12%;
-}
-
-.gsi-material-button:not(:disabled):hover {
-  box-shadow: 0 1px 2px 0 rgba(31, 41, 55, 0.15),
-    0 1px 3px 1px rgba(31, 41, 55, 0.1);
-}
-
-.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
-  background-color: var(--color-bg-card-alt);
-  opacity: 8%;
 }
 
 // Facebook Button
@@ -149,27 +29,29 @@ input {
   appearance: none;
   -webkit-appearance: none;
   background-image: none;
-  border: 1px solid var(--color-bg-secondary);
-  border-radius: 0.5rem;
+  border: 1px solid #dadce0;
+  border-radius: 0.4rem;
   box-sizing: border-box;
   color: var(--color-text-btn-socials);
   cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  height: 40px;
+  font-family: "Google Sans", arial, sans-serif;
+  font-size: var(--font-size-m);
+  font-weight: 500;
+  height: 4rem;
   letter-spacing: 0.25px;
   outline: none;
   overflow: hidden;
-  padding: 0 12px;
+  padding: 1rem 2rem;
+
   position: relative;
   text-align: center;
   transition: background-color 0.218s, border-color 0.218s, box-shadow 0.218s;
   vertical-align: middle;
   white-space: nowrap;
   width: auto;
-  max-width: 400px;
+  max-width: 25rem;
   min-width: min-content;
+  background-color: #fff;
 
   display: flex;
   align-items: center;
@@ -181,9 +63,8 @@ input {
   }
 
   &:hover {
-    background-color: var(--color-bg-secondary);
-    box-shadow: 0 1px 2px 0 rgba(31, 41, 55, 0.2),
-      0 1px 3px 1px rgba(31, 41, 55, 0.1);
+    background-color: var(--color-bg-facebook-hover);
+    box-shadow: none;
   }
 }
 
@@ -192,14 +73,14 @@ input {
   border: 2px solid var(--color-error) !important;
 }
 .error {
-  color: var(--color-error, #c0392b);
+  color: var(--color-error);
   font-weight: bold;
   text-align: center;
 }
 
 // Success
 .success {
-  color: var(--color-success, #26a65b);
+  color: var(--color-success);
   font-weight: bold;
   text-align: center;
 }
