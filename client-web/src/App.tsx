@@ -15,18 +15,19 @@ import { getCurrentUser } from "@services/authApi";
 
 import styles from "./App.module.scss";
 
-import Header from "@components/Header/Header.tsx";
-import Footer from "@components/Footer/Footer";
-import PrivateRoute from "@components/PrivateRoute/PrivateRoute.tsx";
-import PublicRoute from "@components/PublicRoute/PublicRoute";
+import Header from "@components/layout/Header";
+import Footer from "@components/layout/Footer";
+import PrivateRoute from "@components/layout/PrivateRoute";
+import PublicRoute from "@components/layout/PublicRoute";
 
-import Dashboard from "@pages/Dashboard/Dashboard";
-import WorkspacePage from "@pages/WorkspacePage/WorkspacePage";
-import MessagesPage from "@pages/MessagesPage/MessagesPage";
-import RegisterPage from "@pages/RegisterPage/RegisterPage";
-import LoginPage from "@pages/LoginPage/LoginPage";
-import ForgotPasswordPage from "@pages/ForgotPasswordPage/ForgotPasswordPage";
-import ResetPasswordPage from "@pages/ResetPasswordPage/ResetPasswordPage";
+import Dashboard from "@pages/Dashboard";
+import WorkspacePage from "@pages/WorkspacePage";
+import MessagesPage from "@pages/MessagesPage";
+import RegisterPage from "@pages/RegisterPage";
+import LoginPage from "@pages/LoginPage";
+import ForgotPasswordPage from "@pages/ForgotPasswordPage";
+import ResetPasswordPage from "@pages/ResetPasswordPage";
+import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
 
 const AppContent = ({
   theme,
@@ -61,6 +62,7 @@ const AppContent = ({
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/workspace" element={<WorkspacePage />} />
+            <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
             <Route path="/message" element={<MessagesPage />} />
           </Route>
         </Routes>

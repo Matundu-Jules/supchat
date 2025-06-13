@@ -1,3 +1,5 @@
+// /client-web/src/styles/_variables.scss
+
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
 
 /* ========== PALETTE COULEURS PRINCIPALE ========== */
@@ -9,6 +11,7 @@
   --color-bg-card-alt: rgba(31, 41, 55, 0.03); /* Léger contraste */
   --color-bg-form: #f9fafb; /* Fond formulaires */
   --color-bg-input: #f3f4f6; /* Fond inputs */
+  --color-bg-facebook-hover: #f0f5ff; /* Fond boutons sociaux (Facebook) */
 
   /* Textes */
   --color-text: #1f2937; /* Texte principal */
@@ -28,6 +31,7 @@
   --color-link: #3b82f6;
   --color-link-hover: #60a5fa;
   --color-link-visited: #7c3aed;
+  --color-card-hover: #e8f1fe;
 
   /* États */
   --color-success: #22c55e;
@@ -43,6 +47,13 @@
   --font-title: "Montserrat", sans-serif;
   --font-body: "Open Sans", Arial, sans-serif;
   --font-code: "Roboto Mono", monospace;
+
+  --font-size-xs: 1rem;
+  --font-size-s: 1.2rem;
+  --font-size-m: 1.4rem;
+  --font-size-l: 1.6rem;
+  --font-size-xl: 1.8rem;
+  --font-size-xxl: 3rem;
 }
 
 /* ========== DARK MODE ========== */
@@ -59,6 +70,7 @@
 
   --color-border: #475569;
   --color-border-card: rgba(148, 163, 184, 0.2);
+  --color-card-hover: #223558;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
   --shadow-md: 0px 0px 4px 0px rgba(255, 255, 255, 0.05);

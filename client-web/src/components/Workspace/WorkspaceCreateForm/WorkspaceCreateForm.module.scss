@@ -1,0 +1,56 @@
+.title {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.input {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-bg-input);
+  font-size: 1.5rem;
+  margin-bottom: 0;
+  transition: border 0.2s;
+
+  &:focus {
+    border: 1.5px solid var(--color-link);
+    outline: none;
+  }
+}
+label {
+  display: block;
+}
+
+.label-name {
+  // margin-bottom: 0.5rem;
+}
+
+.label-description {
+  margin-top: 1.5rem;
+}
+
+.label-ispublic {
+  margin-top: 1.5rem;
+  display: block;
+  margin-bottom: 2.5rem;
+}
+.container-btn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.submitButton {
+}
+
+.error {
+  color: var(--color-error);
+  margin-top: 1.2rem;
+  font-size: var(--font-size-m);
+  text-align: center;
+}
+
+.inputError {
+  border: 2px solid var(--color-error) !important;
+}

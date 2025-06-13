@@ -1,10 +1,8 @@
-// src/utils/_base.scss
-
 :root {
   font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-  font-size: 62.5%;
+  font-size: 62.5%; // 1rem = 10px
   box-sizing: border-box;
   color: var(--color-text);
   background: var(--color-bg);
@@ -24,7 +22,7 @@
 
 body {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: var(--font-size-m); // 1.2rem
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -42,16 +40,16 @@ h6 {
 }
 
 h1 {
-  font-size: 3.5rem;
+  font-size: var(--font-size-xxl); // 2.2rem
 }
 h2 {
-  font-size: 3rem;
+  font-size: var(--font-size-xl); // 1.8rem
 }
 h3 {
-  font-size: 2.4rem;
+  font-size: var(--font-size-l); // 1.4rem
 }
 h4 {
-  font-size: 2rem;
+  font-size: var(--font-size-m); // 1.2rem
 }
 
 ul {
@@ -78,5 +76,27 @@ a {
 
   &:visited {
     color: var(--color-link-visited);
+  }
+}
+
+// Forms
+label {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-m);
+}
+input {
+  background-color: var(--color-bg-input);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-card);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-body);
+  font-size: var(--font-size-m);
+
+  &:focus {
+    border-color: var(--color-primary);
+    border-width: 0.2rem;
+    outline: none;
   }
 }

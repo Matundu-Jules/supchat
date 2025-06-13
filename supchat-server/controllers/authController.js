@@ -3,10 +3,13 @@
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
-const nodemailer = require('nodemailer')
 const crypto = require('crypto')
 const { OAuth2Client } = require('google-auth-library')
 const axios = require('axios')
+const nodemailer = require('nodemailer')
+const { render } = require('@react-email/render')
+const React = require('react')
+const { renderToStaticMarkup } = require('react-dom/server')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const { generateCsrfToken } = require('../src/csrf')
 
@@ -52,7 +55,7 @@ exports.register = async (req, res) => {
         await user.save()
 
         // (Optionnel) Générer le CSRF ici si tu connectes direct après register
-        // generateCsrfToken(req, res, { overwrite: true })
+        generateCsrfToken(req, res, { overwrite: true })
 
         res.status(201).json({ message: 'Utilisateur créé avec succès', user })
     } catch (error) {
@@ -98,8 +101,15 @@ exports.login = async (req, res) => {
 
 // ================== LOGOUT ==================
 exports.logout = (req, res) => {
-    res.clearCookie('access', accessCookieOptions)
-    res.clearCookie('refresh', refreshCookieOptions)
+    // On retire maxAge des options pour clearCookie
+    const clearCookieOptions = { ...accessCookieOptions }
+    delete clearCookieOptions.maxAge
+
+    const clearRefreshCookieOptions = { ...refreshCookieOptions }
+    delete clearRefreshCookieOptions.maxAge
+
+    res.clearCookie('access', clearCookieOptions)
+    res.clearCookie('refresh', clearRefreshCookieOptions)
     res.clearCookie('XSRF-TOKEN', {
         httpOnly: false,
         secure: isProd,
@@ -162,8 +172,14 @@ exports.deleteUser = async (req, res) => {
         await User.findByIdAndDelete(userId)
 
         // Déconnexion côté serveur (suppression des cookies)
-        res.clearCookie('access', accessCookieOptions)
-        res.clearCookie('refresh', refreshCookieOptions)
+        const clearCookieOptions = { ...accessCookieOptions }
+        delete clearCookieOptions.maxAge
+
+        const clearRefreshCookieOptions = { ...refreshCookieOptions }
+        delete clearRefreshCookieOptions.maxAge
+
+        res.clearCookie('access', clearCookieOptions)
+        res.clearCookie('refresh', clearRefreshCookieOptions)
         res.clearCookie('XSRF-TOKEN', {
             httpOnly: false,
             secure: isProd,
@@ -192,7 +208,12 @@ exports.googleLogin = async (req, res) => {
         let user = await User.findOne({ email })
 
         if (!user) {
+            // Création si aucun utilisateur avec cet email
             user = new User({ name, email, googleId: sub })
+            await user.save()
+        } else if (!user.googleId) {
+            // Si l'utilisateur existe mais n'a pas encore de googleId, on le lie
+            user.googleId = sub
             await user.save()
         }
 
@@ -233,6 +254,9 @@ exports.facebookLogin = async (req, res) => {
         let user = await User.findOne({ email })
         if (!user) {
             user = new User({ name, email, facebookId: id })
+            await user.save()
+        } else if (!user.facebookId) {
+            user.facebookId = id
             await user.save()
         }
 
@@ -298,35 +322,38 @@ exports.forgotPassword = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600 * 1000 // 1h
         await user.save()
 
-        // Création transporteur Ethereal (automatique pour test)
-        let testAccount = await nodemailer.createTestAccount()
-        let transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
+        // Génération du HTML avec React Email
+        const ResetPasswordEmail = require('../emails/ResetPasswordEmail')
+        const emailHtml = renderToStaticMarkup(
+            React.createElement(ResetPasswordEmail, {
+                resetUrl: `http://localhost:5173/reset-password?token=${resetToken}`,
+                userName: user.name || user.email,
+            })
+        )
+
+        // Création du transporteur Gmail
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
             auth: {
-                user: testAccount.user,
-                pass: testAccount.pass,
+                user: process.env['GMAIL_USER'], // adresse gmail
+                pass: process.env['GMAIL_PASS'], // mot de passe d'application
             },
         })
 
-        // Envoi du mail (pas délivré IRL)
-        let info = await transporter.sendMail({
-            from: '"Support SupChat" <no-reply@supchat.fr>',
+        // Envoi du mail
+        await transporter.sendMail({
+            from: `"Support SupChat" <${process.env.GMAIL_USER}>`,
             to: user.email,
             subject: 'Réinitialisation du mot de passe',
-            html: `<a href="http://localhost:5173/reset-password?token=${resetToken}">Clique ici pour réinitialiser ton mot de passe</a>`,
+            html: emailHtml,
         })
 
-        // Lien de prévisualisation (affiché en console)
-        const previewUrl = nodemailer.getTestMessageUrl(info)
-        console.log("Lien d'aperçu mail Ethereal :", previewUrl)
-
-        // Réponse API propre pour la démo
         res.status(200).json({
             message:
-                "Lien de réinitialisation généré (regarde la console serveur pour le lien d'aperçu).",
+                'Lien de réinitialisation envoyé par email (vérifie ta boîte mail).',
         })
     } catch (error) {
+        console.error('Erreur forgotPassword:', error)
         res.status(500).json({ message: 'Erreur serveur.', error })
     }
 }
