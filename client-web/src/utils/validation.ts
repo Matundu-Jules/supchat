@@ -80,12 +80,15 @@ export const channelCreateSchema = yup.object().shape({
   name: yup
     .string()
     .trim()
-    .required("Le nom du canal est requis")
-    .min(3, "Le nom doit faire au moins 3 caractères")
-    .max(50, "Le nom doit faire 50 caractères max"),
+    .required('Le nom du canal est requis')
+    .min(3, 'Le nom doit faire au moins 3 caractères')
+    .max(50, 'Le nom doit faire 50 caractères max'),
   description: yup
     .string()
-    .min(3, "La description doit faire au moins 3 caractères")
-    .max(200, "La description doit faire 200 caractères max"),
+    .min(3, 'La description doit faire au moins 3 caractères')
+    .max(200, 'La description doit faire 200 caractères max'),
+  type: yup
+    .string()
+    .oneOf(['public', 'private'], 'Le type doit être public ou privé')
+    .required('Le type de canal est requis'),
 });
-
