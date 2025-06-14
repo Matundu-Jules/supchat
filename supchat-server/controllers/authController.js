@@ -95,9 +95,10 @@ exports.login = async (req, res) => {
 
         const { _id, name, email: user_email, role, createdAt } = user
 
-        return res
-            .status(200)
-            .json({ user: { _id, name, email: user_email, role, createdAt } })
+        return res.status(200).json({
+            token: accessToken,
+            user: { _id, name, email: user_email, role, createdAt },
+        })
     } catch (error) {
         console.error('Erreur login:', error)
         res.status(500).json({
