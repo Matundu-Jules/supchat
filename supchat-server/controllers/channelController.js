@@ -1,26 +1,26 @@
-const Channel = require("../models/Channel");
+const channelService = require("../services/channelService");
 
 // ✅ Créer un canal
 exports.createChannel = async (req, res) => {
   try {
-    const { name, workspaceId, description } = req.body;
+    const { name, workspaceId, description, type } = req.body
 
     if (!name || !workspaceId) {
-      return res.status(400).json({ message: "Nom et ID du workspace requis" });
+      return res.status(400).json({ message: "Nom et ID du workspace requis" })
     }
 
-    const newChannel = new Channel({
+    const newChannel = await channelService.create({
       name,
-      workspace: workspaceId,
-      description: description || "",
-    });
+      workspaceId,
+      description,
+      type,
+    })
 
-    await newChannel.save();
     return res
       .status(201)
-      .json({ message: "Canal créé avec succès", channel: newChannel });
+      .json({ message: "Canal créé avec succès", channel: newChannel })
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error })
   }
 };
 
@@ -33,10 +33,10 @@ exports.getChannels = async (req, res) => {
       return res.status(400).json({ message: "ID du workspace requis" });
     }
 
-    const channels = await Channel.find({ workspace: workspaceId });
-    return res.status(200).json(channels);
+    const channels = await channelService.findByWorkspace(workspaceId)
+    return res.status(200).json(channels)
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error })
   }
 };
 
@@ -45,14 +45,14 @@ exports.getChannelById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const channel = await Channel.findById(id);
+    const channel = await channelService.findById(id)
     if (!channel) {
-      return res.status(404).json({ message: "Canal non trouvé" });
+      return res.status(404).json({ message: "Canal non trouvé" })
     }
 
-    return res.status(200).json(channel);
+    return res.status(200).json(channel)
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error })
   }
 };
 
@@ -62,18 +62,14 @@ exports.updateChannel = async (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    const channel = await Channel.findById(id);
+    const channel = await channelService.update(id, { name, description })
     if (!channel) {
-      return res.status(404).json({ message: "Canal non trouvé" });
+      return res.status(404).json({ message: "Canal non trouvé" })
     }
 
-    if (name) channel.name = name;
-    if (description) channel.description = description;
-
-    await channel.save();
-    return res.status(200).json({ message: "Canal mis à jour", channel });
+    return res.status(200).json({ message: "Canal mis à jour", channel })
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error })
   }
 };
 
@@ -82,14 +78,13 @@ exports.deleteChannel = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const channel = await Channel.findById(id);
-    if (!channel) {
-      return res.status(404).json({ message: "Canal non trouvé" });
+    const deleted = await channelService.remove(id)
+    if (!deleted) {
+      return res.status(404).json({ message: "Canal non trouvé" })
     }
 
-    await Channel.findByIdAndDelete(id);
-    return res.status(200).json({ message: "Canal supprimé" });
+    return res.status(200).json({ message: "Canal supprimé" })
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error })
   }
 };
