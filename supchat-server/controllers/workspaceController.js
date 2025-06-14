@@ -30,7 +30,7 @@ exports.createWorkspace = async (req, res) => {
                 .json({ message: 'Utilisateur non authentifié' })
         }
 
-        const { name, description } = req.body
+        const { name, description, isPublic } = req.body
         if (!name || name.trim() === '') {
             return res.status(400).json({ message: 'Le nom est requis' })
         }
@@ -38,6 +38,7 @@ exports.createWorkspace = async (req, res) => {
         const workspace = await workspaceService.create({
             name,
             description,
+            isPublic,
             owner: req.user.id,
         })
 
@@ -60,8 +61,22 @@ exports.getWorkspaceById = async (req, res) => {
         }
 
         if (!workspace.isPublic && !isGlobalAdmin(req.user)) {
-            // Privé : seul owner ou admin global
-            if (String(workspace.owner) !== String(req.user.id)) {
+            // Privé : owner, admin global OU membre
+            let ownerId = workspace.owner
+            if (typeof ownerId === 'object' && ownerId !== null) {
+                ownerId = ownerId._id || ownerId.id || ownerId
+            }
+            const isOwner = String(ownerId) === String(req.user.id)
+            // Vérifie si l'utilisateur est membre (Permission ou dans members)
+            const Permission = require('../models/Permission')
+            const isMember = workspace.members?.some(
+                (m) => String(m._id || m) === String(req.user.id)
+            )
+            const hasPermission = await Permission.findOne({
+                userId: req.user.id,
+                workspaceId: workspace._id,
+            })
+            if (!isOwner && !isMember && !hasPermission) {
                 return res.status(403).json({
                     message:
                         "Accès refusé. Vous n'êtes pas autorisé à voir cet espace de travail privé.",
@@ -79,7 +94,7 @@ exports.getWorkspaceById = async (req, res) => {
 exports.updateWorkspace = async (req, res) => {
     try {
         const { id } = req.params
-        const { name, description } = req.body
+        const { name, description, isPublic } = req.body
 
         const workspace = await workspaceService.findById(id)
         if (!workspace) {
@@ -88,7 +103,10 @@ exports.updateWorkspace = async (req, res) => {
                 .json({ message: 'Espace de travail non trouvé' })
         }
 
-        const ownerId = workspace.owner && workspace.owner._id ? workspace.owner._id : workspace.owner
+        const ownerId =
+            workspace.owner && workspace.owner._id
+                ? workspace.owner._id
+                : workspace.owner
 
         let isAllowed = false
         if (isGlobalAdmin(req.user)) {
@@ -104,7 +122,11 @@ exports.updateWorkspace = async (req, res) => {
             })
         }
 
-        const updated = await workspaceService.update(id, { name, description })
+        const updated = await workspaceService.update(id, {
+            name,
+            description,
+            isPublic,
+        })
 
         res.status(200).json({
             message: 'Espace de travail mis à jour',
@@ -126,7 +148,10 @@ exports.deleteWorkspace = async (req, res) => {
         }
         console.log('workspace', workspace)
 
-        const ownerId = workspace.owner && workspace.owner._id ? workspace.owner._id : workspace.owner
+        const ownerId =
+            workspace.owner && workspace.owner._id
+                ? workspace.owner._id
+                : workspace.owner
 
         let isAllowed = false
         if (isGlobalAdmin(req.user)) {
@@ -172,6 +197,9 @@ exports.inviteToWorkspace = async (req, res) => {
                 return res
                     .status(400)
                     .json({ message: 'Cet email est déjà invité.' })
+            }
+            if (err.message === 'USER_NOT_FOUND') {
+                return res.status(400).json({ message: 'USER_NOT_FOUND' })
             }
             throw err
         }
