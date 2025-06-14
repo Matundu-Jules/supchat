@@ -39,9 +39,20 @@ exports.getChannels = async (req, res) => {
       return res.status(400).json({ message: "ID du workspace requis" });
     }
 
-    const channels = await channelService.findByWorkspace(workspaceId);
+    const channels = await channelService.findByWorkspace(
+      workspaceId,
+      req.user
+    );
     return res.status(200).json(channels);
   } catch (error) {
+    if (error.message === "WORKSPACE_NOT_FOUND") {
+      return res.status(404).json({ message: "Workspace non trouvé" });
+    }
+    if (error.message === "NOT_ALLOWED") {
+      return res
+        .status(403)
+        .json({ message: "Accès refusé. Droits insuffisants." });
+    }
     return res.status(500).json({ message: "Erreur serveur", error });
   }
 };
