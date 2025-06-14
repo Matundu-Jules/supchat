@@ -1,6 +1,7 @@
 const Channel = require("../models/Channel");
 const Permission = require("../models/Permission");
 const Workspace = require("../models/Workspace");
+const User = require("../models/User");
 
 const isAdminOrOwner = async (userId, workspaceId) => {
   const workspace = await Workspace.findById(workspaceId);
@@ -118,10 +119,70 @@ const remove = async (id, user) => {
   return Channel.findByIdAndDelete(id);
 };
 
+const invite = async (channelId, email, user) => {
+  const channel = await Channel.findById(channelId);
+  if (!channel) {
+    throw new Error("NOT_FOUND");
+  }
+  const allowed =
+    (await isAdminOrOwner(user.id, channel.workspace)) ||
+    (await isChannelAdmin(user.id, channel));
+  if (!allowed) {
+    throw new Error("NOT_ALLOWED");
+  }
+  const invitedUser = await User.findOne({ email });
+  if (!invitedUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
+  if (channel.members.some((m) => String(m) === String(invitedUser._id))) {
+    throw new Error("ALREADY_MEMBER");
+  }
+  if (!channel.invitations.includes(email)) {
+    channel.invitations.push(email);
+    await channel.save();
+  }
+  return channel;
+};
+
+const join = async (channelId, user) => {
+  const channel = await Channel.findById(channelId);
+  if (!channel) {
+    throw new Error("NOT_FOUND");
+  }
+  if (channel.members.some((m) => String(m) === String(user.id))) {
+    throw new Error("ALREADY_MEMBER");
+  }
+  if (
+    channel.type === "private" &&
+    !channel.invitations.includes(user.email)
+  ) {
+    throw new Error("INVALID_INVITE");
+  }
+  await Channel.findByIdAndUpdate(channelId, {
+    $addToSet: { members: user.id },
+    $pull: { invitations: user.email },
+  });
+  return Channel.findById(channelId);
+};
+
+const leave = async (channelId, user) => {
+  const channel = await Channel.findById(channelId);
+  if (!channel) {
+    throw new Error("NOT_FOUND");
+  }
+  await Channel.findByIdAndUpdate(channelId, {
+    $pull: { members: user.id },
+  });
+  return Channel.findById(channelId);
+};
+
 module.exports = {
   create,
   findByWorkspace,
   findById,
   update,
   remove,
+  invite,
+  join,
+  leave,
 };
