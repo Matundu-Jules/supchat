@@ -1,4 +1,7 @@
 const channelService = require("../services/channelService");
+const Notification = require("../models/Notification");
+const { getIo } = require("../socket");
+const User = require("../models/User");
 
 // ✅ Créer un canal
 exports.createChannel = async (req, res) => {
@@ -144,6 +147,18 @@ exports.inviteToChannel = async (req, res) => {
         return res.status(400).json({ message: "ALREADY_MEMBER" });
       }
       throw err;
+    }
+
+    const invitedUser = await User.findOne({ email });
+    if (invitedUser) {
+      const io = getIo();
+      const notif = new Notification({
+        type: "channel_invite",
+        userId: invitedUser._id,
+        channelId: channel._id,
+      });
+      await notif.save();
+      io.to(`user_${invitedUser._id}`).emit("notification", notif);
     }
     return res
       .status(200)
