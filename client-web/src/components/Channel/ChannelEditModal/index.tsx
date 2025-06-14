@@ -4,6 +4,7 @@ import styles from "./ChannelEditModal.module.scss";
 interface ChannelEditModalProps {
   channel: any;
   onUpdate: (data: { name: string; description: string }) => Promise<void>;
+  onDelete?: () => Promise<void>;
   onClose: () => void;
   loading?: boolean;
   error?: string | null;
@@ -12,6 +13,7 @@ interface ChannelEditModalProps {
 const ChannelEditModal: React.FC<ChannelEditModalProps> = ({
   channel,
   onUpdate,
+  onDelete,
   onClose,
   loading,
   error,
@@ -64,6 +66,20 @@ const ChannelEditModal: React.FC<ChannelEditModalProps> = ({
           <button type="submit" className={styles["submitButton"]} disabled={loading}>
             {loading ? "Enregistrement..." : "Enregistrer"}
           </button>
+          {onDelete && (
+            <button
+              type="button"
+              className={styles["deleteButton"]}
+              onClick={() => {
+                if (window.confirm("Supprimer ce canal ?")) {
+                  onDelete();
+                }
+              }}
+              disabled={loading}
+            >
+              Supprimer
+            </button>
+          )}
         </form>
       </div>
     </div>
