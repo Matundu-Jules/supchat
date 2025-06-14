@@ -209,6 +209,16 @@
   }
 }
 
+.notifBadge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  background: var(--color-error);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0 0.6rem;
+  font-size: 1rem;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
