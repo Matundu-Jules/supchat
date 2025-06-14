@@ -15,17 +15,27 @@ const findByUser = async (user) => {
         'owner',
         'username email'
     )
+
+    const permWorkspaceIds = await Permission.find({
+        userId: user.id,
+    }).distinct('workspaceId')
+
     const privateWorkspaces = await Workspace.find({
         isPublic: false,
-        owner: user.id,
+        $or: [
+            { owner: user.id },
+            { _id: { $in: permWorkspaceIds } },
+            { members: user.id },
+        ],
     }).populate('owner', 'username email')
 
-    return [
-        ...publicWorkspaces,
-        ...privateWorkspaces.filter(
-            (ws) => !publicWorkspaces.some((pub) => pub._id.equals(ws._id))
-        ),
-    ]
+    const allWorkspaces = [...publicWorkspaces]
+    for (const ws of privateWorkspaces) {
+        if (!allWorkspaces.some((w) => w._id.equals(ws._id))) {
+            allWorkspaces.push(ws)
+        }
+    }
+    return allWorkspaces
 }
 
 const findById = (id) => {
