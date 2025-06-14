@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-process.env.NODE_ENV = "test";
 const { MongoMemoryServer } = require("mongodb-memory-server");
 const ioClient = require("socket.io-client");
 const jwt = require("jsonwebtoken");
