@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { getChannelById, updateChannel } from "@services/channelApi";
+import { removeChannel } from "@store/channelsSlice";
+import type { AppDispatch } from "@store/store";
 
 export function useChannelDetails(channelId: string) {
+  const dispatch = useDispatch<AppDispatch>();
   const [channel, setChannel] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +40,23 @@ export function useChannelDetails(channelId: string) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!channel) return;
+    setUpdating(true);
+    setUpdateError(null);
+    try {
+      await dispatch(
+        removeChannel({ channelId, workspaceId: channel.workspace })
+      ).unwrap();
+      return channel.workspace;
+    } catch (err: any) {
+      setUpdateError(err.message || "Erreur lors de la suppression");
+      throw err;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,6 +68,7 @@ export function useChannelDetails(channelId: string) {
     error,
     fetchDetails,
     handleUpdate,
+    handleDelete,
     updating,
     updateError,
   };

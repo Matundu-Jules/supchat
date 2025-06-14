@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@hooks/useMessages";
 import { useChannelDetails } from "@hooks/useChannelDetails";
@@ -16,9 +16,11 @@ function MessagesPage() {
     channel,
     loading: channelLoading,
     handleUpdate,
+    handleDelete,
     updating,
     updateError,
   } = useChannelDetails(channelId);
+  const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const [showEdit, setShowEdit] = useState(false);
   const [text, setText] = useState("");
@@ -83,6 +85,12 @@ function MessagesPage() {
         <ChannelEditModal
           channel={channel}
           onUpdate={handleUpdate}
+          onDelete={async () => {
+            const ws = await handleDelete();
+            if (ws) {
+              navigate(`/workspaces/${ws}`);
+            }
+          }}
           onClose={() => setShowEdit(false)}
           loading={updating}
           error={updateError}
