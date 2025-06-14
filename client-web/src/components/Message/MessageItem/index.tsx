@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./MessageItem.module.scss";
+import ReactionBar from "../ReactionBar";
 
 interface MessageItemProps {
   message: any;
@@ -36,6 +37,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
           </a>
         )
       )}
+      <ReactionBar messageId={message._id} />
     </li>
   );
 };

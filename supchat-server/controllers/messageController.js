@@ -64,6 +64,18 @@ exports.sendMessage = async (req, res) => {
     }
 
     await message.save();
+    if (req.file) {
+      const FileMeta = require("../models/FileMeta");
+      const meta = new FileMeta({
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        channelId,
+        uploader: req.user.id,
+      });
+      await meta.save();
+    }
     const io = getIo();
     try {
       io.to(channelId).emit("newMessage", message);
