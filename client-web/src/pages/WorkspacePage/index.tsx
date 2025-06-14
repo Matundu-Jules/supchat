@@ -1,6 +1,7 @@
 import React from "react";
 import WorkspaceCreateForm from "@components/Workspace/WorkspaceCreateForm";
 import WorkspaceList from "@components/Workspace/WorkspaceList";
+import Loader from "@components/Loader";
 import styles from "./WorkspacePage.module.scss";
 import { useWorkspacePageLogic } from "@hooks/useWorkspacePageLogic";
 import { useSelector } from "react-redux";
@@ -162,7 +163,7 @@ const WorkspacesPage: React.FC = () => {
       )}
 
       {loading ? (
-        <p>Chargement...</p>
+        <Loader />
       ) : error ? (
         <p className={styles["error"]}>{error}</p>
       ) : (
