@@ -109,6 +109,16 @@ npm start
 - Permission management
 - Full containerization
 
+## 🔔 Real-time Notifications
+
+The web client connects to the WebSocket server using `useSocket`. When you pass
+the connected user's ID to `useNotifications` (which forwards it to `useSocket`),
+the hook automatically joins the `user_<userId>` room and listens for
+`notification` events. The server sends these events when commands like
+`inviteToWorkspace` or `inviteToChannel` create a new invite, so any user
+subscribed with `useSocket(undefined, userId)` receives the notification
+instantly.
+
 ---
 
 ## 📢 Authors
