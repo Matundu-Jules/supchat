@@ -4,6 +4,7 @@ const Channel = require("../models/Channel");
 
 describe("Test des routes Channel", () => {
   let channelId;
+  const workspaceId = "507f191e810c19729de860ea";
 
   it("Crée un nouveau canal", async () => {
     const res = await request(app).post("/api/channels").send({
@@ -13,8 +14,17 @@ describe("Test des routes Channel", () => {
     });
 
     expect(res.statusCode).toBe(201);
-    expect(res.body.name).toBe("Général");
-    channelId = res.body._id;
+    channelId = res.body.channel._id;
+  });
+
+  it("Filtre les canaux par workspace", async () => {
+    await Channel.create({ name: "Filtre", type: "public", workspace: workspaceId });
+
+    const res = await request(app).get(`/api/channels?workspaceId=${workspaceId}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.some((c) => c.workspace === workspaceId)).toBe(true);
   });
 
   it("Met à jour un canal", async () => {

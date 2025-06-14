@@ -123,6 +123,13 @@ const join = async (inviteCode, user) => {
     if (!workspace) {
         throw new Error('INVALID_INVITE')
     }
+
+    // Sécurité supplémentaire : si workspace privé, il faut que l'email soit dans la liste d'invités
+    if (!workspace.isPublic && !workspace.invitations.includes(user.email)) {
+        throw new Error('INVALID_INVITE')
+    }
+
+    // Vérifie s'il est déjà membre (Permission)
     const alreadyMember = await Permission.findOne({
         userId: user.id,
         workspaceId: workspace._id,
@@ -130,6 +137,8 @@ const join = async (inviteCode, user) => {
     if (alreadyMember) {
         throw new Error('ALREADY_MEMBER')
     }
+
+    // Création Permission
     await Permission.create({
         userId: user.id,
         workspaceId: workspace._id,
@@ -141,6 +150,12 @@ const join = async (inviteCode, user) => {
             canManageChannels: false,
         },
     })
+
+    // Ajout dans members (évite doublons)
+    await Workspace.findByIdAndUpdate(workspace._id, {
+        $addToSet: { members: user.id },
+    })
+
     return workspace
 }
 

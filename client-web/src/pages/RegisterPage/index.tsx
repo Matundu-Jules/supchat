@@ -2,7 +2,7 @@
 
 // Dépendances externes
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Alias projet
 import { useForm } from "@hooks/useForm";
@@ -24,6 +24,7 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Auto focus refs
   const nameRef = useRef<HTMLInputElement>(null);
@@ -72,7 +73,16 @@ const RegisterPage: React.FC = () => {
       await register(form);
       reset();
       // Automatic redirection to login page after successful registration
-      navigate("/login");
+      const redirect =
+        location.state?.redirect ||
+        sessionStorage.getItem("redirectAfterAuth") ||
+        null;
+
+      if (redirect) {
+        navigate("/login", { state: { redirect } });
+      } else {
+        navigate("/login");
+      }
     } catch (err: any) {
       const errorMessage = err.message || "Erreur lors de l'inscription.";
       if (errorMessage.toLowerCase().includes("email")) {
