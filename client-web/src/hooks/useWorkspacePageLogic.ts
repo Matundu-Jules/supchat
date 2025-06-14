@@ -48,7 +48,12 @@ export function useWorkspacePageLogic() {
   };
 
   const handleEdit = (workspace: any) => {
-    setEditModal(workspace);
+    setEditModal({
+      id: workspace._id,
+      name: workspace.name,
+      description: workspace.description,
+      isPublic: workspace.isPublic,
+    });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
