@@ -25,6 +25,7 @@ const WorkspacesPage: React.FC = () => {
     handleEdit,
     handleEditSubmit,
     handleDelete,
+    editErrors,
   } = useWorkspacePageLogic();
 
   return (
@@ -105,15 +106,27 @@ const WorkspacesPage: React.FC = () => {
                 type="text"
                 name="name"
                 defaultValue={editModal.name}
-                className={styles["input-name"]}
+                className={
+                  styles["input-name"] +
+                  (editErrors?.name ? " " + styles["inputError"] : "")
+                }
                 required
               />
+              {editErrors?.name && (
+                <div className={styles["error"]}>{editErrors.name}</div>
+              )}
               <input
                 type="text"
                 name="description"
                 defaultValue={editModal.description}
-                className={styles["input-description"]}
+                className={
+                  styles["input-description"] +
+                  (editErrors?.description ? " " + styles["inputError"] : "")
+                }
               />
+              {editErrors?.description && (
+                <div className={styles["error"]}>{editErrors.description}</div>
+              )}
               <label className={styles["checkboxLabel"]}>
                 <input
                   type="checkbox"
