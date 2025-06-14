@@ -3,8 +3,10 @@ const User = require('../models/User')
 
 const authMiddleware = async (req, res, next) => {
     try {
-        // Récupère directement le JWT dans le cookie 'access'
-        const token = req.cookies && req.cookies.access
+        // Récupère le JWT dans le cookie 'access' ou dans l'en-tête Authorization
+        let token = req.cookies && req.cookies.access
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer '))
+            token = req.headers.authorization.split(' ')[1]
         if (!token) return res.status(401).json({ message: 'Accès refusé' })
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
