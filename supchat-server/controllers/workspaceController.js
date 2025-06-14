@@ -266,3 +266,33 @@ exports.joinWorkspace = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la jointure', error })
     }
 }
+
+// ✅ Récupérer un espace de travail par ID (public : tout le monde, privé : owner ou admin global)
+exports.getWorkspacePublic = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { email } = req.query
+        const workspace = await workspaceService.findById(id)
+        if (!workspace) {
+            return res
+                .status(404)
+                .json({ message: 'Espace de travail non trouvé' })
+        }
+        // Si workspace privé, on ne montre les infos que si l'email est invité
+        if (!workspace.isPublic) {
+            if (!email || !workspace.invitations.includes(email)) {
+                return res
+                    .status(403)
+                    .json({ message: 'Accès refusé à ce workspace privé.' })
+            }
+        }
+        res.status(200).json({
+            _id: workspace._id,
+            name: workspace.name,
+            description: workspace.description,
+            isPublic: workspace.isPublic,
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}

@@ -127,3 +127,25 @@ export async function getWorkspaceDetails(workspaceId: string) {
     );
   }
 }
+
+/**
+ * Récupère les infos publiques d'un workspace (pas besoin d'être connecté)
+ * Si workspace privé, il faut fournir l'email invité en query.
+ */
+export async function getWorkspacePublicInfo(
+  workspaceId: string,
+  email?: string
+) {
+  try {
+    let url = `/workspaces/${workspaceId}/public`;
+    if (email) url += `?email=${encodeURIComponent(email)}`;
+    const { data } = await api.get(url);
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors de la récupération des infos publiques du workspace'
+    );
+  }
+}
