@@ -33,7 +33,7 @@ exports.getChannels = async (req, res) => {
       return res.status(400).json({ message: "ID du workspace requis" });
     }
 
-    const channels = await Channel.find({ workspaceId });
+    const channels = await Channel.find({ workspace: workspaceId });
     return res.status(200).json(channels);
   } catch (error) {
     return res.status(500).json({ message: "Erreur serveur", error });
