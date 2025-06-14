@@ -4,6 +4,7 @@ const { getIo } = require("../socket");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const Permission = require("../models/Permission");
+const Workspace = require("../models/Workspace");
 const nodemailer = require("nodemailer");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -127,6 +128,31 @@ exports.sendMessage = async (req, res) => {
 exports.getMessagesByChannel = async (req, res) => {
   try {
     const { channelId } = req.params;
+    const channel = await Channel.findById(channelId);
+    if (!channel) {
+      return res.status(404).json({ message: "Canal non trouvé." });
+    }
+
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace non trouvé." });
+    }
+
+    if (req.user.role !== "admin") {
+      const perm = await Permission.findOne({
+        userId: req.user.id,
+        workspaceId: workspace._id,
+      });
+      const isMember = workspace.members?.some(
+        (m) => String(m._id || m) === String(req.user.id)
+      );
+      const isOwner = String(workspace.owner) === String(req.user.id);
+
+      if (!perm && !isMember && !isOwner) {
+        return res.status(403).json({ message: "Accès refusé." });
+      }
+    }
+
     const messages = await Message.find({ channelId }).populate(
       "userId",
       "username email"
@@ -149,6 +175,31 @@ exports.getMessageById = async (req, res) => {
 
     if (!message) {
       return res.status(404).json({ message: "Message non trouvé." });
+    }
+
+    const channel = await Channel.findById(message.channelId || message.channel);
+    if (!channel) {
+      return res.status(404).json({ message: "Canal non trouvé." });
+    }
+
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace non trouvé." });
+    }
+
+    if (req.user.role !== "admin") {
+      const perm = await Permission.findOne({
+        userId: req.user.id,
+        workspaceId: workspace._id,
+      });
+      const isMember = workspace.members?.some(
+        (m) => String(m._id || m) === String(req.user.id)
+      );
+      const isOwner = String(workspace.owner) === String(req.user.id);
+
+      if (!perm && !isMember && !isOwner) {
+        return res.status(403).json({ message: "Accès refusé." });
+      }
     }
 
     return res.status(200).json(message);
