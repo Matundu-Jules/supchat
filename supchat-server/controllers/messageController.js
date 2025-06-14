@@ -30,6 +30,13 @@ exports.sendMessage = async (req, res) => {
       text,
     });
 
+    if (req.file) {
+      message.file = `/uploads/${req.file.filename}`;
+      message.filename = req.file.originalname;
+      message.mimetype = req.file.mimetype;
+      message.size = req.file.size;
+    }
+
     await message.save();
     const io = getIo();
     try {
