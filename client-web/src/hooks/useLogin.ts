@@ -3,7 +3,7 @@
 // Dépendances externes
 import { useState, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Alias projet
 import { login as reduxLogin } from '@store/authSlice';
@@ -31,6 +31,7 @@ export function useLogin() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -64,7 +65,12 @@ export function useLogin() {
       const data = await loginApi(form);
       dispatch(reduxLogin(data.user));
       // localStorage.setItem("token", data.token);
-      navigate('/');
+      const redirect =
+        location.state?.redirect ||
+        sessionStorage.getItem('redirectAfterAuth') ||
+        '/';
+      navigate(redirect, { replace: true });
+      sessionStorage.removeItem('redirectAfterAuth');
     } catch (err: any) {
       const msg = err.message || 'Erreur de connexion';
       const normalized = msg.toLowerCase();
@@ -96,7 +102,12 @@ export function useLogin() {
       const res = await googleLogin(credentialResponse.credential);
       if (res && res.user) {
         dispatch(reduxLogin(res.user));
-        navigate('/');
+        const redirect =
+          location.state?.redirect ||
+          sessionStorage.getItem('redirectAfterAuth') ||
+          '/';
+        navigate(redirect, { replace: true });
+        sessionStorage.removeItem('redirectAfterAuth');
       } else {
         alert('Erreur lors de la connexion Google : utilisateur non trouvé');
       }
@@ -110,7 +121,12 @@ export function useLogin() {
       const res = await facebookLogin(response.accessToken);
       if (res && res.user) {
         dispatch(reduxLogin(res.user));
-        navigate('/');
+        const redirect =
+          location.state?.redirect ||
+          sessionStorage.getItem('redirectAfterAuth') ||
+          '/';
+        navigate(redirect, { replace: true });
+        sessionStorage.removeItem('redirectAfterAuth');
       } else {
         alert('Erreur lors de la connexion Facebook : utilisateur non trouvé');
       }

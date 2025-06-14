@@ -29,7 +29,7 @@ import LoginPage from "@pages/LoginPage";
 import ForgotPasswordPage from "@pages/ForgotPasswordPage";
 import ResetPasswordPage from "@pages/ResetPasswordPage";
 import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
-import InvitePage from "@pages/InviteWorkspacePage";
+import InviteWorkspacePage from "@pages/InviteWorkspacePage";
 
 const AppContent = ({
   theme,
@@ -52,13 +52,14 @@ const AppContent = ({
       )}
       <main className={styles["main-container"]}>
         <Routes>
+          <Route path="/invite/:id" element={<InviteWorkspacePage />} />
+
           {/* Routes publiques protégées par PublicRoute */}
           <Route element={<PublicRoute />}>
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/invite/:id" element={<InvitePage />} />
           </Route>
 
           {/* Routes privées */}
