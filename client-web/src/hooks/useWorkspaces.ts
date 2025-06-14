@@ -34,10 +34,8 @@ export function useWorkspaces() {
   const handleInvite = async (workspaceId: string, email: string) => {
     try {
       const response = await inviteToWorkspaceApi(workspaceId, email);
-      alert(`Invitation envoyée à ${email}`);
       return response;
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'invitation");
       throw err;
     }
   };

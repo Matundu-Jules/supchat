@@ -4,12 +4,57 @@
   width: 100%;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
 .title {
-  margin-bottom: 2rem;
+  margin: 0;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--color-link);
+}
+
+.badgePublic {
+  background: var(--color-success);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0.2rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.badgePrivate {
+  background: var(--color-error);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0.2rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.description {
+  font-size: 1.3rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2.2rem;
+}
+
+.sectionGrid {
+  display: flex;
+  gap: 2.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.4rem;
 }
 
 .section {
-  margin-bottom: 2.4rem;
+  background: var(--color-bg-card);
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 2rem 2.2rem;
+  min-width: 260px;
+  flex: 1 1 320px;
 }
 
 .list {
@@ -21,13 +66,61 @@
   gap: 0.8rem;
 }
 
+.memberName {
+  font-weight: 500;
+  color: var(--color-link);
+}
+
+.empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.sectionActions {
+  display: flex;
+  gap: 2.4rem;
+  flex-wrap: wrap;
+  margin-top: 2.4rem;
+}
+
 .form {
   display: flex;
   gap: 0.8rem;
   margin-top: 1.2rem;
 }
-
+.input {
+  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  background: var(--color-bg-input);
+  transition: border 0.2s;
+}
+.button {
+  background: var(--color-link);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.button:disabled {
+  background: var(--color-border);
+  cursor: not-allowed;
+}
 .error {
   color: var(--color-error);
   margin-top: 1.2rem;
+}
+.inputError {
+  border: 1.5px solid var(--color-error) !important;
+}
+.success {
+  color: var(--color-success, #22c55e);
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
+  text-align: center;
 }

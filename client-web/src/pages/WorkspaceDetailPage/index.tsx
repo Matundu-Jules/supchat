@@ -12,6 +12,8 @@ const WorkspaceDetailPage: React.FC = () => {
     inviteEmail,
     setInviteEmail,
     inviteLoading,
+    inviteError,
+    inviteSuccess,
     joinCode,
     setJoinCode,
     joinLoading,
@@ -41,63 +43,88 @@ const WorkspaceDetailPage: React.FC = () => {
 
   return (
     <section className={styles["container"]}>
-      <h1 className={styles["title"]}>{workspace.name}</h1>
-      {workspace.description && <p>{workspace.description}</p>}
-
-      <div className={styles["section"]}>
-        <h2>Canaux</h2>
-        {workspace.channels && workspace.channels.length ? (
-          <ul className={styles["list"]}>
-            {workspace.channels.map((ch: any) => (
-              <li key={ch._id || ch}>{ch.name || ch}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>Aucun canal.</p>
+      <div className={styles["header"]}>
+        <h1 className={styles["title"]}>{workspace.name}</h1>
+        {workspace.isPublic !== undefined && (
+          <span
+            className={
+              workspace.isPublic
+                ? styles["badgePublic"]
+                : styles["badgePrivate"]
+            }
+          >
+            {workspace.isPublic ? "Public" : "Privé"}
+          </span>
         )}
       </div>
+      {workspace.description && (
+        <p className={styles["description"]}>{workspace.description}</p>
+      )}
 
-      <div className={styles["section"]}>
-        <h2>Membres</h2>
-        {workspace.members && workspace.members.length ? (
+      {/* Section membres */}
+      <div className={styles["sectionGrid"]}>
+        <div className={styles["section"]}>
+          <h2>Membres</h2>
           <ul className={styles["list"]}>
-            {workspace.members.map((m: any) => (
-              <li key={m._id || m}>{m.username || m.email || m}</li>
-            ))}
+            {workspace.members && workspace.members.length > 0 ? (
+              workspace.members.map((member: any) => (
+                <li key={member._id} className={styles["memberName"]}>
+                  {member.username || member.email}
+                </li>
+              ))
+            ) : (
+              <li className={styles["empty"]}>Aucun membre</li>
+            )}
           </ul>
-        ) : (
-          <p>Aucun membre.</p>
-        )}
-      </div>
-
-      <div className={styles["section"]}>
-        <h3>Inviter un membre</h3>
-        <div className={styles["form"]}>
-          <input
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            placeholder="Email"
-          />
-          <button onClick={handleInvite} disabled={inviteLoading}>
-            {inviteLoading ? "Envoi..." : "Inviter"}
-          </button>
         </div>
-      </div>
 
-      <div className={styles["section"]}>
-        <h3>Rejoindre via code</h3>
-        <div className={styles["form"]}>
-          <input
-            type="text"
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value)}
-            placeholder="Code d'invitation"
-          />
-          <button onClick={handleJoin} disabled={joinLoading}>
-            {joinLoading ? "Rejoindre..." : "Rejoindre"}
-          </button>
-        </div>
+        {/* Section invitation (visible seulement pour owner/admin) */}
+        {workspace.owner &&
+          (window?.__USER__?.role === "admin" ||
+            window?.__USER__?._id === workspace.owner._id ||
+            window?.__USER__?.email === workspace.owner.email) && (
+            <div className={styles["section"]}>
+              <h2>Inviter un membre</h2>
+              <form
+                className={styles["form"]}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleInvite();
+                }}
+                autoComplete="off"
+              >
+                <input
+                  type="email"
+                  placeholder="Email du membre"
+                  value={inviteEmail}
+                  onChange={(e) => {
+                    setInviteEmail(e.target.value);
+                    // Réinitialise le message de succès à chaque saisie
+                    if (inviteSuccess) setInviteSuccess(null);
+                  }}
+                  className={
+                    styles["input"] +
+                    (inviteError ? " " + styles["inputError"] : "")
+                  }
+                  required
+                  disabled={inviteLoading}
+                />
+                <button
+                  type="submit"
+                  className={styles["button"]}
+                  disabled={inviteLoading}
+                >
+                  {inviteLoading ? "Envoi..." : "Inviter"}
+                </button>
+              </form>
+              {inviteError && (
+                <div className={styles["error"]}>{inviteError}</div>
+              )}
+              {inviteSuccess && !inviteError && (
+                <div className={styles["success"]}>{inviteSuccess}</div>
+              )}
+            </div>
+          )}
       </div>
     </section>
   );

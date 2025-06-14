@@ -108,3 +108,10 @@
 .inputError {
   border: 1.5px solid var(--color-error) !important;
 }
+
+.success {
+  color: var(--color-success, #22c55e);
+  margin-top: 1.2rem;
+  font-size: var(--font-size-m);
+  text-align: center;
+}

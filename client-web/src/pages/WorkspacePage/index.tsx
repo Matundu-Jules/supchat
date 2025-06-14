@@ -3,8 +3,11 @@ import WorkspaceCreateForm from "@components/Workspace/WorkspaceCreateForm";
 import WorkspaceList from "@components/Workspace/WorkspaceList";
 import styles from "./WorkspacePage.module.scss";
 import { useWorkspacePageLogic } from "@hooks/useWorkspacePageLogic";
+import { useSelector } from "react-redux";
+import type { RootState } from "@store/store";
 
 const WorkspacesPage: React.FC = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
   const {
     workspaces,
     loading,
@@ -26,6 +29,9 @@ const WorkspacesPage: React.FC = () => {
     handleEditSubmit,
     handleDelete,
     editErrors,
+    inviteError,
+    inviteSuccess,
+    setInviteSuccess,
   } = useWorkspacePageLogic();
 
   return (
@@ -78,14 +84,26 @@ const WorkspacesPage: React.FC = () => {
                 type="email"
                 placeholder="Email du membre"
                 value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                onChange={(e) => {
+                  setInviteEmail(e.target.value);
+                  if (inviteSuccess) setInviteSuccess(null);
+                }}
                 required
-                className={styles["input"]}
+                className={
+                  styles["input"] +
+                  (inviteError ? " " + styles["inputError"] : "")
+                }
               />
               <button type="submit" className={styles["submitButton"]}>
                 Envoyer l'invitation
               </button>
             </form>
+            {inviteError && (
+              <div className={styles["error"]}>{inviteError}</div>
+            )}
+            {inviteSuccess && !inviteError && (
+              <div className={styles["success"]}>{inviteSuccess}</div>
+            )}
           </div>
         </div>
       )}
@@ -150,6 +168,7 @@ const WorkspacesPage: React.FC = () => {
       ) : (
         <WorkspaceList
           workspaces={workspaces}
+          user={user ?? undefined}
           onAccess={handleAccess}
           onInvite={handleInviteClick}
           onEdit={handleEdit}

@@ -21,6 +21,8 @@ export function useWorkspacePageLogic() {
     name: string;
   }>(null);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [editModal, setEditModal] = useState<null | {
     id: string;
     name: string;
@@ -41,14 +43,34 @@ export function useWorkspacePageLogic() {
   const handleInviteClick = (workspace: any) => {
     setInviteModal({ id: workspace._id, name: workspace.name });
     setInviteEmail('');
+    setInviteError(null);
+    setInviteSuccess(null);
   };
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteModal) return;
-    await handleInvite(inviteModal.id, inviteEmail);
-    setInviteModal(null);
-    setInviteEmail('');
+    setInviteError(null);
+    setInviteSuccess(null);
+    try {
+      await handleInvite(inviteModal.id, inviteEmail);
+      setInviteSuccess('Invitation envoyée avec succès !');
+      setInviteEmail('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || '';
+      if (
+        msg === 'USER_NOT_FOUND' ||
+        msg.includes('utilisateur') ||
+        msg.toLowerCase().includes("n'existe")
+      ) {
+        setInviteError(
+          "L'adresse e-mail saisie ne correspond à aucun utilisateur inscrit. L'invitation n'a pas été envoyée."
+        );
+      } else {
+        setInviteError(msg || "Erreur lors de l'invitation");
+      }
+      setInviteSuccess(null);
+    }
   };
 
   const handleEdit = (workspace: any) => {
@@ -124,6 +146,10 @@ export function useWorkspacePageLogic() {
     setInviteModal,
     inviteEmail,
     setInviteEmail,
+    inviteError,
+    setInviteError,
+    inviteSuccess,
+    setInviteSuccess,
     editModal,
     setEditModal,
     deleteLoading,

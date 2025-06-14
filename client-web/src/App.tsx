@@ -28,6 +28,7 @@ import LoginPage from "@pages/LoginPage";
 import ForgotPasswordPage from "@pages/ForgotPasswordPage";
 import ResetPasswordPage from "@pages/ResetPasswordPage";
 import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
+import InvitePage from "@pages/InviteWorkspacePage";
 
 const AppContent = ({
   theme,
@@ -56,6 +57,7 @@ const AppContent = ({
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/invite/:id" element={<InvitePage />} />
           </Route>
 
           {/* Routes privées */}
