@@ -26,6 +26,13 @@ exports.sendMessage = async (req, res) => {
       return res.status(404).json({ message: "Canal non trouvé." });
     }
 
+    const isMember = channel.members?.some(
+      (m) => String(m._id || m) === String(req.user.id)
+    );
+    if (!isMember) {
+      return res.status(403).json({ message: "Accès refusé." });
+    }
+
     const perm = await Permission.findOne({
       userId: req.user.id,
       workspaceId: channel.workspace,
@@ -138,6 +145,14 @@ exports.getMessagesByChannel = async (req, res) => {
       return res.status(404).json({ message: "Workspace non trouvé." });
     }
 
+    const isChanMember = channel.members?.some(
+      (m) => String(m._id || m) === String(req.user.id)
+    );
+    if (!isChanMember) {
+      return res.status(403).json({ message: "Accès refusé." });
+    }
+
+
     if (req.user.role !== "admin") {
       const perm = await Permission.findOne({
         userId: req.user.id,
@@ -185,6 +200,12 @@ exports.getMessageById = async (req, res) => {
     const workspace = await Workspace.findById(channel.workspace);
     if (!workspace) {
       return res.status(404).json({ message: "Workspace non trouvé." });
+    }
+    const isChanMember = channel.members?.some(
+      (m) => String(m._id || m) === String(req.user.id)
+    );
+    if (!isChanMember) {
+      return res.status(403).json({ message: "Accès refusé." });
     }
 
     if (req.user.role !== "admin") {

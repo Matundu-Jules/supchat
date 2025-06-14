@@ -119,3 +119,82 @@ exports.deleteChannel = async (req, res) => {
     return res.status(500).json({ message: "Erreur serveur", error });
   }
 };
+
+// ✅ Inviter un utilisateur dans un canal
+exports.inviteToChannel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    let channel;
+    try {
+      channel = await channelService.invite(id, email, req.user);
+    } catch (err) {
+      if (err.message === "NOT_ALLOWED") {
+        return res
+          .status(403)
+          .json({ message: "Accès refusé. Droits insuffisants." });
+      }
+      if (err.message === "NOT_FOUND") {
+        return res.status(404).json({ message: "Canal non trouvé" });
+      }
+      if (err.message === "USER_NOT_FOUND") {
+        return res.status(400).json({ message: "USER_NOT_FOUND" });
+      }
+      if (err.message === "ALREADY_MEMBER") {
+        return res.status(400).json({ message: "ALREADY_MEMBER" });
+      }
+      throw err;
+    }
+    return res
+      .status(200)
+      .json({ message: `Invitation envoyée à ${email}`, channel });
+  } catch (error) {
+    return res.status(500).json({ message: "Erreur lors de l'invitation", error });
+  }
+};
+
+// ✅ Rejoindre un canal
+exports.joinChannel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let channel;
+    try {
+      channel = await channelService.join(id, req.user);
+    } catch (err) {
+      if (err.message === "INVALID_INVITE") {
+        return res
+          .status(404)
+          .json({ message: "Invitation invalide ou expirée" });
+      }
+      if (err.message === "NOT_FOUND") {
+        return res.status(404).json({ message: "Canal non trouvé" });
+      }
+      if (err.message === "ALREADY_MEMBER") {
+        return res.status(400).json({ message: "ALREADY_MEMBER" });
+      }
+      throw err;
+    }
+    return res.status(200).json({ message: "Vous avez rejoint le canal", channel });
+  } catch (error) {
+    return res.status(500).json({ message: "Erreur lors de la jointure", error });
+  }
+};
+
+// ✅ Quitter un canal
+exports.leaveChannel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let channel;
+    try {
+      channel = await channelService.leave(id, req.user);
+    } catch (err) {
+      if (err.message === "NOT_FOUND") {
+        return res.status(404).json({ message: "Canal non trouvé" });
+      }
+      throw err;
+    }
+    return res.status(200).json({ message: "Vous avez quitté le canal", channel });
+  } catch (error) {
+    return res.status(500).json({ message: "Erreur lors du départ", error });
+  }
+};
