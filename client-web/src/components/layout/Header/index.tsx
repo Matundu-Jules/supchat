@@ -81,6 +81,15 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             <span className={styles["notifBadge"]}>{unread}</span>
           )}
         </NavLink>
+        <NavLink
+          to="/search"
+          className={({ isActive }) =>
+            `${styles["navLink"]} ${isActive ? styles["active"] : ""}`
+          }
+          onClick={() => setMenuOpen(false)}
+        >
+          Recherche
+        </NavLink>
         {/* Logout button only visible in the hamburger menu on mobile */}
         <div className={styles["logoutMobile"]}>
           {user && (
