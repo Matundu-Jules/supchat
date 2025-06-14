@@ -43,11 +43,11 @@ beforeAll(async () => {
   await workspace.save();
 
   // JWT tokens
-  const secret = "testsecret";
+  process.env.JWT_SECRET = "testsecret";
   global.tokens = {
-    admin: jwt.sign({ id: admin._id, role: "admin" }, secret),
-    member: jwt.sign({ id: member._id, role: "membre" }, secret),
-    guest: jwt.sign({ id: guest._id, role: "invité" }, secret),
+    admin: jwt.sign({ id: admin._id, role: "admin" }, process.env.JWT_SECRET),
+    member: jwt.sign({ id: member._id, role: "membre" }, process.env.JWT_SECRET),
+    guest: jwt.sign({ id: guest._id, role: "invité" }, process.env.JWT_SECRET),
   };
 
   // Socket.io client for tests
