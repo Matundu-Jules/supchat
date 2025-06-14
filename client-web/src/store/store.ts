@@ -8,6 +8,7 @@ import messagesReducer from "@store/messagesSlice";
 import notificationsReducer from "@store/notificationsSlice";
 import preferencesReducer from "@store/preferencesSlice";
 import reactionsReducer from "@store/reactionsSlice";
+import notificationPrefReducer from "@store/notificationPrefSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     notifications: notificationsReducer,
     preferences: preferencesReducer,
     reactions: reactionsReducer,
+    notificationPrefs: notificationPrefReducer,
   },
 });
 

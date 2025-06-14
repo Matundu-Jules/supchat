@@ -27,6 +27,16 @@ const UserSchema = new mongoose.Schema({
         refreshToken: String,
     },
     githubToken: String,
+    notificationPrefs: [
+        {
+            channelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },
+            mode: {
+                type: String,
+                enum: ['all', 'mentions', 'mute'],
+                default: 'all',
+            },
+        },
+    ],
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 })
