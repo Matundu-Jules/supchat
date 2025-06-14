@@ -71,6 +71,11 @@ export async function logoutApi() {
   }
 }
 
+export async function logoutAll() {
+  await fetchCsrfToken();
+  await api.post('/auth/logout-all');
+}
+
 export const forgotPassword = (email: string) =>
   api.post('/auth/forgot-password', { email });
 
@@ -80,4 +85,9 @@ export const resetPassword = (token: string, newPassword: string) =>
 export async function getCurrentUser() {
   const { data } = await api.get('/auth/me');
   return data;
+}
+
+export async function deleteAccount() {
+  await fetchCsrfToken();
+  await api.delete('/auth/me');
 }

@@ -45,10 +45,46 @@ const removeGithub = async (userId) => {
   return user
 }
 
+const setGoogleId = async (userId, googleId) => {
+  const user = await User.findById(userId)
+  if (!user) return null
+  user.googleId = googleId
+  await user.save()
+  return user
+}
+
+const removeGoogleId = async (userId) => {
+  const user = await User.findById(userId)
+  if (!user) return null
+  user.googleId = undefined
+  await user.save()
+  return user
+}
+
+const setFacebookId = async (userId, fbId) => {
+  const user = await User.findById(userId)
+  if (!user) return null
+  user.facebookId = fbId
+  await user.save()
+  return user
+}
+
+const removeFacebookId = async (userId) => {
+  const user = await User.findById(userId)
+  if (!user) return null
+  user.facebookId = undefined
+  await user.save()
+  return user
+}
+
 module.exports = {
   getIntegrations,
   setGoogleDrive,
   removeGoogleDrive,
   setGithub,
   removeGithub,
+  setGoogleId,
+  removeGoogleId,
+  setFacebookId,
+  removeFacebookId,
 }
