@@ -161,12 +161,15 @@ const join = async (inviteCode, user) => {
         },
     })
 
-    // Ajout dans members (évite doublons)
-    await Workspace.findByIdAndUpdate(workspace._id, {
-        $addToSet: { members: user.id },
-    })
+  // Ajout dans members (évite doublons) et suppression de l'invitation
+  await Workspace.findByIdAndUpdate(workspace._id, {
+    $addToSet: { members: user.id },
+    $pull: { invitations: user.email },
+  })
 
-    return workspace
+  const updatedWorkspace = await Workspace.findById(workspace._id)
+  await updatedWorkspace.save()
+  return updatedWorkspace
 }
 
 module.exports = {
