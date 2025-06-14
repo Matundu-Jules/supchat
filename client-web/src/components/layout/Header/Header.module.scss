@@ -159,6 +159,19 @@
       }
     }
 
+    .settingsLink {
+      color: var(--color-primary);
+      text-decoration: none;
+      margin-right: 0.6rem;
+      font-weight: 600;
+      &:hover {
+        color: var(--color-link);
+      }
+      @include mediaquery(md) {
+        margin-right: 0.6rem;
+      }
+    }
+
     .logoutBtn,
     .loginBtn {
       background: var(--color-primary);
