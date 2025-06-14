@@ -19,6 +19,7 @@ import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
 import PrivateRoute from "@components/layout/PrivateRoute";
 import PublicRoute from "@components/layout/PublicRoute";
+import Loader from "@components/Loader";
 
 import Dashboard from "@pages/Dashboard";
 import WorkspacePage from "@pages/WorkspacePage";
@@ -100,11 +101,14 @@ const App: React.FC = () => {
       })
       .catch(() => {
         dispatch(logout());
+      })
+      .finally(() => {
+        dispatch(setAuthLoading(false));
       });
   }, [dispatch]);
 
   if (authLoading) {
-    return <div className="loading">Chargement...</div>;
+    return <Loader />;
   }
 
   const toggleTheme = () => {
