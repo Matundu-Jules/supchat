@@ -50,6 +50,9 @@ const create = async ({ name, workspaceId, description, type }, user) => {
     type,
   });
   await channel.save();
+  await Workspace.findByIdAndUpdate(workspaceId, {
+    $addToSet: { channels: channel._id },
+  });
   return channel;
 };
 
@@ -108,6 +111,13 @@ const remove = async (id, user) => {
   if (!allowed) {
     throw new Error("NOT_ALLOWED");
   }
+  await Workspace.findByIdAndUpdate(channel.workspace, {
+    $pull: { channels: channel._id },
+  });
+  await Permission.updateMany(
+    { workspaceId: channel.workspace },
+    { $pull: { channelRoles: { channelId: channel._id } } }
+  );
   return Channel.findByIdAndDelete(id);
 };
 
