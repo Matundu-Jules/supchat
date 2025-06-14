@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useWorkspaceDetails } from "@hooks/useWorkspaceDetails";
 import styles from "./WorkspaceDetailPage.module.scss";
+import Loader from "@components/Loader";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +23,11 @@ const WorkspaceDetailPage: React.FC = () => {
   } = useWorkspaceDetails(id || "");
 
   if (loading) {
-    return <p className={styles["container"]}>Chargement...</p>;
+    return (
+      <div className={styles["container"]}>
+        <Loader />
+      </div>
+    );
   }
 
   if (error) {

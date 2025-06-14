@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "@store/store";
 import { joinWorkspace } from "@services/workspaceApi";
+import Loader from "@components/Loader";
 
 const InvitePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +37,7 @@ const InvitePage: React.FC = () => {
   }, [user, isLoading, navigate, id]);
 
   if (isLoading) {
-    return <p>Chargement...</p>;
+    return <Loader />;
   }
 
   if (!user) {
