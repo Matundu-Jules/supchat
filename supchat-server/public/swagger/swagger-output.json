@@ -627,29 +627,21 @@
         }
       }
     },
-    "/api/channels/{id}": {
-      "get": {
-        "description": "Get channel by id",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+    "/api/channels/": {
+      "post": {
+        "description": "",
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Channel"
-                }
-              }
-            }
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found"
@@ -657,10 +649,61 @@
           "500": {
             "description": "Internal Server Error"
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "example": "any"
+                  },
+                  "workspaceId": {
+                    "example": "any"
+                  },
+                  "description": {
+                    "example": "any"
+                  },
+                  "type": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
         }
       },
-      "delete": {
-        "description": "Delete channel",
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/channels/{id}": {
+      "get": {
+        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -675,6 +718,9 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -684,7 +730,7 @@
         }
       },
       "put": {
-        "description": "Update channel",
+        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -697,14 +743,13 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Channel"
-                }
-              }
-            }
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found"
@@ -717,9 +762,47 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChannelUpdate"
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "example": "any"
+                  },
+                  "description": {
+                    "example": "any"
+                  }
+                }
               }
             }
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -989,65 +1072,41 @@
         }
       }
     },
-    "/api/channels": {
-      "post": {
-        "description": "Create a channel",
+    "/api/notifications/": {
+      "get": {
+        "description": "",
         "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Channel"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           },
-          "400": {
-            "description": "Bad Request"
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal Server Error"
           }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChannelCreate"
-              }
-            }
-          }
         }
-      },
-      "get": {
-        "description": "List channels of a workspace",
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "post": {
+        "description": "",
         "parameters": [
           {
-            "name": "workspaceId",
-            "in": "query",
+            "name": "id",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
-            },
-            "required": true
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Channel"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           },
-          "400": {
-            "description": "Bad Request"
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal Server Error"
@@ -1061,84 +1120,252 @@
       "Channel": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string",
-            "example": "64b0fded1c9e3d1a2f1a1234"
-          },
-          "name": {
-            "type": "string",
-            "example": "general"
-          },
-          "workspace": {
-            "type": "string",
-            "example": "64b0fded1c9e3d1a2f1a5678"
-          },
-          "description": {
-            "type": "string",
-            "example": "General discussion channel"
-          },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ],
-            "example": "public"
+            "example": "object"
           },
-          "members": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "type": "string"
+          "properties": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "64b0fded1c9e3d1a2f1a1234"
+                  }
+                }
+              },
+              "name": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "general"
+                  }
+                }
+              },
+              "workspace": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "64b0fded1c9e3d1a2f1a5678"
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "General discussion channel"
+                  }
+                }
+              },
+              "type": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "enum": {
+                    "type": "array",
+                    "example": [
+                      "public",
+                      "private"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "public"
+                  }
+                }
+              },
+              "members": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "messages": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "string"
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
       },
       "ChannelCreate": {
         "type": "object",
-        "required": [
-          "name",
-          "workspaceId",
-          "type"
-        ],
         "properties": {
-          "name": {
-            "type": "string",
-            "example": "support"
-          },
-          "workspaceId": {
-            "type": "string",
-            "example": "64b0fded1c9e3d1a2f1a5678"
-          },
-          "description": {
-            "type": "string",
-            "example": "Support channel"
-          },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "name",
+              "workspaceId",
+              "type"
             ],
-            "example": "public"
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "support"
+                  }
+                }
+              },
+              "workspaceId": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "64b0fded1c9e3d1a2f1a5678"
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Support channel"
+                  }
+                }
+              },
+              "type": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "enum": {
+                    "type": "array",
+                    "example": [
+                      "public",
+                      "private"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "public"
+                  }
+                }
+              }
+            }
           }
         }
       },
       "ChannelUpdate": {
         "type": "object",
         "properties": {
-          "name": {
+          "type": {
             "type": "string",
-            "example": "support"
+            "example": "object"
           },
-          "description": {
-            "type": "string",
-            "example": "New description"
+          "properties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "support"
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "New description"
+                  }
+                }
+              }
+            }
           }
         }
       }
