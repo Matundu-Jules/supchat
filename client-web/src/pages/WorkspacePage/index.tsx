@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import WorkspaceCreateForm from "@components/Workspace/WorkspaceCreateForm";
 import WorkspaceList from "@components/Workspace/WorkspaceList";
 import Loader from "@components/Loader";
@@ -34,6 +34,7 @@ const WorkspacesPage: React.FC = () => {
     inviteSuccess,
     setInviteSuccess,
   } = useWorkspacePageLogic();
+  const [search, setSearch] = useState("");
 
   return (
     <section className={styles["workspaceSection"]}>
@@ -44,6 +45,13 @@ const WorkspacesPage: React.FC = () => {
       >
         Créer un workspace
       </button>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Rechercher..."
+        className={styles["searchInput"]}
+      />
 
       {showModal && (
         <div className={styles["modalOverlay"]}>
@@ -169,6 +177,7 @@ const WorkspacesPage: React.FC = () => {
       ) : (
         <WorkspaceList
           workspaces={workspaces}
+          filter={search}
           user={user ?? undefined}
           onAccess={handleAccess}
           onInvite={handleInviteClick}

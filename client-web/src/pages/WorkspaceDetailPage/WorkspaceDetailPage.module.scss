@@ -132,3 +132,14 @@
   margin-top: 0.5rem;
 }
 
+.searchInput {
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 30rem;
+  background: var(--color-bg-input);
+  font-size: 1.4rem;
+}
+

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useWorkspaceDetails } from "@hooks/useWorkspaceDetails";
 import styles from "./WorkspaceDetailPage.module.scss";
@@ -35,6 +35,7 @@ const WorkspaceDetailPage: React.FC = () => {
     fetchChannels,
     handleCreateChannel,
   } = useChannels(id || "");
+  const [search, setSearch] = useState("");
   const { permissions, setRole, loading: permLoading } = usePermissions(id || "");
 
   if (loading) {
@@ -198,12 +199,23 @@ const WorkspaceDetailPage: React.FC = () => {
       <div className={styles["sectionGrid"]}>
         <div className={styles["section"]}>
           <h2>Canaux</h2>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher..."
+            className={styles["searchInput"]}
+          />
           {channelsLoading ? (
             <Loader />
           ) : channelsError ? (
             <p className={styles["error"]}>{channelsError}</p>
           ) : (
-            <ChannelList channels={channels} onAccess={handleChannelAccess} />
+            <ChannelList
+              channels={channels}
+              filter={search}
+              onAccess={handleChannelAccess}
+            />
           )}
         </div>
         {isAdminOrOwner && (
