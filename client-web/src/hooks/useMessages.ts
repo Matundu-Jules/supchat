@@ -16,9 +16,9 @@ export function useMessages(channelId: string) {
   const loading = useSelector((state: RootState) => state.messages.loading);
   const error = useSelector((state: RootState) => state.messages.error);
 
-  const send = async (text: string) => {
+  const send = async (text: string, file?: File | null) => {
     if (!channelId) return;
-    await dispatch(addMessage({ channelId, text }));
+    await dispatch(addMessage({ channelId, text, file }));
   };
 
   useEffect(() => {

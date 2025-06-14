@@ -9,6 +9,9 @@ const MessageSchema = new mongoose.Schema({
   channel: { type: mongoose.Schema.Types.ObjectId, ref: "Channel" },
   createdAt: { type: Date, default: Date.now },
   file: String,
+  filename: String,
+  mimetype: String,
+  size: Number,
 });
 
 MessageSchema.index({ text: "text", content: "text" });
