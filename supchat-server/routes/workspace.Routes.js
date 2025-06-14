@@ -1,35 +1,69 @@
-const express = require('express')
-const workspaceController = require('../controllers/workspaceController')
+const express = require("express");
+const workspaceController = require("../controllers/workspaceController");
+const { authMiddleware, roleMiddleware } = require("../middlewares/authMiddleware");
 const {
-    authMiddleware,
-    roleMiddleware,
-} = require('../middlewares/authMiddleware')
+  createWorkspaceSchema,
+  updateWorkspaceSchema,
+  inviteToWorkspaceSchema,
+  joinWorkspaceSchema,
+  workspaceIdParamSchema
+} = require("../validators/workspaceValidators");
+const { validate } = require("../middlewares/validationMiddleware");
 
-const router = express.Router()
+const router = express.Router();
 
 // Créer un workspace (admin uniquement)
-router.post('/', authMiddleware, workspaceController.createWorkspace)
+router.post(
+  "/",
+  authMiddleware,
+  validate({ body: createWorkspaceSchema }),
+  workspaceController.createWorkspace
+);
 
 // Récupérer tous les workspaces de l'utilisateur connecté
-router.get('/', authMiddleware, workspaceController.getAllWorkspaces)
+router.get("/", authMiddleware, workspaceController.getAllWorkspaces);
 
 // Récupérer un workspace par ID
-router.get('/:id', authMiddleware, workspaceController.getWorkspaceById)
+router.get(
+  "/:id",
+  authMiddleware,
+  validate({ params: workspaceIdParamSchema }),
+  workspaceController.getWorkspaceById
+);
 
 // Mettre à jour un workspace
-router.put('/:id', authMiddleware, workspaceController.updateWorkspace)
+router.put(
+  "/:id",
+  authMiddleware,
+  validate({ params: workspaceIdParamSchema, body: updateWorkspaceSchema }),
+  workspaceController.updateWorkspace
+);
 
 // Supprimer un workspace
-router.delete('/:id', authMiddleware, workspaceController.deleteWorkspace)
+router.delete(
+  "/:id",
+  authMiddleware,
+  validate({ params: workspaceIdParamSchema }),
+  workspaceController.deleteWorkspace
+);
 
 // Inviter un membre dans un workspace
 router.post(
-    '/:id/invite',
+    "/:id/invite",
     authMiddleware,
+    validate({
+      params: workspaceIdParamSchema,
+      body: inviteToWorkspaceSchema
+    }),
     workspaceController.inviteToWorkspace
 )
 
 // Rejoindre un workspace via un code d'invitation
-router.post('/join', authMiddleware, workspaceController.joinWorkspace)
+router.post(
+  "/join",
+  authMiddleware,
+  validate({ body: joinWorkspaceSchema }),
+  workspaceController.joinWorkspace
+);
 
-module.exports = router
+module.exports = router;
