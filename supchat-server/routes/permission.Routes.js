@@ -6,13 +6,14 @@ const {
   updatePermission,
   deletePermission,
 } = require("../controllers/permissionController");
+const { authMiddleware } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", setPermission);
-router.get("/", getPermissions);
-router.get("/:id", getPermissionById);
-router.put("/:id", updatePermission);
-router.delete("/:id", deletePermission);
+router.post("/", authMiddleware, setPermission);
+router.get("/", authMiddleware, getPermissions);
+router.get("/:id", authMiddleware, getPermissionById);
+router.put("/:id", authMiddleware, updatePermission);
+router.delete("/:id", authMiddleware, deletePermission);
 
 module.exports = router;
