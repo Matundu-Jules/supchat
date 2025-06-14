@@ -5,7 +5,7 @@ const User = require("../models/User");
 // ✅ Assigner une permission à un utilisateur dans un workspace
 exports.setPermission = async (req, res) => {
   try {
-    const { userId, workspaceId, role, permissions } = req.body;
+    const { userId, workspaceId, role, permissions, channelRoles } = req.body;
 
     // Vérifier si le workspace existe
     const workspace = await Workspace.findById(workspaceId);
@@ -37,8 +37,15 @@ exports.setPermission = async (req, res) => {
     if (permission) {
       permission.role = role;
       permission.permissions = permissions;
+      if (channelRoles) permission.channelRoles = channelRoles;
     } else {
-      permission = new Permission({ userId, workspaceId, role, permissions });
+      permission = new Permission({
+        userId,
+        workspaceId,
+        role,
+        permissions,
+        channelRoles,
+      });
     }
 
     await permission.save();
@@ -61,7 +68,9 @@ exports.getPermissions = async (req, res) => {
       return res.status(403).json({ message: "Accès refusé." });
     }
 
-    const permissions = await Permission.find()
+    const { workspaceId } = req.query;
+    const query = workspaceId ? { workspaceId } : {};
+    const permissions = await Permission.find(query)
       .populate("userId", "username email")
       .populate("workspaceId", "name");
     res.status(200).json(permissions);
@@ -92,7 +101,7 @@ exports.getPermissionById = async (req, res) => {
 exports.updatePermission = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, permissions } = req.body;
+    const { role, permissions, channelRoles } = req.body;
 
     const permission = await Permission.findById(id);
     if (!permission) {
@@ -116,6 +125,7 @@ exports.updatePermission = async (req, res) => {
 
     permission.role = role || permission.role;
     permission.permissions = permissions || permission.permissions;
+    if (channelRoles) permission.channelRoles = channelRoles;
 
     await permission.save();
     res.status(200).json({ message: "Permission mise à jour.", permission });
