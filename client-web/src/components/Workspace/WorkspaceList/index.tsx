@@ -13,6 +13,7 @@ type Workspace = {
 type WorkspaceListProps = {
   workspaces: Workspace[];
   user?: { email?: string; role?: string; _id?: string } | undefined;
+  filter?: string;
   onAccess?: (workspace: Workspace) => void;
   onInvite?: (workspace: Workspace) => void;
   onEdit?: (workspace: Workspace) => void;
@@ -22,18 +23,28 @@ type WorkspaceListProps = {
 const WorkspaceList: React.FC<WorkspaceListProps> = ({
   workspaces,
   user,
+  filter,
   onAccess,
   onInvite,
   onEdit,
   onDelete,
 }) => {
-  if (!workspaces.length) {
+  const lowered = filter ? filter.toLowerCase() : "";
+  const filtered = lowered
+    ? workspaces.filter(
+        (w) =>
+          w.name.toLowerCase().includes(lowered) ||
+          (w.description || "").toLowerCase().includes(lowered)
+      )
+    : workspaces;
+
+  if (!filtered.length) {
     return <p>Aucun espace de travail pour le moment.</p>;
   }
 
   return (
     <ul className={styles["workspace-list"]}>
-      {workspaces.map((ws) => {
+      {filtered.map((ws) => {
         const isOwner =
           user &&
           ws.owner &&

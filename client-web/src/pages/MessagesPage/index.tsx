@@ -1,7 +1,8 @@
 import { useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@hooks/useMessages";
 import styles from "./MessagesPage.module.scss";
+import MessageItem from "@components/Message/MessageItem";
 
 function MessagesPage() {
   const [params] = useSearchParams();
@@ -9,6 +10,7 @@ function MessagesPage() {
   const { messages, loading, send } = useMessages(channelId);
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,18 +20,17 @@ function MessagesPage() {
     setFile(null);
   };
 
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <section className={styles["container"]}>
-      <ul className={styles["list"]}>
+      <ul ref={listRef} className={styles["list"]}>
         {messages.map((m: any) => (
-          <li key={m._id}>
-            {m.text || m.content}
-            {m.file && (
-              <a href={m.file} target="_blank" rel="noopener noreferrer">
-                {m.filename || "Fichier"}
-              </a>
-            )}
-          </li>
+          <MessageItem key={m._id} message={m} />
         ))}
       </ul>
       <form onSubmit={handleSubmit} className={styles["form"]}>
