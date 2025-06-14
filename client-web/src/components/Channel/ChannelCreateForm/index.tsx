@@ -4,7 +4,9 @@ import styles from "./ChannelCreateForm.module.scss";
 
 interface ChannelCreateFormProps {
   workspaceId: string;
-  onCreate: (formData: { name: string; description?: string; workspaceId: string }) => Promise<void>;
+  onCreate: (
+    formData: import("@services/channelApi").ChannelFormData
+  ) => Promise<void>;
   onCreated?: () => void;
 }
 
@@ -18,6 +20,8 @@ const ChannelCreateForm: React.FC<ChannelCreateFormProps> = ({
     setName,
     description,
     setDescription,
+    type,
+    setType,
     loading,
     error,
     handleSubmit,
@@ -33,31 +37,59 @@ const ChannelCreateForm: React.FC<ChannelCreateFormProps> = ({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={`${styles["input"]} ${error?.includes("nom") ? styles["inputError"] : ""}`}
+          className={`${styles["input"]} ${
+            error?.includes("nom") ? styles["inputError"] : ""
+          }`}
           disabled={loading}
           required
         />
         {error?.includes("nom") && <p className={styles["error"]}>{error}</p>}
       </label>
-      <label htmlFor="channel-description" className={styles["label-description"]}>
+      <label
+        htmlFor="channel-description"
+        className={styles["label-description"]}
+      >
         Description&nbsp;:
         <input
           id="channel-description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className={`${styles["input"]} ${error?.includes("description") ? styles["inputError"] : ""}`}
+          className={`${styles["input"]} ${
+            error?.includes("description") ? styles["inputError"] : ""
+          }`}
           disabled={loading}
         />
         {error?.includes("description") && (
           <p className={styles["error"]}>{error}</p>
         )}
       </label>
-      {error && !error.includes("nom") && !error.includes("description") && (
-        <p className={styles["error"]}>{error}</p>
-      )}
+      <label htmlFor="channel-type" className={styles["label-type"]}>
+        Type&nbsp;:
+        <select
+          id="channel-type"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className={styles["input"]}
+          disabled={loading}
+          required
+        >
+          <option value="">Sélectionner</option>
+          <option value="public">Public</option>
+          <option value="private">Privé</option>
+        </select>
+        {error?.includes("type") && <p className={styles["error"]}>{error}</p>}
+      </label>
+      {error &&
+        !error.includes("nom") &&
+        !error.includes("description") &&
+        !error.includes("type") && <p className={styles["error"]}>{error}</p>}
       <div className={styles["container-btn"]}>
-        <button type="submit" disabled={loading} className={`btn ${styles["submitButton"]}`}>
+        <button
+          type="submit"
+          disabled={loading}
+          className={`btn ${styles["submitButton"]}`}
+        >
           {loading ? "Création..." : "Créer"}
         </button>
       </div>

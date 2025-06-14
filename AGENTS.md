@@ -1,4 +1,4 @@
-# AGENTS.md – Configuration Optimisée pour OpenAI Codex
+# AGENTS.md – Version 100% Sans Tests Automatiques (Racine)
 
 **Projet :** SUPCHAT – Plateforme de messagerie collaborative
 **Version :** 1.0.0
@@ -7,72 +7,46 @@
 
 ---
 
-## ⚠️ Configuration spéciale pour agents automatisés
+## ⚠️ Configuration spéciale pour agents automatisés (NO TEST)
 
 ### Instructions critiques
 
-- **NE PAS** exécuter de tests automatiques
-- **NE PAS** lancer `npm run lint`, `npm test`, `npm run build`
-- **NE PAS** utiliser `docker-compose`
-- **UTILISER UNIQUEMENT** `npx tsc --noEmit` pour validation TypeScript
+- **INTERDICTION ABSOLUE** d'exécuter toute commande de test, de lint, de build, de type-check ou de vérification TypeScript, y compris :
+  `npm test`, `npm run lint`, `npm run build`, `npm run test:integration`, `npm run test:coverage`, `docker-compose`, `npx tsc --noEmit`, etc.
+- **NE PAS** effectuer de vérification TypeScript ou d'analyse automatique de code.
+- **IGNORER** toutes les commandes nécessitant un environnement Docker, Node.js, Vite, etc.
+- **SE CONCENTRER UNIQUEMENT** sur l'analyse statique manuelle du code, la génération de code, et la validation des patterns et conventions (review humaine uniquement).
 
 ### Justification
 
-Projet microservices avec Docker Compose – les tests nécessitent un environnement complet avec base de données, services réseau et variables d'environnement spécifiques.
-
-### Validation alternative pour agents
-
-- Syntaxe TypeScript : `npx tsc --noEmit`
-- Structure de fichiers : vérification manuelle
-- Conventions de code : review visuel
-- Imports/exports : validation statique
+Projet microservices avec Docker Compose : aucune validation automatisée ne peut être réalisée sans environnement complet.
+Seules les revues de code manuelles, la génération de snippets, ou la structuration de fichiers sont autorisées pour les agents IA.
 
 ---
 
-## Configuration agent automatisé
+## Ce que peut faire l'agent
 
-### Commandes à ignorer
+- Lire et comprendre la structure du projet
+- Générer ou proposer du code selon les patterns du repo
+- Suggérer des améliorations ou pointer des bonnes pratiques
+- Générer de nouveaux dossiers, composants, modèles, etc.
+- **Aucune commande, aucun test, aucun build, aucun check TypeScript !**
 
-Les agents automatisés doivent **IGNORER** les commandes suivantes :
+## Ce qui est INTERDIT
 
-- `npm test` – Nécessite environnement Docker complet
-- `npm run lint` – Dépendances ESLint non installées globalement
-- `npm run build` – Nécessite toutes les dépendances du projet
-- `docker-compose config` – Docker non disponible dans l'environnement agent
-- `npm run test:integration` – Scripts non configurés
-- `npm run test:e2e` – Tests E2E non implémentés
-
-### Validation alternative
-
-Au lieu des tests automatiques, l'agent peut :
-
-- Vérifier la syntaxe TypeScript avec `npx tsc --noEmit` uniquement
-- Valider la structure des fichiers
-- Contrôler les conventions de nommage
-- Vérifier la cohérence des imports/exports
-
-### Environnement de développement
-
-Ce projet utilise une architecture microservices conteneurisée qui nécessite :
-
-- Docker Compose avec 4 services (web, mobile, api, database)
-- Variables d'environnement configurées
-- Base de données MongoDB active
-- Configuration réseau spécifique
-
-Les tests et validations complètes ne peuvent s'exécuter que dans cet environnement complet.
+- **TOUTE EXÉCUTION** de : tests, lint, build, type-check, docker, npm, npx, Vite, preview, analyse CLI
+- **TOUT ACCÈS** réseau ou système (environnement Docker, base Mongo, etc.)
+- **AUCUNE VALIDATION AUTOMATISÉE** du code, même tsc
 
 ---
 
-## Scope hiérarchique du projet
+## Architecture globale du projet
 
-### Architecture globale
-
-- **Type :** Microservices conteneurisés avec séparation client/serveur
-- **Pattern :** MVC (Model-View-Controller) pour le backend
-- **Clients :** Multi-plateformes (React Web + React Native Mobile)
-- **API :** REST avec Node.js/Express
-- **Base de données :** MongoDB avec Mongoose ODM
+- **Type :** Microservices conteneurisés (client/serveur séparés)
+- **Pattern :** MVC (backend)
+- **Clients :** React Web + React Native Mobile
+- **API :** REST Node.js/Express
+- **Base de données :** MongoDB avec Mongoose
 
 ### Structure des répertoires
 
@@ -85,190 +59,60 @@ Les tests et validations complètes ne peuvent s'exécuter que dans cet environn
 └── .env.example         # Template variables d'environnement
 ```
 
-### Hiérarchie de scope (précédence décroissante)
-
-1. Instructions système directes
-2. AGENTS.md spécifiques aux sous-modules
-3. AGENTS.md racine (ce fichier)
-4. Conventions par défaut
-
 ---
 
 ## Conventions de code
 
-### JavaScript/TypeScript Standards
+- **JavaScript/TypeScript :**
 
-- **Syntaxe :** ES2022+ avec modules ES6
-- **Typage :** TypeScript strict activé
-- **Quotes :** Doubles quotes ("string") pour les chaînes
-- **Indentation :** 2 espaces (pas de tabs)
-- **Line endings :** LF (Unix)
-- **Naming conventions :**
+  - Syntaxe : ES2022+
+  - Typage : strict, interfaces explicites, pas d'`any`
+  - Indentation : 2 espaces
+  - Quotes : doubles
+  - Line endings : LF
+  - Nommage : camelCase (var/fonction), PascalCase (classe/composant), SCREAMING_SNAKE_CASE (constantes), kebab-case (fichiers)
 
-  - Variables/fonctions : `camelCase`
-  - Classes/composants : `PascalCase`
-  - Constantes : `SCREAMING_SNAKE_CASE`
-  - Fichiers : `kebab-case.extension`
+- **ESLint/Prettier :**
 
-### ESLint Configuration
-
-- **Base :** @eslint/js recommended
-- **TypeScript :** typescript-eslint strict
-- **React :** eslint-plugin-react-hooks
-- **Règles spécifiques :**
-
-  - Semi-colons obligatoires
-  - Trailing commas pour objets/arrays
-  - No unused variables (erreur)
-  - Console.log autorisé en dev, warning en prod
-
-### Prettier Integration
-
-- **Print width :** 80 caractères
-- **Tab width :** 2 espaces
-- **Semi :** true
-- **Single quote :** false (double quotes)
-- **Trailing comma :** es5
+  - Règles projet : semi obligatoires, trailing commas, unused vars interdits, print width : 80, tab width : 2
 
 ---
 
 ## Patterns architecturaux
 
-### Backend (supchat-server/) – Pattern MVC
-
-```
-controllers/     # Logique métier et actions CRUD
-models/          # Schémas MongoDB avec Mongoose
-routes/          # Définition endpoints REST API
-middlewares/     # Traitements transversaux
-```
-
-### Frontend Web (client-web/) – Hooks + Redux
-
-- **State Management :** Redux Toolkit avec slices
-- **Composants :** Functional components avec hooks
-- **Hooks personnalisés :** Préfixe `use*` obligatoire
-- **Structure :**
-
-  ```
-  src/
-  ├── components/      # Composants réutilisables
-  ├── pages/          # Pages/vues principales
-  ├── hooks/          # Custom hooks (useAuth, useWorkspace)
-  ├── store/          # Redux store et slices
-  ├── services/       # Appels API (Axios)
-  ├── types/          # Interfaces TypeScript
-  └── utils/          # Fonctions utilitaires
-  ```
-
-### Mobile (client-mobile/) – Expo File-based Routing
-
-- **Navigation :** Expo Router avec routing basé fichiers
-- **Structure :**
-
-  ```
-  app/              # Routes principales (file-based)
-  ├── (auth)/       # Routes authentification
-  ├── (tabs)/       # Navigation par onglets
-  └── _layout.tsx   # Layout racine
-  components/       # Composants UI mobiles
-  contexts/         # Context API pour état global
-  hooks/           # Hooks personnalisés mobiles
-  ```
+- **Backend** : MVC (controllers, models, routes, middlewares)
+- **Frontend Web** : Redux Toolkit, hooks custom, components atomiques
+- **Mobile** : Routing file-based Expo, context API, hooks custom
 
 ---
 
-## Vérifications programmatiques (optionnelles)
+## Sécurité et bonnes pratiques
 
-### Note importante
-
-Ces vérifications sont destinées à l'environnement de développement local uniquement.
-Les agents automatisés doivent ignorer ces étapes pour éviter les erreurs d'environnement.
-
-### Scripts de développement local (à exécuter manuellement)
-
-- `npm run lint` – ESLint (nécessite configuration locale)
-- `npm test` – Tests unitaires (nécessite setup complet)
-- `npm run build` – Build production (nécessite toutes les dépendances)
-- `docker-compose config` – Validation Docker (nécessite Docker installé)
+- Secrets uniquement en variable d'env
+- JWT signé et limité (24h)
+- OAuth2 via Passport.js
+- Hachage bcrypt obligatoire pour les mots de passe
+- CSRF : header X-CSRF-TOKEN obligatoire pour POST/PUT/DELETE
+- Validation : Joi côté back, Yup côté front
+- RGPD : endpoints pour suppression/export des données utilisateurs
 
 ---
 
-## Instructions de test (environnement local uniquement)
+## UI/UX
 
-### Configuration Jest (Backend)
-
-- **Environment :** Node.js
-- **Note :** Les tests nécessitent un environnement Docker complet
-- **Exécution :** Manuelle uniquement, pas d'automatisation par les agents
-
-### Commandes de test (manuelles)
-
-Ces commandes nécessitent un setup complet local.
-Ne pas exécuter automatiquement par les agents.
-
-```bash
-npm test # Tests unitaires (si configurés)
-npm run test:watch # Mode watch (à implémenter)
-npm run test:coverage # Rapport de couverture (à implémenter)
-```
-
-### Désactivation pour les agents automatisés
-
-Les agents doivent ignorer toutes les commandes de test car le projet nécessite :
-
-- Docker Compose avec services multiples
-- Variables d'environnement spécifiques
-- Base de données MongoDB active
-- Configuration réseau complexe
+- Palette via variables CSS
+- Typographies : Montserrat, Open Sans, Roboto Mono
+- Icones : Heroicons/Lucide
+- Responsive et mobile-first
+- Accessibilité : ARIA, navigation clavier, alt images
 
 ---
 
-## Workflow CI/CD et déploiement
-
-### Scripts de déploiement (environnement local uniquement)
-
-```bash
-# Déploiement complet
-docker-compose up --build
-
-# Development mode (nécessite setup complet)
-npm run dev              # Web client (Vite)
-npm start               # API server (Nodemon)
-npx expo start          # Mobile client (Expo)
-```
-
-### Health checks (environnement local)
-
-- API endpoint `/health` – accessible uniquement avec Docker
-- Base de données MongoDB – nécessite conteneur actif
-- Services Docker – démarrage en environnement configuré uniquement
+**Note importante :**
+Ce fichier AGENTS.md racine ne doit servir qu'à la structuration du code, à la génération de snippets et à l’assistance humaine.
+Pour toute validation automatisée ou exécution de commandes, utiliser AGENTS.full.md (non destiné aux agents Codex/Copilot).
 
 ---
 
-## Sécurité (Best Practices)
-
-- Gestion des secrets : utilisation exclusive de variables d'environnement, jamais de secrets en dur dans le code
-- Authentification JWT : tokens signés, durée de vie limitée (24h), refresh token configuré
-- OAuth2 : connexion Google/Facebook via Passport.js, secrets OAuth dans l'environnement
-- Stockage des mots de passe : hachage bcrypt obligatoire, jamais de mot de passe en clair
-- Protection CSRF : double-cookie, header X-CSRF-TOKEN pour requêtes mutatives
-- Validation : schémas Joi côté backend, Yup côté frontend
-- Conformité RGPD : endpoints pour suppression/export de données utilisateur à prévoir
-
----
-
-## Charte graphique et conventions UI/UX
-
-- Palette de couleurs via variables CSS (`--color-primary`, `--color-secondary`, etc.)
-- Typographie : Montserrat (titres), Open Sans (texte), Roboto Mono (code)
-- Iconographie : Heroicons/Lucide
-- Responsive design mobile-first
-- Accessibilité : labels ARIA, navigation clavier, alt text images
-
----
-
-**Note importante :**
-
-- Cette configuration AGENTS.md doit être utilisée dans les interactions avec Codex/Copilot pour éviter les blocages liés aux environnements incomplets et accélérer l'assistance sur le code et l'architecture.
-- Pour le développement local complet, utilisez la version étendue AGENTS.full.md.
+🎯 **Strictement ZÉRO test, ZÉRO build, ZÉRO commande exécutée par l’agent IA**.
+Tout doit être fait par lecture et génération statique uniquement.

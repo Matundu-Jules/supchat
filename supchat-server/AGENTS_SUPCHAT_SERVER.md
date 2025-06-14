@@ -1,4 +1,4 @@
-# AGENTS_SUPCHAT_SERVER.md – Configuration Optimisée pour Codex (Server)
+# AGENTS_SUPCHAT_SERVER.md – Version 100% Sans Tests Automatiques (Server)
 
 ## Scope et Contexte du Projet
 
@@ -6,19 +6,21 @@ Vous êtes un assistant IA spécialisé dans le développement backend du projet
 
 ---
 
-## ⚠️ Configuration spéciale pour agents automatisés
+## ⚠️ Configuration spéciale pour agents automatisés (NO TEST)
 
 ### Instructions critiques pour les agents IA
 
-- **NE PAS** exécuter de tests automatiques (`npm test`, `npm run test:integration`)
-- **NE PAS** lancer `npm run lint`, `npm run build`
-- **NE PAS** utiliser `docker-compose config`
-- **UTILISER UNIQUEMENT** `npx tsc --noEmit` pour validation TypeScript
-- **IGNORER** toutes les commandes qui nécessitent l'environnement Docker complet
+- **INTERDICTION ABSOLUE** d'exécuter toute commande de test, de lint, de build ou de vérification type-check, y compris :
+
+  - `npm test`, `npm run test:integration`, `npm run lint`, `npm run build`, `docker-compose config`, `npx tsc --noEmit`, etc.
+
+- **NE PAS** effectuer de vérification TypeScript automatique.
+- **IGNORER** toutes les commandes nécessitant un environnement Docker ou Node.js complet (docker, npm, node, mongo, etc.).
+- **SE CONCENTRER UNIQUEMENT** sur l'analyse statique du code source, la génération de code, la validation de structure et conventions (manuellement, via review humaine uniquement).
 
 ### Justification technique
 
-Ce projet utilise une architecture microservices avec Docker Compose nécessitant :
+Ce projet utilise une architecture microservices nécessitant :
 
 - 4 services conteneurisés (API, MongoDB, Redis, uploads)
 - Variables d'environnement spécifiques
@@ -26,137 +28,38 @@ Ce projet utilise une architecture microservices avec Docker Compose nécessitan
 - Base de données MongoDB active
 - Service Redis pour Socket.IO
 
-Les tests et validations complètes ne peuvent s'exécuter que dans cet environnement complet.
+Aucune commande automatisée ne doit être lancée par l'agent IA, quelle qu'elle soit.
 
-### Validation alternative pour agents
+### Validation alternative autorisée pour agents
 
-- ✅ Syntaxe TypeScript : `npx tsc --noEmit`
-- ✅ Structure de fichiers : vérification manuelle
-- ✅ Conventions MVC : review visuel du code
-- ✅ Imports/exports : validation statique
-- ✅ Patterns de sécurité : analyse du code
+- **Exclusivement** : revue visuelle humaine de la structure du code, conventions de nommage, patterns MVC (routes → controllers → services → models), sécurité (JWT, Joi, Helmet, etc.), conventions asynchrones, cohérence des imports/exports, etc.
+- **Aucune commande CLI, aucun test, aucun build, aucune vérification automatique, même tsc !**
 
 ---
 
-## Architecture MVC et Organisation du Code
+## Consignes spécifiques pour Codex/Copilot
 
-### Structure de Dossiers
-
-```
-supchat-server/
-├── src/
-│   ├── app.js             # Point d'entrée Express
-│   ├── config/            # Configuration environnement
-│   ├── controllers/       # Logique métier
-│   ├── middlewares/       # Intercepteurs de requêtes
-│   ├── models/            # Schémas Mongoose
-│   ├── routes/            # Définition des endpoints
-│   ├── services/          # Logique métier réutilisable
-│   ├── utils/             # Fonctions utilitaires
-│   └── tests/             # Tests unitaires et d'intégration
-├── docs/                  # Documentation technique
-├── public/                # Fichiers statiques
-└── uploads/               # Stockage fichiers temporaires
-```
+- **NE JAMAIS** exécuter la moindre commande de test, lint, build ou vérification TypeScript.
+- **Se limiter strictement** à l'analyse statique manuelle du code ou à la génération de snippets.
+- **Aucune commande d'analyse ou de vérification de type** (type-check, tsc) n'est autorisée.
 
 ---
 
-## Instructions Spéciales
+## Résumé : Ce que peut faire l'agent
 
-### Pour les agents automatisés
+- Lire et comprendre le code source
+- Proposer des suggestions/modifications selon les patterns et conventions du projet
+- Générer des contrôleurs, middlewares, services, models, routes, helpers Node/Express/Mongoose
+- Pointer les bonnes pratiques ou patterns à suivre
 
-- **PRIORITÉ 1** : Ignorer toutes les commandes de test automatiques
-- **PRIORITÉ 2** : Se concentrer sur la génération et modification de code
-- **PRIORITÉ 3** : Utiliser uniquement `npx tsc --noEmit` pour validation
-- **INTERDICTION** : `npm test`, `npm run lint`, `npm run build`, `docker-compose`
+## Ce qui est INTERDIT
 
-### Environnement de développement vs Agent automatisé
-
-Ce fichier AGENTS.md contient des instructions pour deux contextes :
-
-1. **Développement local** : Toutes les commandes disponibles avec Docker
-2. **Agent automatisé** : Commandes limitées pour éviter les erreurs d'environnement
-
-Les agents IA doivent suivre UNIQUEMENT les instructions marquées "Agent automatisé".
+- **TOUTE EXÉCUTION** de : tests, lint, build, type-check, docker, mongo, npm, node, analyse CLI
+- **TOUT ACCÈS** réseau ou système (environnement Docker, base Mongo, etc.)
+- **AUCUNE VALIDATION AUTOMATISÉE** du code, même tsc
 
 ---
 
-## Validation pour Agents Automatisés
+**Cette version est 100% sans tests automatiques : strictement ZÉRO commande exécutée par l'agent, ZÉRO analyse CLI, ZÉRO check automatique.**
 
-### Vérifications autorisées
-
-SEULE commande de validation autorisée pour les agents :
-
-```bash
-npx tsc --noEmit
-```
-
-### Vérifications manuelles (code review)
-
-- **Architecture MVC** : Vérifier routes → controllers → services → models
-- **Sécurité** : Contrôler l'utilisation de JWT, Joi, CORS, Helmet
-- **Patterns** : Valider async/await, gestion d'erreurs centralisée
-- **Socket.IO** : Vérifier l'authentification et la gestion des événements
-- **MongoDB** : Contrôler les schémas Mongoose et validations
-
-### Ce qui est INTERDIT aux agents
-
-- Exécution de tests Jest
-- Lancement de serveurs Express
-- Connexion à MongoDB
-- Utilisation de Docker Compose
-- Validation par build npm
-- Exécution de linters automatiques
-
----
-
-## Tests et Qualité (Environnement local uniquement)
-
-### ⚠️ Important pour les agents automatisés
-
-Les tests suivants nécessitent un environnement Docker complet et ne doivent **PAS** être exécutés automatiquement par les agents IA.
-
-### Configuration Jest (Référence uniquement)
-
-// jest.config.js - Documentation pour développement local
-// NE PAS EXÉCUTER par les agents automatisés
-
-```javascript
-module.exports = {
-  testEnvironment: "node",
-  verbose: true,
-  collectCoverage: true,
-  // Configuration complète disponible pour développement local
-};
-```
-
-### Commandes de test (Exécution manuelle uniquement)
-
-Ces commandes nécessitent Docker Compose actif.
-À exécuter UNIQUEMENT en environnement de développement local
-
-```bash
-npm test # Tests unitaires avec Jest
-npm run test:watch # Mode watch
-npm run test:coverage # Rapport de couverture
-npm run test:integration # Tests d'intégration (Supertest)
-```
-
-### Alternative pour agents automatisés
-
-Au lieu d'exécuter les tests, les agents peuvent :
-
-- Vérifier la syntaxe avec `npx tsc --noEmit`
-- Analyser la structure MVC du code
-- Valider les patterns de sécurité (JWT, validation Joi)
-- Contrôler les conventions de nommage
-- Vérifier la cohérence des imports/exports
-
----
-
-## Remarques Importantes
-
-**Note importante** :
-
-- Cette configuration est fournie pour référence lors du développement local. Les agents automatisés ne doivent pas tenter d'exécuter Jest ou les tests car cela nécessite un environnement Docker complet avec MongoDB et Redis actifs.
-- Pour le développement local complet, gardez une version sauvegardée sous AGENTS_SUPCHAT_SERVER.full.md.
+Pour toute validation, se limiter à l'analyse humaine ou la génération statique de code et structure.
