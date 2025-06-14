@@ -2,6 +2,8 @@ const workspaceService = require('../services/workspaceService')
 const nodemailer = require('nodemailer')
 const React = require('react')
 const { renderToStaticMarkup } = require('react-dom/server')
+const { getIo } = require('../socket')
+const Notification = require('../models/Notification')
 
 // Helper pour vérifier si l'utilisateur est admin global (à adapter selon votre logique)
 function isGlobalAdmin(user) {
@@ -181,8 +183,11 @@ exports.inviteToWorkspace = async (req, res) => {
         const { id } = req.params // workspaceId
         const { email } = req.body
         let workspace
+        let invitedUser
         try {
-            workspace = await workspaceService.invite(id, email, req.user)
+            const result = await workspaceService.invite(id, email, req.user)
+            workspace = result.workspace
+            invitedUser = result.invitedUser
         } catch (err) {
             if (err.message === 'NOT_ALLOWED') {
                 return res.status(403).json({
@@ -230,6 +235,15 @@ exports.inviteToWorkspace = async (req, res) => {
             subject: `Invitation à rejoindre l'espace de travail "${workspace.name}"`,
             html: emailHtml,
         })
+
+        const io = getIo()
+        const notif = new Notification({
+            type: 'workspace_invite',
+            userId: invitedUser._id,
+            workspaceId: workspace._id,
+        })
+        await notif.save()
+        io.to(`user_${invitedUser._id}`).emit('notification', notif)
 
         res.status(200).json({ message: `Invitation envoyée à ${email}` })
     } catch (error) {
