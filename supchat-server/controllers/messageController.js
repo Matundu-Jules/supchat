@@ -10,6 +10,14 @@ const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const NotificationEmail = require("../emails/NotificationEmail");
 
+async function getChannelPref(userId, channelId) {
+  const user = await User.findById(userId).select("notificationPrefs");
+  const pref = user.notificationPrefs?.find(
+    (p) => String(p.channelId) === String(channelId)
+  );
+  return pref ? pref.mode : "all";
+}
+
 // ✅ Envoyer un message dans un canal
 exports.sendMessage = async (req, res) => {
   try {
@@ -91,6 +99,8 @@ exports.sendMessage = async (req, res) => {
     );
     const mentionedUsers = await User.find({ name: { $in: mentions } });
     for (const user of mentionedUsers) {
+      const mode = await getChannelPref(user._id, channelId);
+      if (mode === "mute") continue;
       const notif = new Notification({
         userId: user._id,
         messageId: message._id,
@@ -129,6 +139,8 @@ exports.sendMessage = async (req, res) => {
         if (mentionedUsers.find((u) => String(u._id) === String(member._id))) {
           continue;
         }
+        const mode = await getChannelPref(member._id, channelId);
+        if (mode !== "all") continue;
         const notif = new Notification({
           userId: member._id,
           messageId: message._id,
