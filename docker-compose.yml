@@ -59,6 +59,7 @@ services:
       - .env
     environment:
       - VITE_REACT_APP_API_URL=${VITE_REACT_APP_API_URL}
+      - VITE_WEBSOCKET_URL=${WEBSOCKET_URL}
     depends_on:
       - api
     restart: unless-stopped
