@@ -9,6 +9,8 @@ import ChannelList from "@components/Channel/ChannelList";
 import ChannelCreateForm from "@components/Channel/ChannelCreateForm";
 import { useChannels } from "@hooks/useChannels";
 import { useNavigate } from "react-router-dom";
+import { usePermissions } from "@hooks/usePermissions";
+import RoleSelector from "@components/Permissions/RoleSelector";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +35,7 @@ const WorkspaceDetailPage: React.FC = () => {
     fetchChannels,
     handleCreateChannel,
   } = useChannels(id || "");
+  const { permissions, setRole, loading: permLoading } = usePermissions(id || "");
 
   if (loading) {
     return (
@@ -103,6 +106,46 @@ const WorkspaceDetailPage: React.FC = () => {
               <li className={styles["empty"]}>Aucun membre</li>
             )}
           </ul>
+          {isAdminOrOwner && (
+            <div>
+              <h3>Rôles du workspace</h3>
+              {permLoading ? (
+                <Loader />
+              ) : (
+                <ul className={styles["list"]}>
+                  {permissions.map((p) => (
+                    <li key={p._id} className={styles["memberName"]}>
+                      {p.userId.email}
+                      <RoleSelector
+                        value={p.role}
+                        onChange={(r) => setRole(p._id, { role: r })}
+                      />
+                      {channels.map((c) => {
+                        const chRole =
+                          p.channelRoles.find((cr) => cr.channelId === c._id)
+                            ?.role || p.role;
+                        return (
+                          <div key={c._id} className={styles["channelRole"]}>
+                            {c.name}
+                            <RoleSelector
+                              value={chRole}
+                              onChange={(r) => {
+                                const roles = p.channelRoles.filter(
+                                  (cr) => cr.channelId !== c._id
+                                );
+                                roles.push({ channelId: c._id, role: r });
+                                setRole(p._id, { channelRoles: roles });
+                              }}
+                            />
+                          </div>
+                        );
+                      })
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Section invitation (visible seulement pour owner/admin) */}
