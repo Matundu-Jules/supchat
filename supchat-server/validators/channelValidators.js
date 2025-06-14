@@ -16,8 +16,13 @@ const channelIdParamSchema = Joi.object({
   id: Joi.string().hex().length(24).required()
 });
 
+const inviteToChannelSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
 module.exports = {
   createChannelSchema,
   updateChannelSchema,
-  channelIdParamSchema
+  channelIdParamSchema,
+  inviteToChannelSchema
 };
