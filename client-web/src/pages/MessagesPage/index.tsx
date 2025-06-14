@@ -7,6 +7,7 @@ import type { RootState } from "@store/store";
 import styles from "./MessagesPage.module.scss";
 import MessageItem from "@components/Message/MessageItem";
 import ChannelEditModal from "@components/Channel/ChannelEditModal";
+import MessageInput from "@components/MessageInput";
 
 function MessagesPage() {
   const [params] = useSearchParams();
@@ -23,17 +24,7 @@ function MessagesPage() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const [showEdit, setShowEdit] = useState(false);
-  const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim() && !file) return;
-    await send(text.trim(), file);
-    setText("");
-    setFile(null);
-  };
 
   useEffect(() => {
     if (listRef.current) {
@@ -72,22 +63,7 @@ function MessagesPage() {
           <li className={styles["empty"]}>Aucun message pour le moment.</li>
         )}
       </ul>
-      <form onSubmit={handleSubmit} className={styles["form"]}>
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          disabled={loading}
-        />
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-          disabled={loading}
-        />
-        <button type="submit" disabled={loading}>
-          Envoyer
-        </button>
-      </form>
+      <MessageInput onSend={send} loading={loading} />
       {showEdit && channel && (
         <ChannelEditModal
           channel={channel}
