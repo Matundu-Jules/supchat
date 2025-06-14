@@ -11,7 +11,7 @@ import ChannelEditModal from "@components/Channel/ChannelEditModal";
 function MessagesPage() {
   const [params] = useSearchParams();
   const channelId = params.get("channel") || "";
-  const { messages, loading, send } = useMessages(channelId);
+  const { messages, loading, send, update: updateMsg, remove } = useMessages(channelId);
   const {
     channel,
     loading: channelLoading,
@@ -59,7 +59,14 @@ function MessagesPage() {
       </div>
       <ul ref={listRef} className={styles["list"]}>
         {messages.map((m: any) => (
-          <MessageItem key={m._id} message={m} />
+          <MessageItem
+            key={m._id}
+            message={m}
+            onEdit={(text: string, file?: File | null) =>
+              updateMsg(m._id, text, file)
+            }
+            onDelete={() => remove(m._id)}
+          />
         ))}
         {!loading && messages.length === 0 && (
           <li className={styles["empty"]}>Aucun message pour le moment.</li>
