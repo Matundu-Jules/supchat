@@ -815,7 +815,7 @@
         }
       }
     },
-    "/api/messages/{channelId}": {
+    "/api/messages/channel/{channelId}": {
       "get": {
         "description": "",
         "parameters": [
