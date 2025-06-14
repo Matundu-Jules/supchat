@@ -35,13 +35,21 @@ const accessCookieOptions = {
 
 // Génération du token JWT (access)
 const generateAccessToken = (user) =>
-    jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: ACCESS_EXPIRE,
-    })
+    jwt.sign(
+        { id: user._id, tokenVersion: user.tokenVersion },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: ACCESS_EXPIRE,
+        }
+    )
 const generateRefreshToken = (user) =>
-    jwt.sign({ id: user._id }, process.env.JWT_REFRESH, {
-        expiresIn: REFRESH_EXPIRE,
-    })
+    jwt.sign(
+        { id: user._id, tokenVersion: user.tokenVersion },
+        process.env.JWT_REFRESH,
+        {
+            expiresIn: REFRESH_EXPIRE,
+        }
+    )
 
 // ================== REGISTER ==================
 exports.register = async (req, res) => {
@@ -118,6 +126,33 @@ exports.logout = (req, res) => {
     })
 
     res.status(200).json({ message: 'Déconnexion réussie' })
+}
+
+// ================== LOGOUT ALL SESSIONS ==================
+exports.logoutAll = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+        if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        user.tokenVersion += 1
+        await user.save()
+
+        // Clear cookies as for simple logout
+        const clearCookieOptions = { ...accessCookieOptions }
+        delete clearCookieOptions.maxAge
+        const clearRefreshCookieOptions = { ...refreshCookieOptions }
+        delete clearRefreshCookieOptions.maxAge
+        res.clearCookie('access', clearCookieOptions)
+        res.clearCookie('refresh', clearRefreshCookieOptions)
+        res.clearCookie('XSRF-TOKEN', {
+            httpOnly: false,
+            secure: isProd,
+            sameSite: 'strict',
+            path: '/',
+        })
+        res.status(200).json({ message: 'Déconnecté de tous les appareils' })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
 }
 
 // ================== GET USER DATA ==================
@@ -292,6 +327,7 @@ exports.refreshToken = (req, res) => {
 
         User.findById(payload.id).then((user) => {
             if (!user) return res.sendStatus(404)
+            if (payload.tokenVersion !== user.tokenVersion) return res.sendStatus(401)
 
             const newAccess = generateAccessToken(user)
             res.cookie('access', newAccess, accessCookieOptions)

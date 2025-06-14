@@ -9,9 +9,8 @@ const authMiddleware = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         req.user = await User.findById(decoded.id).select('-password')
-
-        if (!req.user)
-            return res.status(401).json({ message: 'Utilisateur non trouvé' })
+        if (!req.user || decoded.tokenVersion !== req.user.tokenVersion)
+            return res.status(401).json({ message: 'Token invalide ou expiré' })
 
         next()
     } catch (error) {
