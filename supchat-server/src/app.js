@@ -106,14 +106,18 @@ const mongoUri =
     process.env.MONGO_URI ||
     `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${encodeURIComponent(
         MONGO_INITDB_ROOT_PASSWORD
-    )}@${MONGO_HOST || 'localhost'}:${MONGO_PORT || 27017}/${
+    )}@${MONGO_HOST || 'localhost'}:${MONGO_PORT || 27017}/$${
         MONGO_DB || 'supchat'
     }?authSource=${MONGO_AUTH_SOURCE || 'admin'}`
 
+// Nouvelle fonction pour connecter à MongoDB (utilisable dans les tests)
+async function connectToDatabase(uri) {
+    await mongoose.connect(uri || mongoUri)
+    console.log('MongoDB connected')
+}
+
 if (process.env.NODE_ENV !== 'test') {
-    mongoose
-        .connect(mongoUri)
-        .then(() => console.log('MongoDB connected'))
+    connectToDatabase()
         .catch((err) => {
             console.error('MongoDB connection error:', err)
             process.exit(1)
@@ -143,12 +147,14 @@ app.use((err, req, res, next) => {
 })
 
 // ==== START ==== //
-server.listen(port, () => {
-    console.log(`Server listening on port ${port}`)
-    console.log(
-        `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
-    )
-})
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(port, () => {
+        console.log(`Server listening on port ${port}`)
+        console.log(
+            `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
+        )
+    })
+}
 
 // Export for controllers (needed for generateCsrfToken in authController)
 module.exports = {
@@ -158,4 +164,5 @@ module.exports = {
     generateCsrfToken,
     csrfMiddleware,
     invalidCsrfTokenError,
+    connectToDatabase, // <-- export de la fonction
 }

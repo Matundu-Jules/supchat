@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "name": "client-web",
+      "path": "client-web"
+    },
+    {
+      "name": "client-mobile",
+      "path": "client-mobile"
+    },
+    {
+      "name": "supchat-server",
+      "path": "supchat-server"
+    }
+  ],
+  "settings": {
+    "jest.disabledWorkspaceFolders": [
+      "supchat-1",
+      "client-web",
+      "client-mobile"
+    ]
+  }
+}

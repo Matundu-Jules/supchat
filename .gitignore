@@ -8,6 +8,7 @@ npm-debug.log
 # Logs
 logs/
 *.log
+coverage/
 
 # Docker
 **/node_modules
