@@ -1,5 +1,6 @@
 const Message = require("../models/Message"); // Assure-toi que le modèle Message existe
 const Channel = require("../models/Channel"); // Assure-toi que le modèle Channel existe
+const { getIo } = require("../socket");
 
 // ✅ Envoyer un message dans un canal
 exports.sendMessage = async (req, res) => {
@@ -24,6 +25,12 @@ exports.sendMessage = async (req, res) => {
     });
 
     await message.save();
+    try {
+      const io = getIo();
+      io.to(channelId).emit("newMessage", message);
+    } catch (e) {
+      console.error("Socket emit error", e);
+    }
 
     return res.status(201).json({ message: "Message envoyé.", data: message });
   } catch (error) {
