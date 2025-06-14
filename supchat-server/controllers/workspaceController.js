@@ -5,7 +5,7 @@ const { renderToStaticMarkup } = require('react-dom/server')
 
 // Helper pour vérifier si l'utilisateur est admin global (à adapter selon votre logique)
 function isGlobalAdmin(user) {
-    console.log('user', user)
+    // console.log('user', user)
 
     // Exemple : user.role === 'admin'
     return user && user.role === 'admin'
@@ -146,7 +146,7 @@ exports.deleteWorkspace = async (req, res) => {
         if (!workspace) {
             return res.status(404).json({ message: 'Espace non trouvé' })
         }
-        console.log('workspace', workspace)
+        // console.log('workspace', workspace)
 
         const ownerId =
             workspace.owner && workspace.owner._id
