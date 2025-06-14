@@ -46,6 +46,7 @@ const create = async ({ name, workspaceId, description, type }, user) => {
     workspace: workspaceId,
     description: description || "",
     type,
+    members: [user.id],
   });
   await channel.save();
   await Workspace.findByIdAndUpdate(workspaceId, {

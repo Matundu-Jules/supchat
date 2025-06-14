@@ -7,6 +7,7 @@ import channelsReducer from "@store/channelsSlice";
 import messagesReducer from "@store/messagesSlice";
 import notificationsReducer from "@store/notificationsSlice";
 import preferencesReducer from "@store/preferencesSlice";
+import reactionsReducer from "@store/reactionsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     messages: messagesReducer,
     notifications: notificationsReducer,
     preferences: preferencesReducer,
+    reactions: reactionsReducer,
   },
 });
 
