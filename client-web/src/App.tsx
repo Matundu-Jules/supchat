@@ -1,6 +1,6 @@
 // src/App.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -80,9 +80,14 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const dispatch = useDispatch();
   const authLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const authChecked = useRef(false);
 
   // Retrieves the localStorage theme or prefers the system theme
   useEffect(() => {
+    if (authChecked.current) {
+      return;
+    }
+    authChecked.current = true;
     const storedTheme = localStorage.getItem("theme") as
       | "light"
       | "dark"
