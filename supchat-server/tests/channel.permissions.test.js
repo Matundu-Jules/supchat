@@ -33,7 +33,7 @@ describe("Vérification des permissions sur les canaux", () => {
     await Permission.create({
       userId: member._id,
       workspaceId: workspace._id,
-      role: "member",
+      role: "membre",
       permissions: { canManageChannels: false },
     });
   });
