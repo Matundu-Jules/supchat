@@ -2,6 +2,7 @@
 
 import { NavLink } from "react-router-dom";
 import { useHeaderLogic } from "@hooks/useHeaderLogic";
+import { useNotifications } from "@hooks/useNotifications";
 
 import styles from "./Header.module.scss";
 
@@ -21,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     user,
     navigate,
   } = useHeaderLogic();
+  const { unread } = useNotifications(user?._id);
 
   return (
     <header className={styles["header"]}>
@@ -75,6 +77,9 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           onClick={() => setMenuOpen(false)}
         >
           Messages
+          {unread > 0 && (
+            <span className={styles["notifBadge"]}>{unread}</span>
+          )}
         </NavLink>
         {/* Logout button only visible in the hamburger menu on mobile */}
         <div className={styles["logoutMobile"]}>
