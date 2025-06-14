@@ -30,6 +30,7 @@ import ForgotPasswordPage from "@pages/ForgotPasswordPage";
 import ResetPasswordPage from "@pages/ResetPasswordPage";
 import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
 import InviteWorkspacePage from "@pages/InviteWorkspacePage";
+import SearchPage from "@pages/SearchPage";
 
 const AppContent = ({
   theme,
@@ -66,9 +67,10 @@ const AppContent = ({
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/workspace" element={<WorkspacePage />} />
-            <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
-            <Route path="/message" element={<MessagesPage />} />
-          </Route>
+          <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
+          <Route path="/message" element={<MessagesPage />} />
+          <Route path="/search" element={<SearchPage />} />
+        </Route>
         </Routes>
       </main>
 
