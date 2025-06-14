@@ -9,7 +9,7 @@ const {
 const router = express.Router();
 
 router.post("/", sendMessage);
-router.get("/:channelId", getMessagesByChannel);
+router.get("/channel/:channelId", getMessagesByChannel);
 router.get("/:id", getMessageById);
 router.delete("/:id", deleteMessage);
 
