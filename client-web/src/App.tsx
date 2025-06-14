@@ -1,6 +1,6 @@
 // src/App.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,6 +19,7 @@ import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
 import PrivateRoute from "@components/layout/PrivateRoute";
 import PublicRoute from "@components/layout/PublicRoute";
+import Loader from "@components/Loader";
 
 import Dashboard from "@pages/Dashboard";
 import WorkspacePage from "@pages/WorkspacePage";
@@ -79,9 +80,14 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const dispatch = useDispatch();
   const authLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const authChecked = useRef(false);
 
   // Retrieves the localStorage theme or prefers the system theme
   useEffect(() => {
+    if (authChecked.current) {
+      return;
+    }
+    authChecked.current = true;
     const storedTheme = localStorage.getItem("theme") as
       | "light"
       | "dark"
@@ -100,11 +106,14 @@ const App: React.FC = () => {
       })
       .catch(() => {
         dispatch(logout());
+      })
+      .finally(() => {
+        dispatch(setAuthLoading(false));
       });
   }, [dispatch]);
 
   if (authLoading) {
-    return <div className="loading">Chargement...</div>;
+    return <Loader />;
   }
 
   const toggleTheme = () => {
