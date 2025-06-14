@@ -35,6 +35,17 @@
   }
 }
 
+.searchInput {
+  margin-bottom: 2rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 30rem;
+  background: var(--color-bg-input);
+  font-size: 1.4rem;
+}
+
 .modalOverlay {
   position: fixed;
   top: 0;
