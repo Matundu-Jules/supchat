@@ -36,7 +36,11 @@ const WorkspaceDetailPage: React.FC = () => {
     handleCreateChannel,
   } = useChannels(id || "");
   const [search, setSearch] = useState("");
-  const { permissions, setRole, loading: permLoading } = usePermissions(id || "");
+  const {
+    permissions,
+    setRole,
+    loading: permLoading,
+  } = usePermissions(id || "");
 
   if (loading) {
     return (
@@ -140,7 +144,7 @@ const WorkspaceDetailPage: React.FC = () => {
                             />
                           </div>
                         );
-                      })
+                      })}
                     </li>
                   ))}
                 </ul>
