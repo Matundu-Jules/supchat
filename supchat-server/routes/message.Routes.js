@@ -5,6 +5,7 @@ const {
   sendMessage,
   getMessagesByChannel,
   getMessageById,
+  updateMessage,
   deleteMessage,
 } = require("../controllers/messageController");
 const { authMiddleware } = require("../middlewares/authMiddleware");
@@ -24,6 +25,7 @@ const router = express.Router();
 router.post("/", authMiddleware, upload.single("file"), sendMessage);
 router.get("/channel/:channelId", authMiddleware, getMessagesByChannel);
 router.get("/:id", authMiddleware, getMessageById);
+router.put("/:id", authMiddleware, upload.single("file"), updateMessage);
 router.delete("/:id", authMiddleware, deleteMessage);
 
 module.exports = router;
