@@ -6,6 +6,7 @@ const ChannelSchema = new mongoose.Schema({
   workspace: { type: mongoose.Schema.Types.ObjectId, ref: "Workspace" },
   type: { type: String, enum: ["public", "private"], required: true },
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  invitations: [{ type: String }],
   messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
 });
 
