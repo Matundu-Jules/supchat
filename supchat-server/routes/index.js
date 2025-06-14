@@ -11,6 +11,7 @@ const searchRoutes = require('./search.Routes')
 const userRoutes = require('./user.Routes')
 const integrationRoutes = require('./integration.Routes')
 const reactionRoutes = require('./reaction.Routes')
+const notificationPrefRoutes = require('./notificationPref.Routes')
 
 router.use('/auth', authRoutes)
 router.use('/workspaces', workspaceRoutes)
@@ -22,5 +23,6 @@ router.use('/search', searchRoutes)
 router.use('/user', userRoutes)
 router.use('/integrations', integrationRoutes)
 router.use('/reactions', reactionRoutes)
+router.use('/notification-prefs', notificationPrefRoutes)
 
 module.exports = router
