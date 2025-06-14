@@ -10,12 +10,9 @@ const isAdminOrOwner = async (userId, workspaceId) => {
   if (String(workspace.owner) === String(userId)) {
     return true;
   }
-  const perm = await Permission.findOne({
-    userId,
-    workspaceId,
-    role: "admin",
-  });
-  return !!perm;
+  const perm = await Permission.findOne({ userId, workspaceId });
+  if (!perm) return false;
+  return perm.role === "admin" || perm.permissions?.canManageChannels;
 };
 
 const isChannelAdmin = async (userId, channel) => {
@@ -31,7 +28,7 @@ const isChannelAdmin = async (userId, channel) => {
     workspaceId: workspace._id,
   });
   if (!perm) return false;
-  if (perm.role === "admin") return true;
+  if (perm.role === "admin" || perm.permissions?.canManageChannels) return true;
   const chanRole = perm.channelRoles?.find(
     (c) => String(c.channelId) === String(channel._id)
   );
