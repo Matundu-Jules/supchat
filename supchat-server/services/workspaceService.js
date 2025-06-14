@@ -125,7 +125,7 @@ const invite = async (workspaceId, email, user) => {
         workspace.invitations.push(email)
         await workspace.save()
     }
-    return workspace
+    return { workspace, invitedUser }
 }
 
 const join = async (inviteCode, user) => {
