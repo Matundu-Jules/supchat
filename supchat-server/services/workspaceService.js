@@ -142,7 +142,7 @@ const join = async (inviteCode, user) => {
     await Permission.create({
         userId: user.id,
         workspaceId: workspace._id,
-        role: 'member',
+        role: 'membre',
         permissions: {
             canPost: true,
             canDeleteMessages: false,
