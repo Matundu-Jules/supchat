@@ -20,6 +20,8 @@ import {
   linkGithub,
   unlinkGithub,
 } from '@services/integrationApi'
+import { useNotificationPrefs } from '@hooks/useNotificationPrefs'
+import NotificationPrefList from '@components/Notification/NotificationPrefList'
 import styles from './SettingsPage.module.scss'
 
 const SettingsPage: React.FC = () => {
@@ -32,6 +34,7 @@ const SettingsPage: React.FC = () => {
     googleDrive: false,
     github: false,
   })
+  const { prefs, updatePref } = useNotificationPrefs()
 
   useEffect(() => {
     getProfile().then((u) => {
@@ -117,6 +120,10 @@ const SettingsPage: React.FC = () => {
             <option value="offline">Hors ligne</option>
           </select>
         </label>
+      </div>
+      <div className={styles.notifSection}>
+        <h2>Notifications</h2>
+        <NotificationPrefList items={prefs} onChange={updatePref} />
       </div>
       <div className={styles.integrationSection}>
         <h2>Intégrations</h2>
