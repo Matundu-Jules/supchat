@@ -53,7 +53,22 @@ const create = async ({ name, workspaceId, description, type }, user) => {
   return channel;
 };
 
-const findByWorkspace = (workspaceId) => {
+const findByWorkspace = async (workspaceId, user) => {
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new Error("WORKSPACE_NOT_FOUND");
+  }
+
+  const isOwner = String(workspace.owner) === String(user.id);
+  const perm = await Permission.findOne({ userId: user.id, workspaceId });
+  const isMember = workspace.members?.some(
+    (m) => String(m._id || m) === String(user.id)
+  );
+
+  if (!isOwner && !perm && !isMember) {
+    throw new Error("NOT_ALLOWED");
+  }
+
   return Channel.find({ workspace: workspaceId });
 };
 
