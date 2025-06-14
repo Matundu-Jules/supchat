@@ -22,6 +22,11 @@ const UserSchema = new mongoose.Schema({
     },
     googleId: String,
     facebookId: String,
+    googleDrive: {
+        accessToken: String,
+        refreshToken: String,
+    },
+    githubToken: String,
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 })
