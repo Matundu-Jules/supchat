@@ -10,7 +10,12 @@ const updatePreferencesSchema = Joi.object({
     status: Joi.string().valid('online', 'away', 'busy', 'offline'),
 }).min(1)
 
+const updateEmailSchema = Joi.object({
+    email: Joi.string().email().required(),
+})
+
 module.exports = {
     updateProfileSchema,
     updatePreferencesSchema,
+    updateEmailSchema,
 }

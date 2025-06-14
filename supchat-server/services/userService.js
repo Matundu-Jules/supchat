@@ -31,9 +31,20 @@ const exportData = async (id) => {
     return user
 }
 
+const updateEmail = async (id, newEmail) => {
+    const existing = await User.findOne({ email: newEmail })
+    if (existing) return null
+    const user = await User.findById(id)
+    if (!user) return null
+    user.email = newEmail
+    await user.save()
+    return user
+}
+
 module.exports = {
     getById,
     updateProfile,
     updatePreferences,
     exportData,
+    updateEmail,
 }

@@ -27,6 +27,7 @@ const UserSchema = new mongoose.Schema({
         refreshToken: String,
     },
     githubToken: String,
+    tokenVersion: { type: Number, default: 0 },
     notificationPrefs: [
         {
             channelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },

@@ -51,6 +51,44 @@ exports.unlinkGithub = async (req, res) => {
   }
 }
 
+exports.linkGoogleAccount = async (req, res) => {
+  try {
+    const { googleId } = req.body
+    await integrationService.setGoogleId(req.user.id, googleId)
+    res.status(200).json({ message: 'Google account linked' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to link Google account', error })
+  }
+}
+
+exports.unlinkGoogleAccount = async (req, res) => {
+  try {
+    await integrationService.removeGoogleId(req.user.id)
+    res.status(200).json({ message: 'Google account unlinked' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to unlink Google account', error })
+  }
+}
+
+exports.linkFacebookAccount = async (req, res) => {
+  try {
+    const { facebookId } = req.body
+    await integrationService.setFacebookId(req.user.id, facebookId)
+    res.status(200).json({ message: 'Facebook account linked' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to link Facebook account', error })
+  }
+}
+
+exports.unlinkFacebookAccount = async (req, res) => {
+  try {
+    await integrationService.removeFacebookId(req.user.id)
+    res.status(200).json({ message: 'Facebook account unlinked' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to unlink Facebook account', error })
+  }
+}
+
 exports.listIntegrations = async (req, res) => {
   try {
     const integrations = await integrationService.getIntegrations(req.user.id)
