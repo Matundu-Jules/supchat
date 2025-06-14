@@ -88,10 +88,12 @@ exports.updateWorkspace = async (req, res) => {
                 .json({ message: 'Espace de travail non trouvé' })
         }
 
+        const ownerId = workspace.owner && workspace.owner._id ? workspace.owner._id : workspace.owner
+
         let isAllowed = false
         if (isGlobalAdmin(req.user)) {
             isAllowed = true
-        } else if (String(workspace.owner) === String(req.user.id)) {
+        } else if (String(ownerId) === String(req.user.id)) {
             isAllowed = true
         }
 
@@ -124,10 +126,12 @@ exports.deleteWorkspace = async (req, res) => {
         }
         console.log('workspace', workspace)
 
+        const ownerId = workspace.owner && workspace.owner._id ? workspace.owner._id : workspace.owner
+
         let isAllowed = false
         if (isGlobalAdmin(req.user)) {
             isAllowed = true
-        } else if (String(workspace.owner) === String(req.user.id)) {
+        } else if (String(ownerId) === String(req.user.id)) {
             isAllowed = true
         }
 
