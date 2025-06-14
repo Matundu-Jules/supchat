@@ -5,6 +5,7 @@ const {
     register,
     login,
     logout,
+    logoutAll,
     getUser,
     changePassword,
     deleteUser,
@@ -26,6 +27,7 @@ router.post('/login', login)
 
 // Déconnexion de l'utilisateur
 router.post('/logout', logout)
+router.post('/logout-all', authMiddleware, logoutAll)
 
 // Récupération des informations de l'utilisateur connecté
 router.get('/me', authMiddleware, getUser)

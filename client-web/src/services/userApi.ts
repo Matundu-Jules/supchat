@@ -26,3 +26,24 @@ export async function exportUserData() {
   const { data } = await api.get('/user/export')
   return data
 }
+
+export async function updateEmail(email: string) {
+  await fetchCsrfToken()
+  const { data } = await api.put('/user/email', { email })
+  return data
+}
+
+export async function uploadAvatar(file: File) {
+  await fetchCsrfToken()
+  const form = new FormData()
+  form.append('avatar', file)
+  const { data } = await api.post('/user/avatar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}
+
+export async function deleteAvatar() {
+  await fetchCsrfToken()
+  await api.delete('/user/avatar')
+}
