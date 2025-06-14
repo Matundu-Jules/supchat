@@ -32,3 +32,14 @@
   color: var(--color-link);
   word-break: break-all;
 }
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
