@@ -3,9 +3,12 @@ import { useParams } from "react-router-dom";
 import { useWorkspaceDetails } from "@hooks/useWorkspaceDetails";
 import styles from "./WorkspaceDetailPage.module.scss";
 import Loader from "@components/Loader";
+import { useSelector } from "react-redux";
+import type { RootState } from "@store/store";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const user = useSelector((state: RootState) => state.auth.user);
   const {
     workspace,
     loading,
@@ -15,11 +18,8 @@ const WorkspaceDetailPage: React.FC = () => {
     inviteLoading,
     inviteError,
     inviteSuccess,
-    joinCode,
-    setJoinCode,
-    joinLoading,
+    setInviteSuccess,
     handleInvite,
-    handleJoin,
   } = useWorkspaceDetails(id || "");
 
   if (loading) {
@@ -45,6 +45,12 @@ const WorkspaceDetailPage: React.FC = () => {
       </div>
     );
   }
+
+  // Vérifie si l'utilisateur est admin ou owner du workspace
+  const isAdminOrOwner =
+    user &&
+    workspace.owner &&
+    (user.role === "admin" || user.email === workspace.owner.email);
 
   return (
     <section className={styles["container"]}>
@@ -84,52 +90,49 @@ const WorkspaceDetailPage: React.FC = () => {
         </div>
 
         {/* Section invitation (visible seulement pour owner/admin) */}
-        {workspace.owner &&
-          (window?.__USER__?.role === "admin" ||
-            window?.__USER__?._id === workspace.owner._id ||
-            window?.__USER__?.email === workspace.owner.email) && (
-            <div className={styles["section"]}>
-              <h2>Inviter un membre</h2>
-              <form
-                className={styles["form"]}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleInvite();
+        {isAdminOrOwner && (
+          <div className={styles["section"]}>
+            <h2>Inviter un membre</h2>
+            <form
+              className={styles["form"]}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleInvite();
+              }}
+              autoComplete="off"
+            >
+              <input
+                type="email"
+                placeholder="Email du membre"
+                value={inviteEmail}
+                onChange={(e) => {
+                  setInviteEmail(e.target.value);
+                  // Réinitialise le message de succès à chaque saisie
+                  if (inviteSuccess) setInviteSuccess(null);
                 }}
-                autoComplete="off"
+                className={
+                  styles["input"] +
+                  (inviteError ? " " + styles["inputError"] : "")
+                }
+                required
+                disabled={inviteLoading}
+              />
+              <button
+                type="submit"
+                className={styles["button"]}
+                disabled={inviteLoading}
               >
-                <input
-                  type="email"
-                  placeholder="Email du membre"
-                  value={inviteEmail}
-                  onChange={(e) => {
-                    setInviteEmail(e.target.value);
-                    // Réinitialise le message de succès à chaque saisie
-                    if (inviteSuccess) setInviteSuccess(null);
-                  }}
-                  className={
-                    styles["input"] +
-                    (inviteError ? " " + styles["inputError"] : "")
-                  }
-                  required
-                  disabled={inviteLoading}
-                />
-                <button
-                  type="submit"
-                  className={styles["button"]}
-                  disabled={inviteLoading}
-                >
-                  {inviteLoading ? "Envoi..." : "Inviter"}
-                </button>
-              </form>
-              {inviteError && (
-                <div className={styles["error"]}>{inviteError}</div>
-              )}
-              {inviteSuccess && !inviteError && (
-                <div className={styles["success"]}>{inviteSuccess}</div>
-              )}
-            </div>
-          )}
+                {inviteLoading ? "Envoi..." : "Inviter"}
+              </button>
+            </form>
+            {inviteError && (
+              <div className={styles["error"]}>{inviteError}</div>
+            )}
+            {inviteSuccess && !inviteError && (
+              <div className={styles["success"]}>{inviteSuccess}</div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
