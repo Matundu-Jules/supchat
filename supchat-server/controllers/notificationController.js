@@ -4,7 +4,9 @@ exports.getNotifications = async (req, res) => {
   try {
     const notifs = await Notification.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
-      .populate("messageId");
+      .populate("messageId")
+      .populate("workspaceId", "name")
+      .populate("channelId", "name");
     res.status(200).json(notifs);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
