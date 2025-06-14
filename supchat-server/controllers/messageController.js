@@ -1,6 +1,12 @@
 const Message = require("../models/Message"); // Assure-toi que le modèle Message existe
 const Channel = require("../models/Channel"); // Assure-toi que le modèle Channel existe
 const { getIo } = require("../socket");
+const User = require("../models/User");
+const Notification = require("../models/Notification");
+const nodemailer = require("nodemailer");
+const React = require("react");
+const { renderToStaticMarkup } = require("react-dom/server");
+const NotificationEmail = require("../emails/NotificationEmail");
 
 // ✅ Envoyer un message dans un canal
 exports.sendMessage = async (req, res) => {
@@ -13,7 +19,7 @@ exports.sendMessage = async (req, res) => {
         .json({ message: "Le message ne peut pas être vide." });
     }
 
-    const channel = await Channel.findById(channelId);
+    const channel = await Channel.findById(channelId).populate("members");
     if (!channel) {
       return res.status(404).json({ message: "Canal non trouvé." });
     }
@@ -25,11 +31,65 @@ exports.sendMessage = async (req, res) => {
     });
 
     await message.save();
+    const io = getIo();
     try {
-      const io = getIo();
       io.to(channelId).emit("newMessage", message);
     } catch (e) {
       console.error("Socket emit error", e);
+    }
+
+    const mentions = Array.from(
+      new Set(text.match(/@([a-zA-Z0-9_-]+)/g)?.map((m) => m.slice(1)) || [])
+    );
+    const mentionedUsers = await User.find({ name: { $in: mentions } });
+    for (const user of mentionedUsers) {
+      const notif = new Notification({
+        userId: user._id,
+        messageId: message._id,
+        channelId,
+        type: "mention",
+      });
+      await notif.save();
+      io.to(`user_${user._id}`).emit("notification", notif);
+      const room = io.sockets.adapter.rooms.get(`user_${user._id}`);
+      if (!room || room.size === 0) {
+        const html = renderToStaticMarkup(
+          React.createElement(NotificationEmail, {
+            userName: user.name || user.email,
+            messageText: text,
+          })
+        );
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASS,
+          },
+        });
+        await transporter.sendMail({
+          from: `"SupChat" <${process.env.GMAIL_USER}>`,
+          to: user.email,
+          subject: "Nouvelle mention SupChat",
+          html,
+        });
+      }
+    }
+
+    if (channel.members && channel.members.length) {
+      for (const member of channel.members) {
+        if (String(member._id) === String(req.user.id)) continue;
+        if (mentionedUsers.find((u) => String(u._id) === String(member._id))) {
+          continue;
+        }
+        const notif = new Notification({
+          userId: member._id,
+          messageId: message._id,
+          channelId,
+          type: "message",
+        });
+        await notif.save();
+        io.to(`user_${member._id}`).emit("notification", notif);
+      }
     }
 
     return res.status(201).json({ message: "Message envoyé.", data: message });

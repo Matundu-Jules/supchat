@@ -19,6 +19,14 @@ function initSocket(server, allowedOrigins = ["http://localhost:5173", "http://l
     socket.on("leaveChannel", (channelId) => {
       if (channelId) socket.leave(channelId);
     });
+
+    socket.on("subscribeNotifications", (userId) => {
+      if (userId) socket.join(`user_${userId}`);
+    });
+
+    socket.on("unsubscribeNotifications", (userId) => {
+      if (userId) socket.leave(`user_${userId}`);
+    });
   });
 
   return io;

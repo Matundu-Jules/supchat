@@ -6,11 +6,13 @@ const workspaceRoutes = require('./workspace.Routes')
 const channelRoutes = require('./channel.Routes')
 const messageRoutes = require('./message.Routes')
 const permissionRoutes = require('./permission.Routes')
+const notificationRoutes = require('./notification.Routes')
 
 router.use('/auth', authRoutes)
 router.use('/workspaces', workspaceRoutes)
 router.use('/channels', channelRoutes)
 router.use('/messages', messageRoutes)
 router.use('/permissions', permissionRoutes)
+router.use('/notifications', notificationRoutes)
 
 module.exports = router
