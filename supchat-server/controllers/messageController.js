@@ -54,6 +54,9 @@ exports.sendMessage = async (req, res) => {
       channelId,
       userId: req.user.id, // L'ID de l'utilisateur qui envoie le message
       text,
+      hashtags: Array.from(
+        new Set(text.match(/#([a-zA-Z0-9_-]+)/g)?.map((h) => h.slice(1)) || [])
+      ),
     });
 
     if (req.file) {
@@ -241,6 +244,68 @@ exports.getMessageById = async (req, res) => {
   }
 };
 
+// ✅ Mettre à jour un message (auteur ou admin workspace)
+exports.updateMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ message: "Message non trouvé." });
+    }
+
+    const channel = await Channel.findById(message.channelId || message.channel);
+    if (!channel) {
+      return res.status(404).json({ message: "Canal non trouvé." });
+    }
+
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace non trouvé." });
+    }
+
+    let authorized =
+      String(message.userId) === req.user.id || req.user.role === "admin";
+
+    if (!authorized) {
+      const perm = await Permission.findOne({
+        userId: req.user.id,
+        workspaceId: workspace._id,
+      });
+      if (perm && perm.role === "admin") authorized = true;
+    }
+
+    if (!authorized) {
+      return res.status(403).json({ message: "Action non autorisée." });
+    }
+
+    if (text) {
+      message.text = text;
+      message.hashtags = Array.from(
+        new Set(text.match(/#([a-zA-Z0-9_-]+)/g)?.map((h) => h.slice(1)) || [])
+      );
+    }
+
+    if (req.file) {
+      message.file = `/uploads/${req.file.filename}`;
+      message.filename = req.file.originalname;
+      message.mimetype = req.file.mimetype;
+      message.size = req.file.size;
+    }
+
+    await message.save();
+
+    const io = getIo();
+    io
+      .to(String(message.channelId || message.channel))
+      .emit("messageEdited", message);
+
+    res.status(200).json(message);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur.", error });
+  }
+};
+
 // ✅ Supprimer un message (Seul l'auteur ou un admin peut le faire)
 exports.deleteMessage = async (req, res) => {
   try {
@@ -251,15 +316,36 @@ exports.deleteMessage = async (req, res) => {
       return res.status(404).json({ message: "Message non trouvé." });
     }
 
-    // Vérifier si l'utilisateur est l'auteur ou un admin
-    if (
-      message.userId.toString() !== req.user.id &&
-      req.user.role !== "admin"
-    ) {
+    const channel = await Channel.findById(message.channelId || message.channel);
+    if (!channel) {
+      return res.status(404).json({ message: "Canal non trouvé." });
+    }
+
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace non trouvé." });
+    }
+
+    let authorized =
+      message.userId.toString() === req.user.id || req.user.role === "admin";
+
+    if (!authorized) {
+      const perm = await Permission.findOne({
+        userId: req.user.id,
+        workspaceId: workspace._id,
+      });
+      if (perm && perm.role === "admin") authorized = true;
+    }
+
+    if (!authorized) {
       return res.status(403).json({ message: "Action non autorisée." });
     }
 
     await Message.findByIdAndDelete(id);
+    const io = getIo();
+    io
+      .to(String(message.channelId || message.channel))
+      .emit("messageDeleted", { _id: id, channelId: message.channelId });
     return res.status(200).json({ message: "Message supprimé." });
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur.", error });
