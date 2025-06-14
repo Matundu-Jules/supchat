@@ -10,6 +10,16 @@ const UserSchema = new mongoose.Schema({
     },
     password: String,
     avatar: String,
+    theme: {
+        type: String,
+        enum: ['light', 'dark'],
+        default: 'light',
+    },
+    status: {
+        type: String,
+        enum: ['online', 'away', 'busy', 'offline'],
+        default: 'online',
+    },
     googleId: String,
     facebookId: String,
     resetPasswordToken: { type: String },

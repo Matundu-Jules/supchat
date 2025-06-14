@@ -90,6 +90,15 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
         >
           Recherche
         </NavLink>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `${styles["navLink"]} ${isActive ? styles["active"] : ""}`
+          }
+          onClick={() => setMenuOpen(false)}
+        >
+          Paramètres
+        </NavLink>
         {/* Logout button only visible in the hamburger menu on mobile */}
         <div className={styles["logoutMobile"]}>
           {user && (
@@ -120,6 +129,9 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           <>
             {/* Username is only visible on desktop */}
             <span className={styles["username"]}>{user.name}</span>
+            <NavLink to="/settings" className={styles["settingsLink"]}>
+              Paramètres
+            </NavLink>
             <button
               className={styles["logoutBtn"] + " " + styles["logoutDesktop"]}
               onClick={handleLogout}
