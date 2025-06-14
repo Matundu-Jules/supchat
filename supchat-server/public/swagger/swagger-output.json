@@ -627,68 +627,9 @@
         }
       }
     },
-    "/api/channels/": {
-      "post": {
-        "description": "",
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "example": "any"
-                  },
-                  "workspaceId": {
-                    "example": "any"
-                  },
-                  "description": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
     "/api/channels/{id}": {
       "get": {
-        "description": "",
+        "description": "Get channel by id",
         "parameters": [
           {
             "name": "id",
@@ -701,7 +642,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Channel"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"
@@ -712,7 +660,7 @@
         }
       },
       "delete": {
-        "description": "",
+        "description": "Delete channel",
         "parameters": [
           {
             "name": "id",
@@ -734,11 +682,9 @@
             "description": "Internal Server Error"
           }
         }
-      }
-    },
-    "/api/channels/edit/{id}": {
+      },
       "put": {
-        "description": "",
+        "description": "Update channel",
         "parameters": [
           {
             "name": "id",
@@ -751,7 +697,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Channel"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"
@@ -764,15 +717,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "example": "any"
-                  },
-                  "description": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/ChannelUpdate"
               }
             }
           }
@@ -1040,6 +985,160 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/channels": {
+      "post": {
+        "description": "Create a channel",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Channel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "List channels of a workspace",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Channel"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "64b0fded1c9e3d1a2f1a1234"
+          },
+          "name": {
+            "type": "string",
+            "example": "general"
+          },
+          "workspace": {
+            "type": "string",
+            "example": "64b0fded1c9e3d1a2f1a5678"
+          },
+          "description": {
+            "type": "string",
+            "example": "General discussion channel"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "example": "public"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ChannelCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "workspaceId",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "support"
+          },
+          "workspaceId": {
+            "type": "string",
+            "example": "64b0fded1c9e3d1a2f1a5678"
+          },
+          "description": {
+            "type": "string",
+            "example": "Support channel"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "example": "public"
+          }
+        }
+      },
+      "ChannelUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "support"
+          },
+          "description": {
+            "type": "string",
+            "example": "New description"
           }
         }
       }
