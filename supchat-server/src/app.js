@@ -107,13 +107,17 @@ const mongoUri =
         MONGO_DB || 'supchat'
     }?authSource=${MONGO_AUTH_SOURCE || 'admin'}`
 
-mongoose
-    .connect(mongoUri)
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => {
-        console.error('MongoDB connection error:', err)
-        process.exit(1)
-    })
+if (process.env.NODE_ENV !== 'test') {
+    mongoose
+        .connect(mongoUri)
+        .then(() => console.log('MongoDB connected'))
+        .catch((err) => {
+            console.error('MongoDB connection error:', err)
+            process.exit(1)
+        })
+} else {
+    console.log('MongoDB connection skipped in test environment')
+}
 
 // ==== ROUTES ==== //
 const apiRoutes = require('../routes/index')
