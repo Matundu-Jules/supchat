@@ -3,6 +3,7 @@ const Channel = require("../models/Channel"); // Assure-toi que le modèle Chann
 const { getIo } = require("../socket");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Permission = require("../models/Permission");
 const nodemailer = require("nodemailer");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -22,6 +23,23 @@ exports.sendMessage = async (req, res) => {
     const channel = await Channel.findById(channelId).populate("members");
     if (!channel) {
       return res.status(404).json({ message: "Canal non trouvé." });
+    }
+
+    const perm = await Permission.findOne({
+      userId: req.user.id,
+      workspaceId: channel.workspace,
+    });
+
+    if (!perm || perm.permissions?.canPost === false) {
+      return res.status(403).json({ message: "Accès refusé." });
+    }
+
+    const channelRole = perm.channelRoles?.find(
+      (c) => String(c.channelId) === String(channel._id)
+    );
+    const effectiveRole = channelRole ? channelRole.role : perm.role;
+    if (effectiveRole === "invité") {
+      return res.status(403).json({ message: "Accès refusé." });
     }
 
     const message = new Message({
