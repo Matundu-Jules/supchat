@@ -31,7 +31,7 @@ export default function MessagesScreen() {
   const fetchMessages = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/messages?channelId=${channelId}`
+        `http://localhost:3000/api/messages/channel/${channelId}`
       );
       setMessages(res.data.reverse());
     } catch (err) {
