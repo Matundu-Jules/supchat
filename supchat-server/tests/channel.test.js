@@ -7,10 +7,10 @@ describe("Test des routes Channel", () => {
   const workspaceId = "507f191e810c19729de860ea";
 
   it("Crée un nouveau canal", async () => {
-    const res = await request(app).post("/api/channels/create").send({
+    const res = await request(app).post("/api/channels").send({
       name: "Général",
       type: "public",
-      workspaceId,
+      workspaceId: "507f191e810c19729de860ea",
     });
 
     expect(res.statusCode).toBe(201);
@@ -25,6 +25,13 @@ describe("Test des routes Channel", () => {
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.some((c) => c.workspace === workspaceId)).toBe(true);
+  });
+
+  it("Met à jour un canal", async () => {
+    const res = await request(app)
+      .put(`/api/channels/${channelId}`)
+      .send({ name: "Général 2" });
+    expect(res.statusCode).toBe(200);
   });
 
   it("Récupère un canal", async () => {
