@@ -104,3 +104,7 @@
   font-size: var(--font-size-m);
   text-align: center;
 }
+
+.inputError {
+  border: 1.5px solid var(--color-error) !important;
+}

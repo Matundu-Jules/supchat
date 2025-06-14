@@ -28,6 +28,10 @@ export function useWorkspacePageLogic() {
     isPublic: boolean;
   }>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editErrors, setEditErrors] = useState<{
+    name?: string;
+    description?: string;
+  }>({});
   const navigate = useNavigate();
 
   const handleAccess = (workspace: any) => {
@@ -55,15 +59,31 @@ export function useWorkspacePageLogic() {
     e.preventDefault();
     if (!editModal) return;
     const form = e.target as HTMLFormElement;
-    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+    const name = (
+      form.elements.namedItem('name') as HTMLInputElement
+    ).value.trim();
     const description = (
       form.elements.namedItem('description') as HTMLInputElement
-    ).value;
+    ).value.trim();
     const isPublic = (form.elements.namedItem('isPublic') as HTMLInputElement)
       .checked;
 
+    const errors: { name?: string; description?: string } = {};
+    if (!name) {
+      errors.name = 'Le nom est requis.';
+    } else if (name.length < 3) {
+      errors.name = 'Le nom doit contenir au moins 3 caractères.';
+    }
+    if (description.length > 0 && description.length < 3) {
+      errors.description =
+        'La description doit contenir au moins 3 caractères ou être vide.';
+    }
+    setEditErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     await updateWorkspaceApi(editModal.id, { name, description, isPublic });
     setEditModal(null);
+    setEditErrors({});
     fetchWorkspaces();
   };
 
@@ -108,5 +128,7 @@ export function useWorkspacePageLogic() {
     handleEdit,
     handleEditSubmit,
     handleDelete,
+    editErrors,
+    setEditErrors,
   };
 }
