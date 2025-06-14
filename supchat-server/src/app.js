@@ -10,6 +10,7 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
+const path = require('path')
 
 dotenv.config()
 
@@ -47,6 +48,7 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 // ==== CLIENTID ==== //
 app.use((req, res, next) => {
