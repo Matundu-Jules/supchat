@@ -2,6 +2,7 @@
 
 const express = require('express')
 const mongoose = require('mongoose')
+const http = require('http')
 const dotenv = require('dotenv')
 const swaggerUi = require('swagger-ui-express')
 const swaggerFile = require('../public/swagger/swagger-output.json')
@@ -14,6 +15,9 @@ dotenv.config()
 
 const app = express()
 const port = process.env.PORT
+const server = http.createServer(app)
+const { initSocket } = require('../socket')
+const io = initSocket(server, ['http://localhost:5173', 'http://localhost:3000'])
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000']
 
@@ -130,7 +134,7 @@ app.use((err, req, res, next) => {
 })
 
 // ==== START ==== //
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
     console.log(
         `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
@@ -140,6 +144,8 @@ app.listen(port, () => {
 // Export for controllers (needed for generateCsrfToken in authController)
 module.exports = {
     app,
+    io,
+    server,
     generateCsrfToken,
     csrfMiddleware,
     invalidCsrfTokenError,
