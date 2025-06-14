@@ -5,6 +5,10 @@ import styles from "./WorkspaceDetailPage.module.scss";
 import Loader from "@components/Loader";
 import { useSelector } from "react-redux";
 import type { RootState } from "@store/store";
+import ChannelList from "@components/Channel/ChannelList";
+import ChannelCreateForm from "@components/Channel/ChannelCreateForm";
+import { useChannels } from "@hooks/useChannels";
+import { useNavigate } from "react-router-dom";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +25,14 @@ const WorkspaceDetailPage: React.FC = () => {
     setInviteSuccess,
     handleInvite,
   } = useWorkspaceDetails(id || "");
+  const navigate = useNavigate();
+  const {
+    channels,
+    loading: channelsLoading,
+    error: channelsError,
+    fetchChannels,
+    handleCreateChannel,
+  } = useChannels(id || "");
 
   if (loading) {
     return (
@@ -51,6 +63,10 @@ const WorkspaceDetailPage: React.FC = () => {
     user &&
     workspace.owner &&
     (user.role === "admin" || user.email === workspace.owner.email);
+
+  const handleChannelAccess = (channel: any) => {
+    navigate(`/message?channel=${channel._id}`);
+  };
 
   return (
     <section className={styles["container"]}>
@@ -131,6 +147,29 @@ const WorkspaceDetailPage: React.FC = () => {
             {inviteSuccess && !inviteError && (
               <div className={styles["success"]}>{inviteSuccess}</div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Section canaux */}
+      <div className={styles["sectionGrid"]}>
+        <div className={styles["section"]}>
+          <h2>Canaux</h2>
+          {channelsLoading ? (
+            <Loader />
+          ) : channelsError ? (
+            <p className={styles["error"]}>{channelsError}</p>
+          ) : (
+            <ChannelList channels={channels} onAccess={handleChannelAccess} />
+          )}
+        </div>
+        {isAdminOrOwner && (
+          <div className={styles["section"]}>
+            <ChannelCreateForm
+              workspaceId={id || ""}
+              onCreate={handleCreateChannel}
+              onCreated={fetchChannels}
+            />
           </div>
         )}
       </div>
