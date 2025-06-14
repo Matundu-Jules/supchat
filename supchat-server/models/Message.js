@@ -12,8 +12,9 @@ const MessageSchema = new mongoose.Schema({
   filename: String,
   mimetype: String,
   size: Number,
+  hashtags: [String],
 });
 
-MessageSchema.index({ text: "text", content: "text" });
+MessageSchema.index({ text: "text", content: "text", hashtags: 1 });
 
 module.exports = mongoose.model("Message", MessageSchema);
