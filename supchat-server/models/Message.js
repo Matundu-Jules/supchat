@@ -15,6 +15,6 @@ const MessageSchema = new mongoose.Schema({
   hashtags: [String],
 });
 
-MessageSchema.index({ text: "text", content: "text", hashtags: 1 });
+MessageSchema.index({ text: "text", content: "text" });
 
 module.exports = mongoose.model("Message", MessageSchema);
