@@ -143,16 +143,12 @@ app.use((err, req, res, next) => {
 })
 
 // ==== START ==== //
-if (process.env.NODE_ENV !== 'test') {
-    server.listen(port, () => {
-        console.log(`Server running on http://localhost:${port}`)
-        console.log(
-            `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
-        )
-    })
-} else {
-    console.log('Server listen skipped in test environment')
-}
+server.listen(port, () => {
+    console.log(`Server listening on port ${port}`)
+    console.log(
+        `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
+    )
+})
 
 // Export for controllers (needed for generateCsrfToken in authController)
 module.exports = {
