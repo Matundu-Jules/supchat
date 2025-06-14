@@ -1,6 +1,17 @@
 import React from "react";
 import styles from "./NotificationList.module.scss";
 
+function getNotificationLabel(n: any) {
+  switch (n.type) {
+    case "workspace_invite":
+      return `Invité à rejoindre ${n.workspaceId?.name}`;
+    case "channel_invite":
+      return `Invité à rejoindre ${n.channelId?.name}`;
+    default:
+      return n.messageId?.text || "Nouvelle activité";
+  }
+}
+
 interface NotificationListProps {
   items: any[];
   onRead?: (id: string) => void;
@@ -19,7 +30,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ items, onRead }) =>
           className={`${styles["item"]} ${!n.read ? styles["unread"] : ""}`}
         >
           <span className={styles["text"]}>
-            {(n.messageId?.text || "Nouvelle activité").slice(0, 80)}
+            {getNotificationLabel(n).slice(0, 80)}
           </span>
           {!n.read && onRead && (
             <button
