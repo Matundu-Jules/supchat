@@ -80,6 +80,9 @@ app.get('/api/csrf-token', (req, res) => {
 
 // Exclure CSRF sur les routes publiques de reset
 app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'test') {
+        return next()
+    }
     if (
         req.path === '/api/auth/forgot-password' ||
         req.path === '/api/auth/reset-password'
@@ -140,12 +143,16 @@ app.use((err, req, res, next) => {
 })
 
 // ==== START ==== //
-server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`)
-    console.log(
-        `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
-    )
-})
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`)
+        console.log(
+            `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
+        )
+    })
+} else {
+    console.log('Server listen skipped in test environment')
+}
 
 // Export for controllers (needed for generateCsrfToken in authController)
 module.exports = {
