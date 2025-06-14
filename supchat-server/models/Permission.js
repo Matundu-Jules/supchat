@@ -17,6 +17,20 @@ const PermissionSchema = new mongoose.Schema(
       enum: ["admin", "membre", "invité"],
       default: "membre",
     },
+    channelRoles: [
+      {
+        channelId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Channel",
+          required: true,
+        },
+        role: {
+          type: String,
+          enum: ["admin", "membre", "invité"],
+          default: "membre",
+        },
+      },
+    ],
     permissions: {
       canPost: { type: Boolean, default: true },
       canDeleteMessages: { type: Boolean, default: false },

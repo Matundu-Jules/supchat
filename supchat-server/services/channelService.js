@@ -18,6 +18,26 @@ const isAdminOrOwner = async (userId, workspaceId) => {
   return !!perm;
 };
 
+const isChannelAdmin = async (userId, channel) => {
+  const workspace = await Workspace.findById(channel.workspace);
+  if (!workspace) {
+    throw new Error("WORKSPACE_NOT_FOUND");
+  }
+  if (String(workspace.owner) === String(userId)) {
+    return true;
+  }
+  const perm = await Permission.findOne({
+    userId,
+    workspaceId: workspace._id,
+  });
+  if (!perm) return false;
+  if (perm.role === "admin") return true;
+  const chanRole = perm.channelRoles?.find(
+    (c) => String(c.channelId) === String(channel._id)
+  );
+  return chanRole && chanRole.role === "admin";
+};
+
 const create = async ({ name, workspaceId, description, type }, user) => {
   const allowed = await isAdminOrOwner(user.id, workspaceId);
   if (!allowed) {
@@ -46,7 +66,9 @@ const update = async (id, { name, description }, user) => {
   if (!channel) {
     return null;
   }
-  const allowed = await isAdminOrOwner(user.id, channel.workspace);
+  const allowed =
+    (await isAdminOrOwner(user.id, channel.workspace)) ||
+    (await isChannelAdmin(user.id, channel));
   if (!allowed) {
     throw new Error("NOT_ALLOWED");
   }
@@ -65,7 +87,9 @@ const remove = async (id, user) => {
   if (!channel) {
     return null;
   }
-  const allowed = await isAdminOrOwner(user.id, channel.workspace);
+  const allowed =
+    (await isAdminOrOwner(user.id, channel.workspace)) ||
+    (await isChannelAdmin(user.id, channel));
   if (!allowed) {
     throw new Error("NOT_ALLOWED");
   }
