@@ -106,6 +106,15 @@ const App: React.FC = () => {
       });
   }, [dispatch]);
 
+  // Fallback to prevent infinite loading if the API doesn't respond
+  useEffect(() => {
+    if (!authLoading) return;
+    const timeout = setTimeout(() => {
+      dispatch(setAuthLoading(false));
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [authLoading, dispatch]);
+
   if (authLoading) {
     return <Loader />;
   }
