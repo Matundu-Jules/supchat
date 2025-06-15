@@ -55,18 +55,37 @@ const create = async ({ name, workspaceId, description, type }, user) => {
     if (!canCreate) {
         throw new Error('NOT_ALLOWED')
     }
-
     const channel = new Channel({
         name,
         workspace: workspaceId,
         description: description || '',
         type,
+        owner: user.id,
         members: [user.id],
     })
     await channel.save()
+
+    // Ajouter le canal au workspace
     await Workspace.findByIdAndUpdate(workspaceId, {
         $addToSet: { channels: channel._id },
     })
+
+    // CORRECTIF: Donner automatiquement le rôle admin du canal au créateur
+    // Vérifier si l'utilisateur a déjà un rôle spécifique pour ce canal
+    const existingChannelRole = perm.channelRoles?.find(
+        (cr) => String(cr.channelId) === String(channel._id)
+    )
+
+    if (!existingChannelRole) {
+        // Ajouter le rôle admin pour ce canal
+        perm.channelRoles = perm.channelRoles || []
+        perm.channelRoles.push({
+            channelId: channel._id,
+            role: 'admin',
+        })
+        await perm.save()
+    }
+
     return channel
 }
 
@@ -86,7 +105,10 @@ const findByWorkspace = async (workspaceId, user) => {
         throw new Error('NOT_ALLOWED')
     }
 
-    const allChannels = await Channel.find({ workspace: workspaceId })
+    const allChannels = await Channel.find({ workspace: workspaceId }).populate(
+        'owner',
+        'username email'
+    )
     // Si c'est un invité, filtrer les channels selon ses permissions
     if (perm && perm.role === 'invité') {
         // Les invités ne voient que les channels où ils sont explicitement membres
@@ -102,7 +124,7 @@ const findByWorkspace = async (workspaceId, user) => {
 }
 
 const findById = (id) => {
-    return Channel.findById(id)
+    return Channel.findById(id).populate('owner', 'username email')
 }
 
 const update = async (id, { name, description }, user) => {

@@ -1,10 +1,136 @@
 .bar {
-  margin-top: 4px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  color: var(--color-text);
 }
 
+/* Bouton de like principal */
+.likeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.3rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.likeBtn:hover {
+  background: var(--color-bg-secondary);
+  transform: translateY(-1px);
+  color: var(--color-text);
+}
+
+/* État liked */
+.likeBtn.liked {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.likeBtn.liked:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* Icône de like */
+.likeIcon {
+  font-size: 1.4rem;
+  transition: all 0.3s ease;
+}
+
+.likeBtn.liked .likeIcon {
+  color: var(--color-primary);
+}
+
+/* Compteur */
+.likeCount {
+  font-size: 1.2rem;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Animations */
+@keyframes likeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes unlikeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.likeBtn.animating .likeIcon {
+  animation: likeAnimation 0.4s ease;
+}
+
+.likeBtn.unanimating .likeIcon {
+  animation: unlikeAnimation 0.3s ease;
+}
+
+/* Bouton ancien pour rétrocompatibilité */
 .btn {
   margin-right: 4px;
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--color-bg-secondary);
+}
+
+/* Bouton "+" moderne et rond */
+.addBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary, #3b82f6);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.addBtn:hover {
+  background: var(--color-primary-dark, #2563eb);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.addBtn:active {
+  transform: scale(0.95);
 }

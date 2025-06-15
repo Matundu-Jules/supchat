@@ -67,6 +67,20 @@
     }
   }
 
+  &-success {
+    background: var(--color-success);
+    color: #f9fafb;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 1rem 2rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #22c55eb2;
+      font-weight: 700;
+    }
+  }
+
   &-danger {
     background: var(--color-error);
     color: var(--color-text-inverse);
