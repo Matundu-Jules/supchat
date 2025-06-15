@@ -12,6 +12,7 @@ type Workspace = {
     isMember: boolean;
     isOwner: boolean;
     hasRequestedJoin: boolean;
+    isInvited?: boolean; // Ajouté pour la gestion des invitations
   };
 };
 
@@ -24,6 +25,10 @@ type WorkspaceListProps = {
   onEdit?: (workspace: Workspace) => void;
   onDelete?: (workspace: Workspace) => void;
   onRequestJoin?: (workspace: Workspace) => void;
+  onAcceptInvite?: (workspace: Workspace) => void; // Ajouté pour accepter une invitation
+  showOnlyJoinActions?: boolean;
+  requestJoinLoading?: boolean;
+  acceptInviteLoading?: string | null; // Ajouté pour gérer le chargement du bouton 'Rejoindre'
 };
 
 const WorkspaceList: React.FC<WorkspaceListProps> = ({
@@ -35,6 +40,10 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
   onEdit,
   onDelete,
   onRequestJoin,
+  onAcceptInvite, // Ajouté
+  showOnlyJoinActions = false,
+  requestJoinLoading = false,
+  acceptInviteLoading = null, // Ajouté
 }) => {
   const lowered = filter ? filter.toLowerCase() : "";
   const filtered = lowered
@@ -67,13 +76,22 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               (m) => (m._id || m) === user._id || (m.email || m) === user.email
             ));
         const hasRequestedJoin = ws.userStatus?.hasRequestedJoin || false;
+        const isInvited = ws.userStatus?.isInvited || false;
 
         // Invitation : seuls owner ou admin peuvent inviter
         const canInvite = isOwner || isAdmin;
 
         // Peut demander à rejoindre : workspace public, utilisateur connecté, pas déjà membre, pas propriétaire, pas déjà demandé
         const canRequestJoin =
-          user && ws.isPublic && !isMember && !isOwner && !hasRequestedJoin;
+          user &&
+          ws.isPublic &&
+          !isMember &&
+          !isOwner &&
+          !hasRequestedJoin &&
+          !isInvited;
+
+        // Peut rejoindre via invitation : utilisateur invité, pas encore membre
+        const canAcceptInvite = isInvited && !isMember;
 
         return (
           <li key={ws._id} className={styles["workspace-list-item"]}>
@@ -87,6 +105,11 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               >
                 {ws.isPublic ? "Public" : "Privé"}
               </span>
+              {isInvited && !isMember && (
+                <span className={styles["workspace-invited-badge"]}>
+                  <i className="fa-solid fa-envelope"></i> Invitation reçue
+                </span>
+              )}
             </div>
             {ws.description && (
               <div className={styles["workspace-description"]}>
@@ -94,34 +117,72 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               </div>
             )}
             <div className={styles["workspace-actions"]}>
-              <button className={`btn`} onClick={() => onAccess?.(ws)}>
-                Accéder
-              </button>
-
+              {/* Action principale : Accéder (seulement si on est membre/propriétaire et pas en mode joinActions) */}
+              {!showOnlyJoinActions && (isMember || isOwner) && (
+                <button className={`btn`} onClick={() => onAccess?.(ws)}>
+                  Accéder
+                </button>
+              )}
+              {/* Action de demande de rejoindre (pour les workspaces publics non rejoints) */}
               {canRequestJoin && (
                 <button
                   onClick={() => onRequestJoin?.(ws)}
                   className={`btn ${styles["btn-request-join"]}`}
-                  title="Demander à rejoindre"
-                  aria-label="Demander à rejoindre"
+                  title="Demander à rejoindre ce workspace"
+                  aria-label="Demander à rejoindre ce workspace"
                   type="button"
+                  disabled={requestJoinLoading}
                 >
-                  Demander à rejoindre
+                  {requestJoinLoading ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-user-plus"></i>
+                      Demander à rejoindre
+                    </>
+                  )}
                 </button>
               )}
-
+              {/* Action : Rejoindre le workspace si invité */}
+              {canAcceptInvite && (
+                <button
+                  onClick={() => onAcceptInvite?.(ws)}
+                  className={`btn ${styles["btn-accept-invite"]}`}
+                  title="Rejoindre ce workspace (invitation)"
+                  aria-label="Rejoindre ce workspace (invitation)"
+                  type="button"
+                  disabled={acceptInviteLoading === ws._id}
+                >
+                  {acceptInviteLoading === ws._id ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>{" "}
+                      Rejoindre...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-door-open"></i> Rejoindre le
+                      workspace
+                    </>
+                  )}
+                </button>
+              )}
+              {/* État : Demande en attente */}
               {hasRequestedJoin && (
                 <span className={styles["request-pending"]}>
-                  Demande en cours...
+                  <i className="fa-solid fa-clock"></i>
+                  Demande en attente de validation
                 </span>
               )}
-
-              {canInvite && (
+              {/* Actions de gestion (inviter) - seulement pour les propriétaires/admins et pas en mode joinActions */}
+              {!showOnlyJoinActions && canInvite && (
                 <button
                   onClick={() => onInvite?.(ws)}
                   className={styles["workspace-action-icon"]}
-                  title="Inviter"
-                  aria-label="Inviter"
+                  title="Inviter des utilisateurs"
+                  aria-label="Inviter des utilisateurs"
                   type="button"
                 >
                   <i
@@ -129,7 +190,7 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
                   ></i>
                 </button>
               )}
-              {(isOwner || isAdmin) && (
+              {!showOnlyJoinActions && (isOwner || isAdmin) && (
                 <>
                   <button
                     onClick={() => onEdit?.(ws)}

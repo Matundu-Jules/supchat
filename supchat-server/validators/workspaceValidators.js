@@ -33,6 +33,11 @@ const requestUserIdParamSchema = Joi.object({
     requestUserId: Joi.string().hex().length(24).required(),
 })
 
+const removeMemberParamSchema = Joi.object({
+    id: Joi.string().hex().length(24).required(),
+    userId: Joi.string().hex().length(24).required(),
+})
+
 module.exports = {
     createWorkspaceSchema,
     updateWorkspaceSchema,
@@ -41,4 +46,5 @@ module.exports = {
     requestJoinWorkspaceSchema,
     workspaceIdParamSchema,
     requestUserIdParamSchema,
+    removeMemberParamSchema,
 }

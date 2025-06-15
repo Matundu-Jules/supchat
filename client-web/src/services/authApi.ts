@@ -88,7 +88,7 @@ export async function changePassword(data: {
 }) {
   try {
     await fetchCsrfToken();
-    const { data: res } = await api.post('/auth/change-password', data);
+    const { data: res } = await api.patch('/auth/me/password', data);
     return res;
   } catch (err: any) {
     const msg = err?.response?.data?.message || err.message || 'Unknown error';

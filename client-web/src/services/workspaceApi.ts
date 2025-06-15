@@ -271,3 +271,27 @@ export async function removeMemberFromWorkspace(
     );
   }
 }
+
+/**
+ * Invite un invité avec accès limité à des channels spécifiques
+ */
+export async function inviteGuestToWorkspace(
+  workspaceId: string,
+  email: string,
+  allowedChannels: string[]
+) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.post(`/workspaces/${workspaceId}/invite-guest`, {
+      email,
+      allowedChannels,
+    });
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        "Erreur lors de l'invitation de l'invité"
+    );
+  }
+}

@@ -20,15 +20,20 @@ interface JoinRequest {
 interface JoinRequestsManagerProps {
   workspaceId: string;
   isOwnerOrAdmin: boolean;
+  onRequestsChange?: () => void; // Callback pour notifier les changements
 }
 
 const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   workspaceId,
   isOwnerOrAdmin,
+  onRequestsChange,
 }) => {
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [approving, setApproving] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fetchRequests = async () => {
     if (!isOwnerOrAdmin) return;
@@ -45,33 +50,52 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
     }
   };
   const handleApprove = async (requestUserId: string) => {
+    setApproving(requestUserId);
+    setError(null);
+    setSuccessMessage(null);
     try {
-      console.log("🔍 Frontend - Approbation demande:", {
-        workspaceId,
-        requestUserId,
-      });
       await approveJoinRequest(workspaceId, requestUserId);
-      await fetchRequests(); // Rafraîchir la liste
-      alert("Demande approuvée avec succès !");
+      await fetchRequests(); // Rafraîchir la liste locale
+      onRequestsChange?.(); // Notifier le parent des changements
+      setSuccessMessage("Demande approuvée avec succès !");
     } catch (err: any) {
-      console.error("❌ Frontend - Erreur approbation:", err);
-      alert(err.message || "Erreur lors de l'approbation");
+      console.error("Erreur lors de l'approbation:", err);
+      setError(err.message || "Erreur lors de l'approbation");
+    } finally {
+      setApproving(null);
     }
   };
-
   const handleReject = async (requestUserId: string) => {
+    setRejecting(requestUserId);
+    setError(null);
+    setSuccessMessage(null);
     try {
       await rejectJoinRequest(workspaceId, requestUserId);
-      await fetchRequests(); // Rafraîchir la liste
-      alert("Demande rejetée.");
+      await fetchRequests(); // Rafraîchir la liste locale
+      onRequestsChange?.(); // Notifier le parent des changements
+      setSuccessMessage("Demande rejetée avec succès.");
     } catch (err: any) {
-      alert(err.message || "Erreur lors du rejet");
+      console.error("Erreur lors du rejet:", err);
+      setError(err.message || "Erreur lors du rejet");
+    } finally {
+      setRejecting(null);
     }
   };
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, isOwnerOrAdmin]);
+
+  // Effacer les messages de succès après 5 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   if (!isOwnerOrAdmin) {
     return null;
@@ -93,10 +117,24 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
       </div>
     );
   }
-
   return (
     <div className={styles["container"]}>
       <h3>Demandes de rejoindre ({requests.length})</h3>
+
+      {/* Messages de succès/erreur */}
+      {successMessage && (
+        <div className={styles["success"]}>
+          <i className="fa-solid fa-check-circle"></i>
+          {successMessage}
+        </div>
+      )}
+      {error && (
+        <div className={styles["error"]}>
+          <i className="fa-solid fa-exclamation-circle"></i>
+          {error}
+        </div>
+      )}
+
       <div className={styles["requestsList"]}>
         {requests.map((request) => (
           <div key={request.userId._id} className={styles["requestItem"]}>
@@ -114,14 +152,36 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
               <button
                 onClick={() => handleApprove(request.userId._id)}
                 className={`${styles["button"]} ${styles["approve"]}`}
+                disabled={
+                  approving === request.userId._id ||
+                  rejecting === request.userId._id
+                }
               >
-                Accepter
+                {approving === request.userId._id ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Approbation...
+                  </>
+                ) : (
+                  "Accepter"
+                )}
               </button>
               <button
                 onClick={() => handleReject(request.userId._id)}
                 className={`${styles["button"]} ${styles["reject"]}`}
+                disabled={
+                  approving === request.userId._id ||
+                  rejecting === request.userId._id
+                }
               >
-                Rejeter
+                {rejecting === request.userId._id ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Rejet...
+                  </>
+                ) : (
+                  "Rejeter"
+                )}
               </button>
             </div>
           </div>

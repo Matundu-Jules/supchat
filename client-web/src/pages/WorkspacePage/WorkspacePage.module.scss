@@ -46,6 +46,62 @@
   font-size: 1.4rem;
 }
 
+// Nouvelles sections organisées
+.workspaceSections {
+  width: 100%;
+  max-width: 120rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.workspaceCategory {
+  width: 100%;
+
+  .categoryTitle {
+    font-size: var(--font-size-xxl);
+    color: var(--color-primary);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    i {
+      font-size: var(--font-size-xl);
+    }
+  }
+
+  .categoryDescription {
+    color: var(--color-text-secondary);
+    margin-bottom: 1.6rem;
+    font-size: var(--font-size-m);
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--color-text-secondary);
+
+  i {
+    font-size: 4rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.6rem;
+  }
+
+  h3 {
+    color: var(--color-text);
+    margin-bottom: 0.8rem;
+    font-size: var(--font-size-xl);
+  }
+
+  p {
+    font-size: var(--font-size-m);
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+}
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -125,4 +181,59 @@
   margin-top: 1.2rem;
   font-size: var(--font-size-m);
   text-align: center;
+}
+
+// Notifications
+.notification {
+  width: 100%;
+  max-width: 60rem;
+  margin: 1rem 0;
+}
+
+.notificationSuccess,
+.notificationError {
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--font-size-m);
+  position: relative;
+  box-shadow: var(--shadow-md);
+
+  i:first-child {
+    font-size: 1.2rem;
+  }
+}
+
+.notificationSuccess {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.notificationError {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.notificationClose {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  i {
+    font-size: 1rem;
+  }
 }

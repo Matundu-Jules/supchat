@@ -1,10 +1,11 @@
 const { doubleCsrf } = require('csrf-csrf')
 
-const isProd = process.env.NODE_ENV === 'production'
+const isProd =
+    process.env.NODE_ENV === 'production' && !process.env.CSRF_DEV_MODE
 const csrfCookieOptions = {
     httpOnly: false,
-    sameSite: 'strict',
-    secure: isProd,
+    sameSite: isProd ? 'strict' : 'lax', // Plus permissif en développement
+    secure: isProd, // Pas de HTTPS requis en développement
     maxAge: 7 * 24 * 60 * 60 * 1000,
 }
 
