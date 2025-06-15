@@ -4,20 +4,103 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-bg);
+  z-index: 9999;
 }
 
-.spinner {
-  width: 4rem;
-  height: 4rem;
-  border: 0.4rem solid var(--color-bg-secondary);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.logoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.logo {
+  width: 10rem;
+  height: 10rem;
+  animation: logoGlow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 1rem rgba(37, 99, 235, 0.3));
+}
+
+.loadingText {
+  font-family: var(--font-title);
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  background: linear-gradient(
+    45deg,
+    var(--color-primary),
+    var(--color-secondary),
+    var(--color-primary)
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: textGradient 3s ease-in-out infinite;
+}
+
+.loadingDots {
+  display: flex;
+  gap: 0.5rem;
+
+  span {
+    width: 0.8rem;
+    height: 0.8rem;
+    background: var(--color-primary);
+    border-radius: 50%;
+    animation: dotBounce 1.4s ease-in-out infinite;
+
+    &:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+}
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 1rem rgba(37, 99, 235, 0.3));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 2rem rgba(245, 158, 11, 0.4));
+  }
+}
+
+@keyframes textGradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes dotBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
   }
 }
