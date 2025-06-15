@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
             default: 'membre',
         },
         password: String,
+        hasPassword: { type: Boolean, default: false }, // Indique si l'utilisateur a défini un mot de passe
         avatar: String,
         theme: {
             type: String,

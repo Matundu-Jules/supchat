@@ -13,12 +13,22 @@ const PublicRoute: React.FC = () => {
     return <Loader />;
   }
 
-  // If the user is logged in => redirect to dashboard (or other)
+  // Si l'utilisateur est connecté via Google/Facebook mais n'a pas de mot de passe,
+  // le rediriger vers /set-password
+  if (
+    user &&
+    (user.googleId || user.facebookId) &&
+    user.hasPassword === false
+  ) {
+    return <Navigate to="/set-password" replace />;
+  }
+
+  // Si l'utilisateur est connecté normalement, rediriger vers le dashboard
   if (user) {
     return <Navigate to="/" replace />;
   }
 
-  // Otherwise, allowed to display the public page (login/register/etc)
+  // Sinon, autoriser l'affichage de la page publique (login/register/etc)
   return <Outlet />;
 };
 

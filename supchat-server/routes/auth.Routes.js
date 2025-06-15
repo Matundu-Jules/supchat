@@ -8,6 +8,7 @@ const {
     logoutAll,
     getUser,
     changePassword,
+    setPassword,
     deleteUser,
     googleLogin,
     facebookLogin,
@@ -36,6 +37,9 @@ router.get('/me', authMiddleware, getUser)
 
 // Changement du mot de passe de l'utilisateur connecté
 router.patch('/me/password', authMiddleware, changePassword)
+
+// Création d'un mot de passe pour les utilisateurs social login
+router.post('/set-password', authMiddleware, setPassword)
 
 // Suppression du compte utilisateur
 router.delete('/me', authMiddleware, deleteUser)

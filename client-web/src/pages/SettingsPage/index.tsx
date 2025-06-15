@@ -3,6 +3,7 @@ import { getAvatarUrl } from "@utils/avatarUtils";
 import { useNotificationPrefs } from "@hooks/useNotificationPrefs";
 import { useSettingsHandlers } from "@hooks/useSettingsHandlers";
 import NotificationPrefList from "@components/Notification/NotificationPrefList";
+import PasswordManagement from "@components/PasswordManagement";
 import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
@@ -276,11 +277,16 @@ const SettingsPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </section>
+          </section>{" "}
           {/* Section Notifications */}
           <section className={styles["settingsSection"]}>
             <h2>🔔 Notifications</h2>
             <NotificationPrefList items={prefs} onChange={updatePref} />
+          </section>
+          {/* Section Mot de passe */}
+          <section className={styles["settingsSection"]}>
+            <h2>🔑 Mot de passe</h2>
+            <PasswordManagement />
           </section>
           {/* Section Sécurité */}
           <section className={styles["settingsSection"]}>

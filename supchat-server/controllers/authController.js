@@ -189,15 +189,31 @@ exports.getUser = async (req, res) => {
         // Désactive tout le cache dès le début de la route
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
         res.set('Pragma', 'no-cache')
-        res.set('Expires', '0')
-
-        // req.user est injecté par le authMiddleware
+        res.set('Expires', '0') // req.user est injecté par le authMiddleware
         if (!req.user) {
             return res.status(404).json({ message: 'Utilisateur non trouvé.' })
         }
-        const { _id, name, email, role, createdAt } = req.user
+        const {
+            _id,
+            name,
+            email,
+            role,
+            createdAt,
+            googleId,
+            facebookId,
+            hasPassword,
+        } = req.user
 
-        res.status(200).json({ _id, name, email, role, createdAt })
+        res.status(200).json({
+            _id,
+            name,
+            email,
+            role,
+            createdAt,
+            googleId,
+            facebookId,
+            hasPassword: hasPassword || false,
+        })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur.', error })
     }
@@ -262,6 +278,7 @@ exports.deleteUser = async (req, res) => {
 exports.googleLogin = async (req, res) => {
     try {
         const { tokenId } = req.body
+
         const ticket = await client.verifyIdToken({
             idToken: tokenId,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -272,11 +289,21 @@ exports.googleLogin = async (req, res) => {
 
         if (!user) {
             // Création si aucun utilisateur avec cet email
-            user = new User({ name, email, googleId: sub })
+            user = new User({ name, email, googleId: sub, hasPassword: false })
             await user.save()
         } else if (!user.googleId) {
             // Si l'utilisateur existe mais n'a pas encore de googleId, on le lie
             user.googleId = sub
+            // Si l'utilisateur a un mot de passe existant, on garde hasPassword = true
+            if (!user.password) {
+                user.hasPassword = false
+            } else {
+                user.hasPassword = true
+            }
+            await user.save()
+        } else {
+            // L'utilisateur existe déjà avec googleId - vérifier hasPassword
+            user.hasPassword = !!user.password
             await user.save()
         }
 
@@ -284,12 +311,21 @@ exports.googleLogin = async (req, res) => {
         const refreshToken = generateRefreshToken(user)
 
         res.cookie('access', accessToken, accessCookieOptions)
-        res.cookie('refresh', refreshToken, refreshCookieOptions)
-
-        // Génère un nouveau token CSRF à chaque Google login
+        res.cookie('refresh', refreshToken, refreshCookieOptions) // Génère un nouveau token CSRF à chaque Google login
         generateCsrfToken(req, res, { overwrite: true })
 
-        return res.status(200).json({ user })
+        return res.status(200).json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                googleId: user.googleId,
+                facebookId: user.facebookId,
+                hasPassword: user.hasPassword || false,
+            },
+        })
     } catch (error) {
         res.status(500).json({
             message: "Erreur d'authentification Google",
@@ -313,13 +349,22 @@ exports.facebookLogin = async (req, res) => {
                     "Facebook ne retourne pas d'email pour cet utilisateur.",
             })
         }
-
         let user = await User.findOne({ email })
         if (!user) {
-            user = new User({ name, email, facebookId: id })
+            user = new User({ name, email, facebookId: id, hasPassword: false })
             await user.save()
         } else if (!user.facebookId) {
             user.facebookId = id
+            // Si l'utilisateur a un mot de passe existant, on garde hasPassword = true
+            if (!user.password) {
+                user.hasPassword = false
+            } else {
+                user.hasPassword = true
+            }
+            await user.save()
+        } else {
+            // L'utilisateur existe déjà avec facebookId - vérifier hasPassword
+            user.hasPassword = !!user.password
             await user.save()
         }
 
@@ -327,12 +372,21 @@ exports.facebookLogin = async (req, res) => {
         const jwtRefresh = generateRefreshToken(user)
 
         res.cookie('access', jwtAccess, accessCookieOptions)
-        res.cookie('refresh', jwtRefresh, refreshCookieOptions)
-
-        // Génère un nouveau token CSRF à chaque Facebook login
+        res.cookie('refresh', jwtRefresh, refreshCookieOptions) // Génère un nouveau token CSRF à chaque Facebook login
         generateCsrfToken(req, res, { overwrite: true })
 
-        return res.status(200).json({ user })
+        return res.status(200).json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                googleId: user.googleId,
+                facebookId: user.facebookId,
+                hasPassword: user.hasPassword || false,
+            },
+        })
     } catch (error) {
         res.status(500).json({
             message: "Erreur d'authentification Facebook",
@@ -500,14 +554,62 @@ exports.deleteUser = async (req, res) => {
         }
 
         // Supprime l'utilisateur de la base de données
-        await User.findByIdAndDelete(req.user.id)
-
-        // Supprime les cookies
+        await User.findByIdAndDelete(req.user.id) // Supprime les cookies
         res.clearCookie('accessToken', accessCookieOptions)
         res.clearCookie('refreshToken', refreshCookieOptions)
 
         res.status(200).json({
             message: 'Compte supprimé avec succès.',
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// ================== SET PASSWORD (pour utilisateurs social login) ==================
+exports.setPassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body
+
+        if (!newPassword || newPassword.length < 8) {
+            return res.status(400).json({
+                message: 'Le mot de passe doit contenir au moins 8 caractères.',
+            })
+        }
+
+        const user = await User.findById(req.user.id)
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        }
+
+        // Vérifier si l'utilisateur s'est connecté via social login
+        if (!user.googleId && !user.facebookId) {
+            return res.status(400).json({
+                message:
+                    'Cette fonctionnalité est réservée aux utilisateurs connectés via les réseaux sociaux.',
+            })
+        }
+
+        // Hasher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        // Mettre à jour le mot de passe et hasPassword
+        user.password = hashedPassword
+        user.hasPassword = true
+        await user.save()
+
+        res.status(200).json({
+            message: 'Mot de passe créé avec succès.',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                googleId: user.googleId,
+                facebookId: user.facebookId,
+                hasPassword: user.hasPassword,
+            },
         })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur.', error })

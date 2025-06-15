@@ -39,7 +39,15 @@ api.interceptors.response.use(
   (res) => res,
   async (err) => {
     const orig = err.config;
-    if (err.response?.status === 401 && !orig._retry) {
+
+    // Ne pas essayer de rafraîchir le token sur les routes de login/register
+    const isAuthRoute =
+      orig.url?.includes('/auth/login') ||
+      orig.url?.includes('/auth/register') ||
+      orig.url?.includes('/auth/google-login') ||
+      orig.url?.includes('/auth/facebook-login');
+
+    if (err.response?.status === 401 && !orig._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           addSubscriber(() => resolve(api(orig)));
