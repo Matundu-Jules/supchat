@@ -82,6 +82,31 @@ export const forgotPassword = (email: string) =>
 export const resetPassword = (token: string, newPassword: string) =>
   api.post('/auth/reset-password', { token, newPassword });
 
+export async function changePassword(data: {
+  currentPassword?: string;
+  newPassword: string;
+}) {
+  try {
+    await fetchCsrfToken();
+    const { data: res } = await api.post('/auth/change-password', data);
+    return res;
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err.message || 'Unknown error';
+    throw new Error(msg);
+  }
+}
+
+export async function setPassword(newPassword: string) {
+  try {
+    await fetchCsrfToken();
+    const { data: res } = await api.post('/auth/set-password', { newPassword });
+    return res;
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err.message || 'Unknown error';
+    throw new Error(msg);
+  }
+}
+
 export async function getCurrentUser() {
   const { data } = await api.get('/auth/me');
   return data;

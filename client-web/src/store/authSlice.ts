@@ -11,6 +11,7 @@ export interface User {
   avatar?: string;
   googleId?: string;
   facebookId?: string;
+  hasPassword?: boolean; // Indique si l'utilisateur a défini un mot de passe
 }
 
 interface AuthState {

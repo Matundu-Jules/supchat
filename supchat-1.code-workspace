@@ -9,7 +9,7 @@
     },
     {
       "name": "client-mobile",
-      "path": "client-mobile"
+      "path": "client-mobile/src"
     },
     {
       "name": "supchat-server",
@@ -17,10 +17,6 @@
     }
   ],
   "settings": {
-    "jest.disabledWorkspaceFolders": [
-      "supchat-1",
-      "client-web",
-      "client-mobile"
-    ]
+    "jest.disabledWorkspaceFolders": ["supchat-1", "client-mobile"]
   }
 }

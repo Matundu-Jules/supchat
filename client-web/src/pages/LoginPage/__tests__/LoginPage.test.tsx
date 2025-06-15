@@ -167,6 +167,27 @@ describe("LoginPage", () => {
     expect(screen.getByText("Password is required")).toBeInTheDocument();
   });
 
+  it("should display incorrect password error", () => {
+    vi.mocked(useLogin).mockReturnValue({
+      ...mockUseLogin,
+      errors: {
+        password: "Mot de passe incorrect",
+      },
+    });
+
+    render(
+      <TestProvider>
+        <LoginPage />
+      </TestProvider>
+    );
+
+    expect(screen.getByText("Mot de passe incorrect")).toBeInTheDocument();
+
+    // Vérifie que l'input a la classe d'erreur
+    const passwordInput = screen.getByPlaceholderText("Mot de passe");
+    expect(passwordInput).toHaveClass("inputError");
+  });
+
   it("should show loading state when submitting", () => {
     vi.mocked(useLogin).mockReturnValue({
       ...mockUseLogin,

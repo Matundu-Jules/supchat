@@ -247,3 +247,45 @@ button.submit {
     }
   }
 }
+
+.help-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 80%;
+
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+    font-size: var(--font-size-s);
+
+    &:hover {
+      color: var(--color-link-hover);
+      text-decoration: underline;
+    }
+  }
+}
+
+.social-help {
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.4;
+  background: var(--color-bg-secondary);
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--color-secondary);
+  margin: 0;
+
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      color: var(--color-link-hover);
+      text-decoration: underline;
+    }
+  }
+}
