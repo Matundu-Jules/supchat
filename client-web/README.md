@@ -18,11 +18,11 @@ export default tseslint.config({
   languageOptions: {
     // other options...
     parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
       tsconfigRootDir: import.meta.dirname,
     },
   },
-})
+});
 ```
 
 - Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
@@ -31,11 +31,11 @@ export default tseslint.config({
 
 ```js
 // eslint.config.js
-import react from 'eslint-plugin-react'
+import react from "eslint-plugin-react";
 
 export default tseslint.config({
   // Set the react version
-  settings: { react: { version: '18.3' } },
+  settings: { react: { version: "18.3" } },
   plugins: {
     // Add the react plugin
     react,
@@ -44,7 +44,43 @@ export default tseslint.config({
     // other rules...
     // Enable its recommended rules
     ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
+    ...react.configs["jsx-runtime"].rules,
   },
-})
+});
 ```
+
+# Client Web - SupChat
+
+Application web React avec TypeScript et Vite pour le projet SupChat.
+
+## 🚀 Démarrage rapide
+
+```bash
+npm install
+npm run dev
+```
+
+## 🧪 Tests
+
+### Tests unitaires/composants (Vitest)
+
+```bash
+npm test              # Lance les tests
+npm run test:watch    # Mode watch
+npm run test:ui       # Interface graphique
+npm run test:coverage # Rapport de couverture
+```
+
+### Tests E2E (Cypress)
+
+```bash
+npm run test:e2e      # Lance les tests E2E
+npm run test:e2e:open # Interface Cypress
+```
+
+### Stack de test
+
+- **Vitest** : Test runner (compatible Jest, plus rapide pour Vite)
+- **Testing Library** : Tests React (@testing-library/react + user-event + jest-dom)
+- **MSW** : Mock Service Worker pour les APIs
+- **Cypress** : Tests end-to-end
