@@ -6,6 +6,7 @@ import {
   addChannelMember,
 } from "@services/channelApi";
 import { getWorkspaceMembers } from "@services/workspaceApi";
+import { useChannelPermissions } from "@hooks/useChannelPermissions";
 import Loader from "@components/Loader";
 import styles from "./ChannelMembersManager.module.scss";
 
@@ -26,7 +27,6 @@ interface ChannelMembersManagerProps {
   workspaceId: string;
   channelId: string;
   channelName: string;
-  isChannelAdmin: boolean;
   onMembersChange?: () => void;
 }
 
@@ -34,7 +34,6 @@ const ChannelMembersManager: React.FC<ChannelMembersManagerProps> = ({
   workspaceId,
   channelId,
   channelName,
-  isChannelAdmin,
   onMembersChange,
 }) => {
   const [members, setMembers] = useState<ChannelMember[]>([]);
@@ -46,6 +45,12 @@ const ChannelMembersManager: React.FC<ChannelMembersManagerProps> = ({
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Utiliser le hook centralisé pour vérifier les permissions d'admin de canal
+  const { canManageMembers: isChannelAdmin } = useChannelPermissions(
+    channelId,
+    workspaceId
+  );
 
   useEffect(() => {
     loadData();

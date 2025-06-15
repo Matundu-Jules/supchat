@@ -1,3 +1,5 @@
+@use "@styles/themes" as *;
+
 /* Layout principal du workspace */
 .workspaceLayout {
   width: 100%;
@@ -22,8 +24,10 @@
 .headerContent {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1.2rem;
   margin-bottom: 0.8rem;
+  width: 100%;
 }
 
 .workspaceTitle {
@@ -478,6 +482,13 @@
   background: var(--color-primary-dark);
 }
 
+.channelsButton {
+  @extend .btn;
+  margin-right: 2rem;
+  width: 20rem;
+  min-width: 15rem;
+}
+
 .submitButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -587,6 +598,53 @@
 .emptyChannels p {
   margin: 0;
   font-size: 0.875rem;
+}
+
+/* Nouveau style pour la note des rôles de canaux */
+.channelRolesNote {
+  background: var(--color-info-light);
+  border: 1px solid var(--color-info);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.channelRolesNote p {
+  margin: 0;
+  color: var(--color-info-dark);
+  font-size: 1.4rem;
+  line-height: 1.5;
+}
+
+.channelRolesNote strong {
+  color: var(--color-info-dark);
+  font-weight: 600;
+}
+
+/* Bouton de lien inline */
+.linkButton {
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  margin-left: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.linkButton:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}
+
+.linkButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Responsive design */
