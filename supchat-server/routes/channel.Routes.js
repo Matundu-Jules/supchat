@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const {
   createChannel,
   getChannels,
@@ -19,6 +20,16 @@ const {
 } = require("../validators/channelValidators");
 
 const router = express.Router();
+
+// Limiteur : 5 messages max par minute par utilisateur sur un channel
+const messageRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  message: { message: "Trop de messages envoyés, réessayez plus tard." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${req.user ? req.user.id : req.ip}-${req.params.id}`,
+});
 
 router.post(
   "/",
@@ -65,6 +76,18 @@ router.post(
   authMiddleware,
   validate({ params: channelIdParamSchema }),
   leaveChannel
+);
+
+router.post(
+  "/:id/messages",
+  authMiddleware,
+  messageRateLimiter,
+  async (req, res, next) => {
+    // Injecte channelId dans le body pour compatibilité avec le contrôleur
+    req.body.channelId = req.params.id;
+    next();
+  },
+  require("../controllers/messageController").sendMessage
 );
 
 module.exports = router;

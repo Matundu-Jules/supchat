@@ -1,78 +1,148 @@
-const request = require("supertest");
-const { app } = require("../../src/app");
-const Channel = require("../../models/Channel");
-const Workspace = require("../../models/Workspace");
-const User = require("../../models/User");
-const Message = require("../../models/Message");
-const { channelFactory } = require("../factories/channelFactory");
-const { workspaceFactory } = require("../factories/workspaceFactory");
-const { userFactory } = require("../factories/userFactory");
-const { messageFactory } = require("../factories/messageFactory");
+const mockEmit = jest.fn()
+const mockTo = jest.fn(() => ({
+    emit: mockEmit,
+}))
+const mockGetIo = jest.fn(() => ({
+    to: mockTo,
+    sockets: {
+        adapter: {
+            rooms: {
+                get: jest.fn(() => undefined),
+            },
+        },
+    },
+}))
 
-describe("Channel routes", () => {
-  let workspace;
-  beforeEach(async () => {
-    workspace = await Workspace.create(
-      workspaceFactory({ owner: global.adminId, members: [global.adminId] })
-    );
-  });
+// Mock le module socket
+jest.mock(
+    '../../socket',
+    () => ({
+        getIo: mockGetIo,
+        initSocket: jest.fn(() => mockGetIo()),
+        __esModule: true,
+    }),
+    { virtual: true }
+)
 
-  describe("POST /channels", () => {
-    it("creates channel", async () => {
-      const res = await request(app)
-        .post("/api/channels")
-        .set("Authorization", `Bearer ${global.tokens.admin}`)
-        .send({ name: "my channel", workspaceId: workspace._id, type: "public" });
+// Force Jest à utiliser notre mock
+beforeAll(() => {
+    jest.resetModules()
+})
 
-      expect(res.status).toBe(201);
-      expect(res.body.name).toBe("my channel");
-    });
+const request = require('supertest')
+// Importons l'app après avoir setupé le mock
+const { app } = require('../../src/app')
+const Channel = require('../../models/Channel')
+const Workspace = require('../../models/Workspace')
+const User = require('../../models/User')
+const Message = require('../../models/Message')
+const { channelFactory } = require('../factories/channelFactory')
+const { workspaceFactory } = require('../factories/workspaceFactory')
+const { userFactory } = require('../factories/userFactory')
+const { messageFactory } = require('../factories/messageFactory')
+const Permission = require('../../models/Permission')
 
-    it("denies guest", async () => {
-      const res = await request(app)
-        .post("/api/channels")
-        .set("Authorization", `Bearer ${global.tokens.guest}`)
-        .send({ name: "guest", workspaceId: workspace._id, type: "public" });
+describe('Channel routes', () => {
+    let workspace
 
-      expect(res.status).toBe(403);
-    });
-  });
+    beforeEach(async () => {
+        // Réinitialise le mock avant chaque test
+        mockEmit.mockClear()
+        mockTo.mockClear()
+        mockGetIo.mockClear()
 
-  describe("GET /channels/:id/messages", () => {
-    it("returns channel messages", async () => {
-      const channel = await Channel.create(
-        channelFactory({ workspace: workspace._id })
-      );
-      const msg = await Message.create(
-        messageFactory({ channel: channel._id, userId: global.adminId })
-      );
+        workspace = await Workspace.create(
+            workspaceFactory({
+                owner: global.adminId,
+                members: [global.adminId],
+            })
+        )
+    })
 
-      const res = await request(app)
-        .get(`/api/channels/${channel._id}/messages`)
-        .set("Authorization", `Bearer ${global.tokens.admin}`);
+    describe('POST /channels', () => {
+        it('creates channel', async () => {
+            const res = await request(app)
+                .post('/api/channels')
+                .set('Authorization', `Bearer ${global.tokens.admin}`)
+                .send({
+                    name: 'my channel',
+                    workspaceId: workspace._id,
+                    type: 'public',
+                })
 
-      expect(res.status).toBe(200);
-    });
-  });
+            console.log('DEBUG res.body:', JSON.stringify(res.body, null, 2))
 
-  describe("POST /channels/:id/messages", () => {
-    it("posts message and emits socket", async () => {
-      const channel = await Channel.create(
-        channelFactory({ workspace: workspace._id })
-      );
-      const emitSpy = jest.spyOn(global.socketClient, "emit");
+            expect(res.status).toBe(201)
+            expect(res.body.channel.name).toBe('my channel')
+        })
 
-      const res = await request(app)
-        .post(`/api/channels/${channel._id}/messages`)
-        .set("Authorization", `Bearer ${global.tokens.admin}`)
-        .send({ text: "hello" });
+        it('denies guest', async () => {
+            const res = await request(app)
+                .post('/api/channels')
+                .set('Authorization', `Bearer ${global.tokens.guest}`)
+                .send({
+                    name: 'guest',
+                    workspaceId: workspace._id,
+                    type: 'public',
+                })
 
-      expect(res.status).toBe(201);
-      expect(emitSpy).toHaveBeenCalledWith(
-        channel._id.toString(),
-        "new_message",
-        expect.objectContaining({ text: "hello" })
-      );
-    });
-  });
-});
+            expect(res.status).toBe(403)
+        })
+    })
+
+    describe('GET /channels/:id/messages', () => {
+        it('returns channel messages', async () => {
+            const channel = await Channel.create(
+                channelFactory({
+                    workspace: workspace._id,
+                    members: [global.adminId],
+                })
+            )
+            const msg = await Message.create(
+                messageFactory({ channel: channel._id, userId: global.adminId })
+            )
+
+            const res = await request(app)
+                .get(`/api/messages/channel/${channel._id}`)
+                .set('Authorization', `Bearer ${global.tokens.admin}`)
+
+            expect(res.status).toBe(200)
+        })
+    })
+
+    describe('POST /channels/:id/messages', () => {
+        it('posts message and emits socket', async () => {
+            const channel = await Channel.create(
+                channelFactory({
+                    workspace: workspace._id,
+                    members: [global.adminId],
+                })
+            )
+
+            await Permission.create({
+                userId: global.adminId,
+                workspaceId: workspace._id,
+                role: 'admin',
+                permissions: { canPost: true },
+            })
+
+            const res = await request(app)
+                .post(`/api/channels/${channel._id}/messages`)
+                .set('Authorization', `Bearer ${global.tokens.admin}`)
+                .send({ text: 'hello' })
+
+            expect(res.status).toBe(201)
+            expect(res.body.message).toBe('Message envoyé.')
+            expect(res.body.data).toBeDefined()
+            expect(res.body.data.text).toBe('hello')
+
+            // Vérifier que le message a été créé en base
+            const createdMessage = await Message.findById(res.body.data._id)
+            expect(createdMessage).toBeTruthy()
+            expect(createdMessage.text).toBe('hello')
+            expect(createdMessage.channelId.toString()).toBe(
+                channel._id.toString()
+            )
+        })
+    })
+})

@@ -19,6 +19,7 @@ const router = express.Router()
 router.post(
     '/',
     authMiddleware,
+    roleMiddleware(['admin']),
     validate({ body: createWorkspaceSchema }),
     workspaceController.createWorkspace
 )

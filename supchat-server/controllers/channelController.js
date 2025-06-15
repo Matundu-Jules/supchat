@@ -70,6 +70,17 @@ exports.getChannelById = async (req, res) => {
       return res.status(404).json({ message: "Canal non trouvé" });
     }
 
+    // Vérification d'accès pour les canaux privés
+    if (channel.type === 'private') {
+      const userId = String(req.user._id || req.user.id);
+      const isMember = channel.members.some(
+        (memberId) => String(memberId) === userId
+      );
+      if (!isMember) {
+        return res.status(403).json({ message: "Accès refusé. Non membre du canal privé." });
+      }
+    }
+
     return res.status(200).json(channel);
   } catch (error) {
     return res.status(500).json({ message: "Erreur serveur", error });
