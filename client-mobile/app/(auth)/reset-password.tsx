@@ -16,6 +16,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API_ENDPOINTS } from "../../constants/api";
 
 const resetPasswordSchema = Yup.object().shape({
   password: Yup.string()
@@ -37,7 +38,7 @@ export default function ResetPasswordScreen() {
   const handleSubmit = async (values: { password: string }) => {
     if (!token) return Alert.alert("Lien invalide", "Aucun token fourni.");
     try {
-      await axios.post("http://localhost:3000/api/auth/reset-password", {
+      await axios.post(API_ENDPOINTS.resetPassword, {
         token,
         password: values.password,
       });

@@ -1,5 +1,5 @@
 # Use a lightweight Node.js image for production
-FROM node:18-alpine3.19
+FROM node:24-alpine3.22
 
 # Update Alpine packages to address vulnerabilities
 RUN apk update && apk upgrade --no-cache

@@ -1,19 +1,73 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "es2016",
-    "module": "es2015", // 'es2015' is valid for 'bundler'
-    "jsx": "react-native",
+    "target": "es2020",
+    "lib": [
+      "es2020"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "declaration": false,
+    "allowJs": true,
+    "incremental": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/services/*": [
+        "./services/*"
+      ],
+      "@/hooks/*": [
+        "./hooks/*"
+      ],
+      "@/utils/*": [
+        "./utils/*"
+      ],
+      "@/constants/*": [
+        "./constants/*"
+      ],
+      "@/contexts/*": [
+        "./contexts/*"
+      ]
+    }
   },
-  "include": ["app/**/*", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "types/**/*.d.ts",
+    "app/**/*",
+    "components/**/*",
+    "services/**/*",
+    "hooks/**/*",
+    "utils/**/*",
+    "constants/**/*",
+    "contexts/**/*"
+  ],
   "exclude": [
     "node_modules",
+    ".expo",
+    "dist",
     "babel.config.js",
     "metro.config.js",
     "jest.config.js"
-  ],
-  "extends": "expo/tsconfig.base"
+  ]
 }

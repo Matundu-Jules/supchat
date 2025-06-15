@@ -17,27 +17,37 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Linking from "expo-linking";
+import { API_ENDPOINTS } from "../../constants/api";
+import { AuthService } from "../../services/authService";
+import { API_BASE_URL } from "../../constants/network";
 
 export default function LoginScreen() {
   const router = useRouter();
 
   const handleLogin = async (values: any) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
-        {
-          email: values.email,
-          password: values.password,
-        }
-      );
+      await AuthService.login({
+        email: values.email,
+        password: values.password,
+      });
 
-      const token = (response.data as { token: string }).token; // selon la structure exacte de ta réponse
-      await AsyncStorage.setItem("authToken", token);
-      // Redirection après succès
       router.replace("../workspace.tsx");
     } catch (err) {
       Alert.alert("Erreur", "Email ou mot de passe invalide");
     }
+  };
+
+  const handleGoogleLogin = () => {
+    const googleUrl = `${API_BASE_URL}/auth/google`;
+    console.log("🔗 URL Google générée:", googleUrl);
+    Linking.openURL(googleUrl);
+  };
+
+  const handleFacebookLogin = () => {
+    const facebookUrl = `${API_BASE_URL}/auth/facebook`;
+    console.log("🔗 URL Facebook générée:", facebookUrl);
+    Linking.openURL(facebookUrl);
   };
 
   return (
@@ -49,10 +59,6 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={{ alignItems: "center", marginTop: 30 }}>
-            <Image
-              source={require("../../assets/images/logo-couleur.png")}
-              style={{ width: 120, height: 120, resizeMode: "contain" }}
-            />
             <Image
               source={require("../../assets/images/logo-supchat-primary.png")}
               style={{ width: 120, height: 120, resizeMode: "contain" }}
@@ -73,7 +79,6 @@ export default function LoginScreen() {
               }) => (
                 <View style={styles.container}>
                   <Text style={styles.title}>Connexion</Text>
-
                   <TextInput
                     placeholder="Email"
                     placeholderTextColor="#888"
@@ -87,7 +92,6 @@ export default function LoginScreen() {
                   {touched.email && errors.email && (
                     <Text style={styles.error}>{errors.email}</Text>
                   )}
-
                   <View style={{ alignItems: "flex-end", marginBottom: 4 }}>
                     <TouchableOpacity
                       onPress={() => router.push("/(auth)/forgot-password")}
@@ -97,7 +101,6 @@ export default function LoginScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-
                   <TextInput
                     placeholder="Mot de passe"
                     placeholderTextColor="#888"
@@ -110,14 +113,34 @@ export default function LoginScreen() {
                   {touched.password && errors.password && (
                     <Text style={styles.error}>{errors.password}</Text>
                   )}
-
                   <TouchableOpacity
                     style={styles.button}
                     onPress={() => handleSubmit()}
                   >
                     <Text style={styles.buttonText}>Connexion</Text>
                   </TouchableOpacity>
-
+                  {/* Boutons Google et Facebook */}
+                  <View style={{ marginTop: 20 }}>
+                    <TouchableOpacity
+                      style={[styles.button, { backgroundColor: "#DB4437" }]}
+                      onPress={handleGoogleLogin}
+                    >
+                      <Text style={styles.buttonText}>
+                        Se connecter avec Google
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.button,
+                        { backgroundColor: "#3b5998", marginTop: 10 },
+                      ]}
+                      onPress={handleFacebookLogin}
+                    >
+                      <Text style={styles.buttonText}>
+                        Se connecter avec Facebook
+                      </Text>
+                    </TouchableOpacity>
+                  </View>{" "}
                   <TouchableOpacity
                     onPress={() => router.push("/(auth)/register")}
                   >
