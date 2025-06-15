@@ -53,17 +53,22 @@ beforeAll(async () => {
 
     // JWT tokens
     process.env.JWT_SECRET = 'testsecret'
+    process.env.JWT_REFRESH = 'testrefresh'
     global.tokens = {
         admin: jwt.sign(
-            { id: admin._id, role: 'admin' },
+            { id: admin._id, role: 'admin', tokenVersion: admin.tokenVersion },
             process.env.JWT_SECRET
         ),
         member: jwt.sign(
-            { id: member._id, role: 'membre' },
+            {
+                id: member._id,
+                role: 'membre',
+                tokenVersion: member.tokenVersion,
+            },
             process.env.JWT_SECRET
         ),
         guest: jwt.sign(
-            { id: guest._id, role: 'invité' },
+            { id: guest._id, role: 'invité', tokenVersion: guest.tokenVersion },
             process.env.JWT_SECRET
         ),
     }

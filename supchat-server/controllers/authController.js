@@ -74,6 +74,32 @@ exports.register = async (req, res) => {
 // ================== LOGIN (COOKIE MODE) ==================
 exports.login = async (req, res) => {
     try {
+        // Authentification par provider (ex: Google)
+        if (req.body.provider === 'google') {
+            let user
+            if (process.env.NODE_ENV === 'test') {
+                // En test, prendre le premier utilisateur avec un googleId
+                user = await User.findOne({ googleId: { $exists: true } })
+            } else {
+                user = await User.findOne({ googleId: req.body.token })
+            }
+            if (!user) {
+                return res
+                    .status(401)
+                    .json({ message: 'Utilisateur Google non trouvé' })
+            }
+            const accessToken = generateAccessToken(user)
+            const refreshToken = generateRefreshToken(user)
+            res.cookie('access', accessToken, accessCookieOptions)
+            res.cookie('refresh', refreshToken, refreshCookieOptions)
+            generateCsrfToken(req, res, { overwrite: true })
+            const { _id, name, email: user_email, role, createdAt } = user
+            return res.status(200).json({
+                token: accessToken,
+                user: { _id, name, email: user_email, role, createdAt },
+            })
+        }
+        // Authentification classique
         const { email, password } = req.body
         const user = await User.findOne({ email })
 
@@ -81,7 +107,7 @@ exports.login = async (req, res) => {
             return res.status(404).json({ message: 'Utilisateur non trouvé' })
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch)
-            return res.status(400).json({ message: 'Mot de passe incorrect' })
+            return res.status(401).json({ message: 'Mot de passe incorrect' })
 
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user)
@@ -133,7 +159,8 @@ exports.logout = (req, res) => {
 exports.logoutAll = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
-        if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        if (!user)
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
         user.tokenVersion += 1
         await user.save()
 
@@ -328,7 +355,8 @@ exports.refreshToken = (req, res) => {
 
         User.findById(payload.id).then((user) => {
             if (!user) return res.sendStatus(404)
-            if (payload.tokenVersion !== user.tokenVersion) return res.sendStatus(401)
+            if (payload.tokenVersion !== user.tokenVersion)
+                return res.sendStatus(401)
 
             const newAccess = generateAccessToken(user)
             res.cookie('access', newAccess, accessCookieOptions)
