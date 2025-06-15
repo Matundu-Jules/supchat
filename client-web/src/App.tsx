@@ -30,6 +30,7 @@ import RegisterPage from "@pages/RegisterPage";
 import LoginPage from "@pages/LoginPage";
 import ForgotPasswordPage from "@pages/ForgotPasswordPage";
 import ResetPasswordPage from "@pages/ResetPasswordPage";
+import SetPasswordPage from "@pages/SetPasswordPage";
 import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
 import InviteWorkspacePage from "@pages/InviteWorkspacePage";
 import SearchPage from "@pages/SearchPage";
@@ -45,9 +46,16 @@ const AppContent = ({
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
 
+  // Log de debug pour tracker les changements de route
+  React.useEffect(() => {
+    console.log("🛣️  Route changed to:", location.pathname);
+  }, [location.pathname]);
+
   // Vérifier si on est sur les pages Login ou Register
   const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/register";
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/set-password";
 
   return (
     <div className={styles["appContainer"]}>
@@ -55,24 +63,25 @@ const AppContent = ({
       {!isAuthPage && user && <Header />}
       <main className={styles["main-container"]}>
         <Routes>
-          <Route path="/invite/:id" element={<InviteWorkspacePage />} />
-
+          <Route path="/invite/:id" element={<InviteWorkspacePage />} />{" "}
           {/* Routes publiques protégées par PublicRoute */}
           <Route element={<PublicRoute />}>
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-          </Route>
-
+          </Route>{" "}
           {/* Routes privées */}
           <Route element={<PrivateRoute />}>
-            <Route path="/" element={<Dashboard />} />
+            {/* Route pour la création obligatoire de mot de passe */}
+            <Route path="/set-password" element={<SetPasswordPage />} />
             <Route path="/workspace" element={<WorkspacePage />} />
             <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
             <Route path="/message" element={<MessagesPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            {/* Route par défaut - DOIT être en dernier */}
+            <Route index element={<Dashboard />} />
           </Route>
         </Routes>
       </main>
@@ -90,24 +99,30 @@ const App: React.FC = () => {
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
+  // Vérifier l'authentification au chargement de l'app
   useEffect(() => {
+    console.log("🔄 App.tsx - Starting getCurrentUser...");
     dispatch(setAuthLoading(true));
     getCurrentUser()
       .then(async (user) => {
+        console.log("👤 App.tsx - getCurrentUser response:", user);
         dispatch(setAuth(user));
 
         // Récupérer aussi le profil complet (avec avatar)
         try {
           const profile = await getProfile();
+          console.log("📝 App.tsx - getProfile response:", profile);
           dispatch(setAuth({ ...user, avatar: profile.avatar }));
         } catch (error) {
           console.log("Erreur lors de la récupération du profil:", error);
         }
       })
       .catch(() => {
+        console.log("❌ App.tsx - getCurrentUser failed, logging out");
         dispatch(logout());
       })
       .finally(() => {
+        console.log("✅ App.tsx - getCurrentUser completed");
         dispatch(setAuthLoading(false));
       });
   }, [dispatch]);
