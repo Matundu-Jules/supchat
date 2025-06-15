@@ -3,7 +3,6 @@ import { getAvatarUrl } from "@utils/avatarUtils";
 import { useNotificationPrefs } from "@hooks/useNotificationPrefs";
 import { useSettingsHandlers } from "@hooks/useSettingsHandlers";
 import NotificationPrefList from "@components/Notification/NotificationPrefList";
-import PasswordManagement from "@components/PasswordManagement";
 import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
@@ -17,6 +16,13 @@ const SettingsPage: React.FC = () => {
     avatar,
     isEditingProfile,
     integrations,
+    // États du mot de passe
+    currentPassword,
+    setCurrentPassword,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
     // Actions du profil
     handleSaveProfileWithFeedback,
     handleAvatarChangeWithFeedback,
@@ -33,6 +39,8 @@ const SettingsPage: React.FC = () => {
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,
     handleDeleteAccountWithConfirmation,
+    // Actions du mot de passe
+    handleChangePasswordWithFeedback,
   } = useSettingsHandlers();
 
   const { prefs, updatePref } = useNotificationPrefs();
@@ -111,6 +119,7 @@ const SettingsPage: React.FC = () => {
             </div>{" "}
             {!isEditingProfile ? (
               <div className={styles["profileView"]}>
+                {" "}
                 <div className={styles["profileInfo"]}>
                   <div className={styles["infoItem"]}>
                     <strong>Nom d'affichage</strong>
@@ -120,8 +129,11 @@ const SettingsPage: React.FC = () => {
                     <strong>Email</strong>
                     <span>{email}</span>
                   </div>
+                  <div className={styles["infoItem"]}>
+                    <strong>Mot de passe</strong>
+                    <span>{"•".repeat(12)}</span>
+                  </div>
                 </div>
-
                 <button
                   onClick={startEditingProfile}
                   className={styles["btnProfileInfo"]}
@@ -136,8 +148,7 @@ const SettingsPage: React.FC = () => {
                   <span className={styles["editIndicator"]}>
                     Edition en cours
                   </span>
-                </div>
-
+                </div>{" "}
                 <div className={styles["editForm"]}>
                   <div className={styles["field"]}>
                     <label htmlFor="edit-name">Nom d'affichage</label>
@@ -167,6 +178,50 @@ const SettingsPage: React.FC = () => {
                       📧 L'email ne peut pas être modifié pour des raisons de
                       sécurité
                     </small>
+                  </div>
+
+                  {/* Section Mot de passe */}
+                  <div className={styles["passwordSection"]}>
+                    <h4>🔑 Changement de mot de passe</h4>
+
+                    {user?.hasPassword && (
+                      <div className={styles["field"]}>
+                        <label htmlFor="current-password">
+                          Mot de passe actuel
+                        </label>
+                        <input
+                          id="current-password"
+                          name="currentPassword"
+                          type="password"
+                          placeholder="Mot de passe actuel"
+                          className={styles["input"]}
+                        />
+                      </div>
+                    )}
+
+                    <div className={styles["field"]}>
+                      <label htmlFor="new-password">Nouveau mot de passe</label>
+                      <input
+                        id="new-password"
+                        name="newPassword"
+                        type="password"
+                        placeholder="Nouveau mot de passe (min. 8 caractères)"
+                        className={styles["input"]}
+                      />
+                    </div>
+
+                    <div className={styles["field"]}>
+                      <label htmlFor="confirm-password">
+                        Confirmer le nouveau mot de passe
+                      </label>
+                      <input
+                        id="confirm-password"
+                        name="confirmPassword"
+                        type="password"
+                        placeholder="Confirmer le nouveau mot de passe"
+                        className={styles["input"]}
+                      />
+                    </div>
                   </div>
 
                   <div className={styles["editActions"]}>
@@ -282,11 +337,6 @@ const SettingsPage: React.FC = () => {
           <section className={styles["settingsSection"]}>
             <h2>🔔 Notifications</h2>
             <NotificationPrefList items={prefs} onChange={updatePref} />
-          </section>
-          {/* Section Mot de passe */}
-          <section className={styles["settingsSection"]}>
-            <h2>🔑 Mot de passe</h2>
-            <PasswordManagement />
           </section>
           {/* Section Sécurité */}
           <section className={styles["settingsSection"]}>

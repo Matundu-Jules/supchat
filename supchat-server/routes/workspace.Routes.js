@@ -12,6 +12,7 @@ const {
     requestJoinWorkspaceSchema,
     workspaceIdParamSchema,
     requestUserIdParamSchema,
+    removeMemberParamSchema,
 } = require('../validators/workspaceValidators')
 const { validate } = require('../middlewares/validationMiddleware')
 
@@ -121,8 +122,15 @@ router.post(
 router.delete(
     '/:id/members/:userId',
     authMiddleware,
-    validate({ params: requestUserIdParamSchema }), // Réutilise le même validateur car il valide id et userId
+    validate({ params: removeMemberParamSchema }),
     workspaceController.removeMember
+)
+
+// Inviter un invité avec accès limité
+router.post(
+    '/:id/invite-guest',
+    authMiddleware,
+    workspaceController.inviteGuestToWorkspace
 )
 
 module.exports = router

@@ -457,7 +457,8 @@
 }
 
 .inputError {
-  border-color: var(--color-error);
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
 }
 
 .submitButton {

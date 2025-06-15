@@ -50,10 +50,11 @@ export function useWorkspaceDetails(workspaceId: string) {
       if (
         msg === 'USER_NOT_FOUND' ||
         msg.includes('utilisateur') ||
+        msg.includes('aucun utilisateur inscrit') ||
         msg.toLowerCase().includes("n'existe")
       ) {
         setInviteError(
-          "L'adresse e-mail saisie ne correspond à aucun utilisateur inscrit. L'invitation n'a pas été envoyée."
+          'Cette adresse email ne correspond à aucun utilisateur inscrit. Seuls les utilisateurs ayant un compte peuvent être invités.'
         );
       } else {
         setInviteError(msg || "Erreur lors de l'invitation");
@@ -163,5 +164,6 @@ export function useWorkspaceDetails(workspaceId: string) {
     handleRemoveMember,
     handleEdit,
     handleDelete,
+    fetchDetails, // Exposer la fonction fetchDetails
   };
 }

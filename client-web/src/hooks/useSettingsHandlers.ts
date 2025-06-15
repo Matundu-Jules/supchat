@@ -115,20 +115,32 @@ export const useSettingsHandlers = () => {
     } else {
       settingsInteractionService.showError(result.error || 'Erreur inconnue');
     }
-  };
-  // Handler pour la suppression du compte avec confirmation
+  }; // Handler pour la suppression du compte avec confirmation
   const handleDeleteAccountWithConfirmation = async () => {
     if (settingsInteractionService.confirmAccountDeletion()) {
       const result = await settingsLogic.handleDeleteAccount();
       if (result.success) {
-        // Rediriger immédiatement vers register après suppression du compte
-        navigate('/register');
+        settingsInteractionService.showSuccess(
+          settingsInteractionService.messages.security.accountDeleted
+        );
+        navigate('/login');
       } else {
         settingsInteractionService.showError(result.error || 'Erreur inconnue');
       }
     }
   };
 
+  // Handler pour le changement de mot de passe avec feedback
+  const handleChangePasswordWithFeedback = async () => {
+    const result = await settingsLogic.handleChangePassword();
+    if (result.success) {
+      settingsInteractionService.showSuccess(
+        'Mot de passe modifié avec succès'
+      );
+    } else {
+      settingsInteractionService.showError(result.error || 'Erreur inconnue');
+    }
+  };
   return {
     // États et données depuis settingsLogic
     ...settingsLogic,
@@ -144,5 +156,6 @@ export const useSettingsHandlers = () => {
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,
     handleDeleteAccountWithConfirmation,
+    handleChangePasswordWithFeedback,
   };
 };

@@ -70,7 +70,7 @@ const ChannelCreateForm: React.FC<ChannelCreateFormProps> = ({
           id="channel-type"
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className={styles["input"]}
+          className={styles["input-select"]}
           disabled={loading}
           required
         >

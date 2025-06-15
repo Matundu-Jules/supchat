@@ -70,20 +70,33 @@ exports.getChannelById = async (req, res) => {
         const channel = await channelService.findById(id)
         if (!channel) {
             return res.status(404).json({ message: 'Canal non trouvé' })
+        } // Vérification d'accès selon le type de channel et le rôle de l'utilisateur
+        const userId = String(req.user._id || req.user.id)
+        const isMember = channel.members.some(
+            (memberId) => String(memberId) === userId
+        )
+
+        // Pour les canaux privés, il faut être membre
+        if (channel.type === 'private' && !isMember) {
+            return res.status(403).json({
+                message: 'Accès refusé. Non membre du canal privé.',
+            })
         }
 
-        // Vérification d'accès pour les canaux privés
-        if (channel.type === 'private') {
-            const userId = String(req.user._id || req.user.id)
-            const isMember = channel.members.some(
-                (memberId) => String(memberId) === userId
-            )
-            if (!isMember) {
-                return res
-                    .status(403)
-                    .json({
-                        message: 'Accès refusé. Non membre du canal privé.',
-                    })
+        // Pour les canaux publics, vérifier les permissions des invités
+        if (channel.type === 'public') {
+            const Permission = require('../models/Permission')
+            const perm = await Permission.findOne({
+                userId: req.user.id,
+                workspaceId: channel.workspace,
+            })
+
+            // Si c'est un invité, il ne peut accéder aux canaux publics que s'il en est membre
+            if (perm && perm.role === 'invité' && !isMember) {
+                return res.status(403).json({
+                    message:
+                        "Accès refusé. Les invités ne peuvent accéder qu'aux canaux où ils sont membres.",
+                })
             }
         }
 

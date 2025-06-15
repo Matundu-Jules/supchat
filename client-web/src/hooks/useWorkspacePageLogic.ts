@@ -28,6 +28,7 @@ export function useWorkspacePageLogic() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [requestJoinLoading, setRequestJoinLoading] = useState(false);
   const [editModal, setEditModal] = useState<null | {
     id: string;
     name: string;
@@ -77,6 +78,38 @@ export function useWorkspacePageLogic() {
       setInviteSuccess(null);
     }
   };
+  // Nouvelle fonction pour gérer l'invitation via la modale
+  const handleInviteModalSubmit = async (email: string) => {
+    if (!inviteModal) return;
+
+    setInviteError(null);
+    setInviteSuccess(null);
+    try {
+      await handleInvite(inviteModal.id, email);
+      setInviteSuccess('Invitation envoyée avec succès !');
+      // Ne pas fermer la modale immédiatement pour laisser voir le message de succès
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || '';
+      if (
+        msg === 'USER_NOT_FOUND' ||
+        msg.includes('utilisateur') ||
+        msg.includes('aucun utilisateur inscrit') ||
+        msg.toLowerCase().includes("n'existe")
+      ) {
+        // Stocker l'erreur dans l'état pour l'afficher dans la modale
+        setInviteError(
+          'Cette adresse email ne correspond à aucun utilisateur inscrit. Seuls les utilisateurs ayant un compte peuvent être invités.'
+        );
+      } else {
+        setInviteError(msg || "Erreur lors de l'invitation");
+      }
+    }
+  };
+
+  const handleClearInviteMessages = () => {
+    setInviteError(null);
+    setInviteSuccess(null);
+  };
 
   const handleEdit = (workspace: any) => {
     setEditModal({
@@ -119,6 +152,40 @@ export function useWorkspacePageLogic() {
     fetchWorkspaces();
   };
 
+  // Version simplifiée pour les données de formulaire direct
+  const handleEditWorkspace = async (formData: {
+    name: string;
+    description?: string;
+    isPublic: boolean;
+  }) => {
+    if (!editModal) return;
+
+    const errors: { name?: string; description?: string } = {};
+    if (!formData.name) {
+      errors.name = 'Le nom est requis.';
+    } else if (formData.name.length < 3) {
+      errors.name = 'Le nom doit contenir au moins 3 caractères.';
+    }
+    if (
+      formData.description &&
+      formData.description.length > 0 &&
+      formData.description.length < 3
+    ) {
+      errors.description =
+        'La description doit contenir au moins 3 caractères ou être vide.';
+    }
+
+    setEditErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      throw new Error('Données invalides');
+    }
+
+    await updateWorkspaceApi(editModal.id, formData);
+    setEditModal(null);
+    setEditErrors({});
+    fetchWorkspaces();
+  };
+
   const handleDelete = async (workspace: any) => {
     if (
       !window.confirm('Voulez-vous vraiment supprimer cet espace de travail ?')
@@ -137,6 +204,10 @@ export function useWorkspacePageLogic() {
     }
   };
   const handleRequestJoin = async (workspace: any) => {
+    setRequestJoinLoading(true);
+    setInviteError(null);
+    setInviteSuccess(null);
+
     try {
       await dispatch(
         requestJoinWorkspace({
@@ -145,10 +216,16 @@ export function useWorkspacePageLogic() {
         })
       );
 
-      alert('Demande envoyée au propriétaire du workspace !');
+      // Notification de succès plus élégante
+      setInviteSuccess(
+        'Demande envoyée avec succès ! Le propriétaire du workspace recevra votre demande.'
+      );
       fetchWorkspaces(); // Rafraîchir pour mettre à jour le statut
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'envoi de la demande");
+      // Gestion d'erreur plus élégante
+      setInviteError(err.message || "Erreur lors de l'envoi de la demande");
+    } finally {
+      setRequestJoinLoading(false);
     }
   };
 
@@ -178,9 +255,13 @@ export function useWorkspacePageLogic() {
     handleInviteSubmit,
     handleEdit,
     handleEditSubmit,
+    handleEditWorkspace,
     handleDelete,
     handleRequestJoin,
     editErrors,
     setEditErrors,
+    requestJoinLoading,
+    handleInviteModalSubmit,
+    handleClearInviteMessages,
   };
 }

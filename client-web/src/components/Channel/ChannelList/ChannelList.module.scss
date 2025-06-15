@@ -5,6 +5,28 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  /* Limiter la hauteur pour éviter le débordement */
+  max-height: 280px; /* Environ 2 canaux + gap */
+  overflow-y: auto;
+
+  /* Style de la barre de défilement */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--color-text-secondary);
+    }
+  }
 }
 
 .channel-item {

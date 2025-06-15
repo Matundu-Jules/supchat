@@ -23,7 +23,6 @@ import PrivateRoute from "@components/layout/PrivateRoute";
 import PublicRoute from "@components/layout/PublicRoute";
 import Loader from "@components/Loader";
 
-import Dashboard from "@pages/Dashboard";
 import WorkspacePage from "@pages/WorkspacePage";
 import MessagesPage from "@pages/MessagesPage";
 import RegisterPage from "@pages/RegisterPage";
@@ -33,7 +32,6 @@ import ResetPasswordPage from "@pages/ResetPasswordPage";
 import SetPasswordPage from "@pages/SetPasswordPage";
 import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
 import InviteWorkspacePage from "@pages/InviteWorkspacePage";
-import SearchPage from "@pages/SearchPage";
 import SettingsPage from "@pages/SettingsPage";
 
 const AppContent = ({
@@ -45,11 +43,6 @@ const AppContent = ({
 }) => {
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
-
-  // Log de debug pour tracker les changements de route
-  React.useEffect(() => {
-    console.log("🛣️  Route changed to:", location.pathname);
-  }, [location.pathname]);
 
   // Vérifier si on est sur les pages Login ou Register
   const isAuthPage =
@@ -71,17 +64,16 @@ const AppContent = ({
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Route>{" "}
-          {/* Routes privées */}
+          {/* Routes privées */}{" "}
           <Route element={<PrivateRoute />}>
             {/* Route pour la création obligatoire de mot de passe */}
             <Route path="/set-password" element={<SetPasswordPage />} />
             <Route path="/workspace" element={<WorkspacePage />} />
             <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
             <Route path="/message" element={<MessagesPage />} />
-            <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            {/* Route par défaut - DOIT être en dernier */}
-            <Route index element={<Dashboard />} />
+            {/* Route par défaut - redirection vers workspace */}
+            <Route index element={<WorkspacePage />} />
           </Route>
         </Routes>
       </main>
@@ -98,31 +90,25 @@ const App: React.FC = () => {
   // Initialise theme from store
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
-  }, [theme]);
-  // Vérifier l'authentification au chargement de l'app
+  }, [theme]); // Vérifier l'authentification au chargement de l'app
   useEffect(() => {
-    console.log("🔄 App.tsx - Starting getCurrentUser...");
     dispatch(setAuthLoading(true));
     getCurrentUser()
       .then(async (user) => {
-        console.log("👤 App.tsx - getCurrentUser response:", user);
         dispatch(setAuth(user));
 
         // Récupérer aussi le profil complet (avec avatar)
         try {
           const profile = await getProfile();
-          console.log("📝 App.tsx - getProfile response:", profile);
           dispatch(setAuth({ ...user, avatar: profile.avatar }));
         } catch (error) {
-          console.log("Erreur lors de la récupération du profil:", error);
+          // Erreur lors de la récupération du profil, continuer sans avatar
         }
       })
       .catch(() => {
-        console.log("❌ App.tsx - getCurrentUser failed, logging out");
         dispatch(logout());
       })
       .finally(() => {
-        console.log("✅ App.tsx - getCurrentUser completed");
         dispatch(setAuthLoading(false));
       });
   }, [dispatch]);

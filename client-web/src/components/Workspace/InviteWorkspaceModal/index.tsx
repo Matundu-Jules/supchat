@@ -42,12 +42,11 @@ const InviteWorkspaceModal: React.FC<InviteWorkspaceModalProps> = ({
       return;
     }
     setLocalError("");
-    console.log("About to invite:", email, "to workspace:", workspace._id);
+
     try {
       await onInvite(email);
       // Ne pas fermer automatiquement pour laisser voir le message de succès
     } catch (err) {
-      console.error("Modal caught error:", err);
       // L'erreur sera gérée par le parent
     }
   };

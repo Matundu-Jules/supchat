@@ -1,12 +1,15 @@
 const Workspace = require('../models/Workspace')
 const Permission = require('../models/Permission')
 const User = require('../models/User')
+const { getDefaultPermissions } = require('./rolePermissionService')
 
 function isGlobalAdmin(user) {
     return user && user.role === 'admin'
 }
 
 const findByUser = async (user) => {
+    const userId = user._id || user.id // Support pour les deux formats
+
     if (isGlobalAdmin(user)) {
         return Workspace.find().populate('owner', 'username email')
     }
@@ -17,20 +20,30 @@ const findByUser = async (user) => {
     )
 
     const permWorkspaceIds = await Permission.find({
-        userId: user.id,
+        userId: userId,
     }).distinct('workspaceId')
 
     const privateWorkspaces = await Workspace.find({
         isPublic: false,
         $or: [
-            { owner: user.id },
+            { owner: userId },
             { _id: { $in: permWorkspaceIds } },
-            { members: user.id },
+            { members: userId },
         ],
+    }).populate('owner', 'username email')
+
+    // Nouveauté : workspaces où l'utilisateur est invité
+    const invitedWorkspaces = await Workspace.find({
+        invitations: { $in: [user.email] },
     }).populate('owner', 'username email')
 
     const allWorkspaces = [...publicWorkspaces]
     for (const ws of privateWorkspaces) {
+        if (!allWorkspaces.some((w) => w._id.equals(ws._id))) {
+            allWorkspaces.push(ws)
+        }
+    }
+    for (const ws of invitedWorkspaces) {
         if (!allWorkspaces.some((w) => w._id.equals(ws._id))) {
             allWorkspaces.push(ws)
         }
@@ -44,24 +57,27 @@ const findByUser = async (user) => {
         const hasRequestedJoin =
             workspace.joinRequests &&
             workspace.joinRequests.some(
-                (request) => String(request.userId) === String(user.id)
+                (request) => String(request.userId) === String(userId)
             )
 
         // Vérifier si l'utilisateur est membre
         const isMember =
             workspace.members &&
             workspace.members.some(
-                (memberId) => String(memberId) === String(user.id)
-            )
-
-        // Vérifier si l'utilisateur est propriétaire
-        const isOwner =
-            String(workspace.owner._id || workspace.owner) === String(user.id)
+                (memberId) => String(memberId) === String(userId)
+            ) // Vérifier si l'utilisateur est propriétaire
+        const isOwner = workspace.owner
+            ? String(workspace.owner._id || workspace.owner) === String(userId)
+            : false
+        // Vérifier si l'utilisateur est invité
+        const isInvited =
+            workspace.invitations && workspace.invitations.includes(user.email)
 
         workspaceObj.userStatus = {
             isMember,
             isOwner,
             hasRequestedJoin,
+            isInvited,
         }
 
         return workspaceObj
@@ -85,16 +101,12 @@ const create = async ({ name, description, isPublic, owner }) => {
         members: [owner],
     })
     await workspace.save()
+
     await Permission.create({
         userId: owner,
         workspaceId: workspace._id,
         role: 'admin',
-        permissions: {
-            canPost: true,
-            canDeleteMessages: true,
-            canManageMembers: true,
-            canManageChannels: true,
-        },
+        permissions: getDefaultPermissions('admin'),
     })
     return workspace
 }
@@ -119,25 +131,42 @@ const remove = async (id) => {
 }
 
 const invite = async (workspaceId, email, user) => {
+    console.log('🔍 workspaceService.invite - Paramètres:', {
+        workspaceId,
+        email,
+        userId: user?.id,
+        userRole: user?.role,
+    })
+
     let isAdmin = false
     if (isGlobalAdmin(user)) {
+        console.log('✅ Utilisateur est admin global')
         isAdmin = true
     } else {
+        console.log('🔍 Vérification des permissions workspace...')
         const perm = await Permission.findOne({
             userId: user.id,
             workspaceId,
             role: 'admin',
         })
+        console.log('🔍 Permission trouvée:', perm)
         isAdmin = !!perm
     }
-    if (!isAdmin) {
-        throw new Error('NOT_ALLOWED')
-    }
 
-    // Vérifier que l'utilisateur existe
+    console.log('🔍 isAdmin:', isAdmin)
+    if (!isAdmin) {
+        console.log('❌ Accès refusé - utilisateur pas admin')
+        throw new Error('NOT_ALLOWED')
+    } // Vérifier que l'utilisateur existe
     const invitedUser = await User.findOne({ email })
     if (!invitedUser) {
         throw new Error('USER_NOT_FOUND')
+    }
+
+    // Vérifier que l'utilisateur ne s'invite pas lui-même
+    if (String(invitedUser._id) === String(user.id)) {
+        console.log("❌ Tentative d'auto-invitation détectée")
+        throw new Error('CANNOT_INVITE_YOURSELF')
     }
 
     const workspace = await Workspace.findById(workspaceId)
@@ -178,19 +207,12 @@ const join = async (inviteCode, user) => {
     })
     if (alreadyMember) {
         throw new Error('ALREADY_MEMBER')
-    }
-
-    // Création Permission
+    } // Création Permission
     await Permission.create({
         userId: user.id,
         workspaceId: workspace._id,
         role: 'membre',
-        permissions: {
-            canPost: true,
-            canDeleteMessages: false,
-            canManageMembers: false,
-            canManageChannels: false,
-        },
+        permissions: getDefaultPermissions('membre'),
     })
 
     // Ajout dans members (évite doublons) et suppression de l'invitation
@@ -293,26 +315,34 @@ const approveJoinRequest = async (
             requestUserId
         )
         throw new Error('REQUEST_NOT_FOUND')
-    }
-
-    // Supprimer la demande
+    } // Supprimer la demande
     workspace.joinRequests.splice(requestIndex, 1)
 
-    // Ajouter l'utilisateur comme membre
-    workspace.members.push(requestUserId)
+    // Vérifier si l'utilisateur n'est pas déjà membre pour éviter les doublons
+    const isMember = workspace.members.some(
+        (memberId) => String(memberId) === String(requestUserId)
+    )
 
-    // Créer les permissions
-    await Permission.create({
+    if (!isMember) {
+        // Ajouter l'utilisateur comme membre
+        workspace.members.push(requestUserId)
+    }
+
+    // Vérifier si l'utilisateur n'a pas déjà une permission pour éviter les erreurs de doublon
+    const existingPermission = await Permission.findOne({
         userId: requestUserId,
         workspaceId: workspace._id,
-        role: 'membre',
-        permissions: {
-            canPost: true,
-            canDeleteMessages: false,
-            canManageMembers: false,
-            canManageChannels: false,
-        },
     })
+
+    if (!existingPermission) {
+        // Créer les permissions
+        await Permission.create({
+            userId: requestUserId,
+            workspaceId: workspace._id,
+            role: 'membre',
+            permissions: getDefaultPermissions('membre'),
+        })
+    }
 
     await workspace.save()
     return workspace
@@ -442,6 +472,35 @@ const removeMember = async (workspaceId, targetUserId, requestingUser) => {
     }
 }
 
+/**
+ * Créer une permission pour un invité dans un workspace
+ * Les invités ont des permissions limitées et accès seulement aux channels spécifiés
+ */
+const createGuestPermission = async (
+    userId,
+    workspaceId,
+    allowedChannels = []
+) => {
+    // Supprimer l'ancienne permission si elle existe
+    await Permission.findOneAndDelete({ userId, workspaceId })
+
+    // Créer les rôles de channels pour les channels autorisés
+    const channelRoles = allowedChannels.map((channelId) => ({
+        channelId,
+        role: 'invité',
+    }))
+
+    const permission = await Permission.create({
+        userId,
+        workspaceId,
+        role: 'invité',
+        channelRoles,
+        permissions: getDefaultPermissions('invité'),
+    })
+
+    return permission
+}
+
 module.exports = {
     findByUser,
     findById,
@@ -455,4 +514,5 @@ module.exports = {
     rejectJoinRequest,
     getJoinRequests,
     removeMember,
+    createGuestPermission,
 }

@@ -23,7 +23,7 @@ const PublicRoute: React.FC = () => {
     return <Navigate to="/set-password" replace />;
   }
 
-  // Si l'utilisateur est connecté normalement, rediriger vers le dashboard
+  // Si l'utilisateur est connecté normalement, rediriger vers les workspaces
   if (user) {
     return <Navigate to="/" replace />;
   }

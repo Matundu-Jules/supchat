@@ -28,7 +28,11 @@ const Header: React.FC = () => {
   return (
     <header className={styles["header"]}>
       {/* Logo section (left) - ready for logo image */}
-      <NavLink to="/" className={styles["logo"]} title="Back to dashboard">
+      <NavLink
+        to="/workspace"
+        className={styles["logo"]}
+        title="Go to workspace"
+      >
         <img
           src="/assets/images/logo-supchat-simplified-without-text-primary.png"
           alt="SupChat Logo"
@@ -38,29 +42,12 @@ const Header: React.FC = () => {
       {/* Navigation desktop centrée (≥1024px) */}
       <nav className={styles["desktopNav"]}>
         <NavLink
-          to="/"
-          className={({ isActive }) =>
-            `${styles["navLinkDesktop"]} ${isActive ? styles["active"] : ""}`
-          }
-          end
-        >
-          Dashboard
-        </NavLink>
-        <NavLink
           to="/workspace"
           className={({ isActive }) =>
             `${styles["navLinkDesktop"]} ${isActive ? styles["active"] : ""}`
           }
         >
           Workspace
-        </NavLink>
-        <NavLink
-          to="/search"
-          className={({ isActive }) =>
-            `${styles["navLinkDesktop"]} ${isActive ? styles["active"] : ""}`
-          }
-        >
-          Recherche
         </NavLink>
         <NavLink
           to="/settings"
@@ -79,22 +66,12 @@ const Header: React.FC = () => {
         onClick={toggleMenu}
       >
         <i className="fa-solid fa-bars"></i>
-      </button>
+      </button>{" "}
       {/* Hamburger dropdown menu (mobile only) */}
       <nav
         ref={menuRef}
         className={`${styles["menu"]} ${isMenuOpen ? styles["open"] : ""}`}
       >
-        <NavLink
-          to="/"
-          className={({ isActive }) =>
-            `${styles["navLink"]} ${isActive ? styles["active"] : ""}`
-          }
-          onClick={() => setMenuOpen(false)}
-          end
-        >
-          Dashboard
-        </NavLink>{" "}
         <NavLink
           to="/workspace"
           className={({ isActive }) =>
@@ -104,15 +81,6 @@ const Header: React.FC = () => {
         >
           Workspace
         </NavLink>{" "}
-        <NavLink
-          to="/search"
-          className={({ isActive }) =>
-            `${styles["navLink"]} ${isActive ? styles["active"] : ""}`
-          }
-          onClick={() => setMenuOpen(false)}
-        >
-          Recherche
-        </NavLink>
         <NavLink
           to="/settings"
           className={({ isActive }) =>

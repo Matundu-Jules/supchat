@@ -44,6 +44,7 @@ const WorkspaceDetailPage: React.FC = () => {
     deleteLoading,
     handleEdit,
     handleDelete,
+    fetchDetails,
   } = useWorkspaceDetails(id || "");
   const navigate = useNavigate();
   const {
@@ -328,10 +329,11 @@ const WorkspaceDetailPage: React.FC = () => {
       case "join-requests":
         return (
           <div className={styles["content"]}>
-            <h2>Demandes d'accès au workspace</h2>
+            <h2>Demandes d'accès au workspace</h2>{" "}
             <JoinRequestsManager
               workspaceId={id || ""}
               isOwnerOrAdmin={isAdminOrOwner}
+              onRequestsChange={fetchDetails}
             />
           </div>
         );
@@ -452,7 +454,29 @@ const WorkspaceDetailPage: React.FC = () => {
                   onClick={() => setActiveMenu(item.id)}
                 >
                   <span className={styles["menuIcon"]}>{item.icon}</span>
-                  <span className={styles["menuLabel"]}>{item.label}</span>
+                  <span className={styles["menuLabel"]}>
+                    {item.label}
+                    {/* Compteur dynamique pour "Demandes d'accès" */}
+                    {item.id === "join-requests" &&
+                      Array.isArray(workspace.joinRequests) &&
+                      workspace.joinRequests.length > 0 && (
+                        <span
+                          style={{
+                            background: "#d32f2f",
+                            color: "white",
+                            borderRadius: "10px",
+                            padding: "2px 8px",
+                            fontSize: "0.85em",
+                            marginLeft: 8,
+                            fontWeight: 600,
+                            verticalAlign: "middle",
+                          }}
+                          aria-label={`${workspace.joinRequests.length} demande(s) en attente`}
+                        >
+                          {workspace.joinRequests.length}
+                        </span>
+                      )}
+                  </span>
                 </button>
               </li>
             ))}
