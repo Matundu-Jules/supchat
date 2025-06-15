@@ -12,6 +12,17 @@ const WorkspaceSchema = new mongoose.Schema({
         required: true,
     },
     invitations: [{ type: String }],
+    joinRequests: [
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                required: true,
+            },
+            requestedAt: { type: Date, default: Date.now },
+            message: { type: String, default: '' },
+        },
+    ],
 })
 
 module.exports = mongoose.model('Workspace', WorkspaceSchema)
