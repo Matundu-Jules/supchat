@@ -5,28 +5,17 @@ import styles from "./WorkspaceDetailPage.module.scss";
 import Loader from "@components/Loader";
 import { useSelector } from "react-redux";
 import type { RootState } from "@store/store";
-import ChannelList from "@components/Channel/ChannelList";
-import ChannelCreateForm from "@components/Channel/ChannelCreateForm";
-import { useChannels } from "@hooks/useChannels";
 import { useNavigate } from "react-router-dom";
 import JoinRequestsManager from "@components/Workspace/JoinRequestsManager";
 import WorkspaceRolesManager from "@components/Workspace/WorkspaceRolesManager";
-import ChannelRolesManager from "@components/Workspace/ChannelRolesManager";
-import ChannelMembersManager from "@components/Workspace/ChannelMembersManager";
 import EditWorkspaceModal from "@components/Workspace/EditWorkspaceModal";
 
-type MenuItem =
-  | "members"
-  | "channels"
-  | "channel-management"
-  | "roles"
-  | "join-requests"
-  | "settings";
+type MenuItem = "members" | "roles" | "join-requests" | "settings";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const user = useSelector((state: RootState) => state.auth.user);
-  const [activeMenu, setActiveMenu] = useState<MenuItem>("channels");
+  const [activeMenu, setActiveMenu] = useState<MenuItem>("members");
   const [showEditModal, setShowEditModal] = useState(false);
   const {
     workspace,
@@ -47,14 +36,6 @@ const WorkspaceDetailPage: React.FC = () => {
     fetchDetails,
   } = useWorkspaceDetails(id || "");
   const navigate = useNavigate();
-  const {
-    channels,
-    loading: channelsLoading,
-    error: channelsError,
-    fetchChannels,
-    handleCreateChannel,
-  } = useChannels(id || "");
-  const [search, setSearch] = useState("");
 
   if (loading) {
     return (
@@ -85,10 +66,6 @@ const WorkspaceDetailPage: React.FC = () => {
     workspace.owner &&
     (user.role === "admin" || user.email === workspace.owner.email);
 
-  const handleChannelAccess = (channel: any) => {
-    navigate(`/message?channel=${channel._id}`);
-  };
-
   const handleEditWorkspace = () => {
     setShowEditModal(true);
   };
@@ -109,15 +86,9 @@ const WorkspaceDetailPage: React.FC = () => {
     setShowEditModal(false);
   };
   const menuItems = [
-    { id: "channels" as MenuItem, label: "Canaux", icon: "💬" },
     { id: "members" as MenuItem, label: "Membres", icon: "👥" },
     ...(isAdminOrOwner
       ? [
-          {
-            id: "channel-management" as MenuItem,
-            label: "Gestion Canaux",
-            icon: "🔧",
-          },
           { id: "roles" as MenuItem, label: "Rôles", icon: "👑" },
           {
             id: "join-requests" as MenuItem,
@@ -220,109 +191,15 @@ const WorkspaceDetailPage: React.FC = () => {
           </div>
         );
 
-      case "channels":
-        return (
-          <div className={styles["content"]}>
-            <h2>Canaux du workspace</h2>
-            <div className={styles["channelsSection"]}>
-              <div className={styles["searchContainer"]}>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un canal..."
-                  className={styles["searchInput"]}
-                />
-              </div>
-
-              <div className={styles["channelsContent"]}>
-                <div className={styles["channelsList"]}>
-                  <h3>Liste des canaux</h3>
-                  {channelsLoading ? (
-                    <Loader />
-                  ) : channelsError ? (
-                    <p className={styles["error"]}>{channelsError}</p>
-                  ) : (
-                    <ChannelList
-                      channels={channels}
-                      filter={search}
-                      onAccess={handleChannelAccess}
-                    />
-                  )}
-                </div>
-
-                {isAdminOrOwner && (
-                  <div className={styles["createChannelSection"]}>
-                    <h3>Créer un nouveau canal</h3>
-                    <ChannelCreateForm
-                      workspaceId={id || ""}
-                      onCreate={handleCreateChannel}
-                      onCreated={fetchChannels}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>{" "}
-          </div>
-        );
-
-      case "channel-management":
-        return (
-          <div className={styles["content"]}>
-            <h2>Gestion des Canaux</h2>
-            {channels && channels.length > 0 ? (
-              <div className={styles["channelManagementSection"]}>
-                <p className={styles["description"]}>
-                  Sélectionnez un canal pour gérer ses membres et leurs rôles.
-                </p>
-                {channels.map((channel: any) => (
-                  <div
-                    key={channel._id}
-                    className={styles["channelManagementItem"]}
-                  >
-                    <h3>#{channel.name}</h3>
-                    <p>{channel.description || "Aucune description"}</p>
-                    <ChannelMembersManager
-                      workspaceId={id || ""}
-                      channelId={channel._id}
-                      channelName={channel.name}
-                      isChannelAdmin={isAdminOrOwner} // Pour l'instant, seuls les admins/owners peuvent gérer
-                      onMembersChange={() => {
-                        // Optionnel : recharger les données si nécessaire
-                        fetchChannels();
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles["emptyChannels"]}>
-                <p>
-                  Aucun canal disponible. Créez d'abord des canaux pour les
-                  gérer.
-                </p>
-              </div>
-            )}
-          </div>
-        );
-
       case "roles":
         return (
           <div className={styles["content"]}>
             <h2>Gestion des Rôles</h2>
-
             {/* Rôles du Workspace */}
             <WorkspaceRolesManager
               workspaceId={id || ""}
               isOwnerOrAdmin={isAdminOrOwner}
-            />
-
-            {/* Rôles par Canal */}
-            <ChannelRolesManager
-              workspaceId={id || ""}
-              channels={channels}
-              isOwnerOrAdmin={isAdminOrOwner}
-            />
+            />{" "}
           </div>
         );
 
@@ -374,10 +251,17 @@ const WorkspaceDetailPage: React.FC = () => {
                 <div className={styles["infoItem"]}>
                   <label>Nombre de membres :</label>
                   <span>{workspace.members?.length || 0}</span>
-                </div>
+                </div>{" "}
                 <div className={styles["infoItem"]}>
-                  <label>Nombre de canaux :</label>
-                  <span>{channels.length}</span>
+                  <label>Canaux :</label>
+                  <span>
+                    <button
+                      className={styles["linkButton"]}
+                      onClick={() => navigate(`/channels?workspace=${id}`)}
+                    >
+                      Voir tous les canaux
+                    </button>
+                  </span>
                 </div>
               </div>
 
@@ -419,17 +303,27 @@ const WorkspaceDetailPage: React.FC = () => {
     <div className={styles["workspaceLayout"]}>
       {/* En-tête du workspace */}
       <div className={styles["workspaceHeader"]}>
+        {" "}
         <div className={styles["headerContent"]}>
           <h1 className={styles["workspaceTitle"]}>{workspace.name}</h1>
-          <span
-            className={
-              workspace.isPublic
-                ? styles["badgePublic"]
-                : styles["badgePrivate"]
-            }
-          >
-            {workspace.isPublic ? "Public" : "Privé"}
-          </span>
+          <div className={styles["headerActions"]}>
+            <button
+              className={styles["channelsButton"]}
+              onClick={() => navigate(`/channels?workspace=${id}`)}
+              title="Accéder aux canaux"
+            >
+              Accéder aux Canaux
+            </button>
+            <span
+              className={
+                workspace.isPublic
+                  ? styles["badgePublic"]
+                  : styles["badgePrivate"]
+              }
+            >
+              {workspace.isPublic ? "Public" : "Privé"}
+            </span>
+          </div>
         </div>
         {workspace.description && (
           <p className={styles["workspaceDescription"]}>

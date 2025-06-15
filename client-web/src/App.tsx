@@ -25,6 +25,7 @@ import Loader from "@components/Loader";
 
 import WorkspacePage from "@pages/WorkspacePage";
 import MessagesPage from "@pages/MessagesPage";
+import ChannelsPageWrapper from "@pages/ChannelsPage/wrapper";
 import RegisterPage from "@pages/RegisterPage";
 import LoginPage from "@pages/LoginPage";
 import ForgotPasswordPage from "@pages/ForgotPasswordPage";
@@ -67,9 +68,10 @@ const AppContent = ({
           {/* Routes privées */}{" "}
           <Route element={<PrivateRoute />}>
             {/* Route pour la création obligatoire de mot de passe */}
-            <Route path="/set-password" element={<SetPasswordPage />} />
+            <Route path="/set-password" element={<SetPasswordPage />} />{" "}
             <Route path="/workspace" element={<WorkspacePage />} />
             <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
+            <Route path="/channels" element={<ChannelsPageWrapper />} />
             <Route path="/message" element={<MessagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             {/* Route par défaut - redirection vers workspace */}

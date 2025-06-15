@@ -1,4 +1,4 @@
-import api, { fetchCsrfToken } from "@utils/axiosInstance";
+import api, { fetchCsrfToken } from '@utils/axiosInstance';
 
 export interface ReactionPayload {
   messageId: string;
@@ -12,9 +12,18 @@ export async function getReactions(messageId: string) {
 }
 
 export async function addReaction(payload: ReactionPayload) {
-  await fetchCsrfToken();
-  const { data } = await api.post("/reactions", payload);
-  return data;
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.post('/reactions', payload);
+    return data;
+  } catch (error: any) {
+    // Si la réaction existe déjà (409), on ne lance pas d'erreur
+    if (error.response?.status === 409) {
+      console.log('Réaction déjà existante');
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function removeReaction(id: string) {
