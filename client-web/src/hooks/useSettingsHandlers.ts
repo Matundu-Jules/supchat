@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom';
 import { useSettingsLogic } from './useSettingsLogic';
 import { settingsInteractionService } from '@services/settingsInteractionService';
 
 export const useSettingsHandlers = () => {
   const settingsLogic = useSettingsLogic();
+  const navigate = useNavigate();
 
   // Handler pour la connexion Google Drive avec prompt
   const handleLinkDriveWithPrompt = async () => {
@@ -92,15 +94,12 @@ export const useSettingsHandlers = () => {
     if (!result.success && result.error) {
       settingsInteractionService.showError(result.error);
     }
-  };
-
-  // Handler pour la déconnexion globale
+  }; // Handler pour la déconnexion globale
   const handleLogoutAllWithFeedback = async () => {
     const result = await settingsLogic.handleLogoutAll();
     if (result.success) {
-      settingsInteractionService.showSuccess(
-        settingsInteractionService.messages.security.logoutAllSuccess
-      );
+      // Rediriger immédiatement vers login, pas de message
+      navigate('/login');
     } else {
       settingsInteractionService.showError(result.error || 'Erreur inconnue');
     }
@@ -117,15 +116,13 @@ export const useSettingsHandlers = () => {
       settingsInteractionService.showError(result.error || 'Erreur inconnue');
     }
   };
-
   // Handler pour la suppression du compte avec confirmation
   const handleDeleteAccountWithConfirmation = async () => {
     if (settingsInteractionService.confirmAccountDeletion()) {
       const result = await settingsLogic.handleDeleteAccount();
       if (result.success) {
-        settingsInteractionService.showSuccess(
-          settingsInteractionService.messages.security.accountDeleted
-        );
+        // Rediriger immédiatement vers register après suppression du compte
+        navigate('/register');
       } else {
         settingsInteractionService.showError(result.error || 'Erreur inconnue');
       }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '@store/store';
 import { setTheme, setStatus, Theme, Status } from '@store/preferencesSlice';
-import { updateUserProfile } from '@store/authSlice';
+import { updateUserProfile, logout } from '@store/authSlice';
 import {
   getProfile,
   updateProfile,
@@ -207,12 +207,28 @@ export const useSettingsLogic = () => {
           'Erreur lors de la déconnexion GitHub',
       };
     }
-  };
-
-  // Gestion de la sécurité
+  }; // Gestion de la sécurité
   const handleLogoutAll = async () => {
     try {
       await logoutAll();
+
+      // Nettoyer le store Redux
+      dispatch(logout());
+
+      // Nettoyer tous les cookies (pour être sûr)
+      document.cookie.split(';').forEach((c) => {
+        const eqPos = c.indexOf('=');
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie =
+          name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        document.cookie =
+          name +
+          '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=localhost';
+        document.cookie =
+          name +
+          '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.localhost';
+      });
+
       return { success: true };
     } catch (error: any) {
       console.error('Erreur lors de la déconnexion globale:', error);
@@ -248,10 +264,28 @@ export const useSettingsLogic = () => {
       };
     }
   };
-
   const handleDeleteAccount = async () => {
     try {
+      // Supprimer le compte
       await deleteAccount();
+
+      // Nettoyer le store Redux
+      dispatch(logout());
+
+      // Nettoyer tous les cookies (pour être sûr)
+      document.cookie.split(';').forEach((c) => {
+        const eqPos = c.indexOf('=');
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie =
+          name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        document.cookie =
+          name +
+          '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=localhost';
+        document.cookie =
+          name +
+          '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.localhost';
+      });
+
       return { success: true };
     } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
