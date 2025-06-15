@@ -18,6 +18,11 @@
   font-size: 1.4rem;
 }
 
+.input-select {
+  @extend .input;
+  color: var(--color-text);
+}
+
 .label-description {
   margin-top: 1rem;
 }

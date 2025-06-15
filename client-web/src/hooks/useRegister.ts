@@ -109,12 +109,8 @@ export function useRegister() {
     try {
       const res = await googleLogin(credentialResponse.credential);
       if (res && res.user) {
-        console.log('Google register response:', res.user); // Debug
         dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Google a un mot de passe
         if (res.user.googleId && res.user.hasPassword === false) {
-          console.log(
-            'Redirecting Google user without password to set-password page'
-          );
           // Rediriger vers la page de création de mot de passe
           navigate('/set-password', { replace: true });
         } else {
@@ -137,11 +133,8 @@ export function useRegister() {
     try {
       const res = await facebookLogin(response.accessToken);
       if (res && res.user) {
-        console.log('Facebook register response:', res.user); // Debug        dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
+        dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
         if (res.user.facebookId && res.user.hasPassword === false) {
-          console.log(
-            'Redirecting Facebook user without password to set-password page'
-          );
           // Rediriger vers la page de création de mot de passe
           navigate('/set-password', { replace: true });
         } else {

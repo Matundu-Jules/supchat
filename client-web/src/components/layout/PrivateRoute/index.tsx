@@ -27,9 +27,6 @@ const PrivateRoute: React.FC = () => {
     user.hasPassword === false &&
     location.pathname !== "/set-password"
   ) {
-    console.log(
-      "🔄 PrivateRoute: Redirecting user without password to /set-password"
-    );
     return <Navigate to="/set-password" replace />;
   }
 

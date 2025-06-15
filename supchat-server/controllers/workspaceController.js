@@ -1,9 +1,15 @@
 const workspaceService = require('../services/workspaceService')
+const {
+    canViewAllWorkspaceMembers,
+} = require('../services/rolePermissionService')
 const nodemailer = require('nodemailer')
 const React = require('react')
 const { renderToStaticMarkup } = require('react-dom/server')
 const { getIo } = require('../socket')
 const Notification = require('../models/Notification')
+const Permission = require('../models/Permission')
+const User = require('../models/User')
+const Channel = require('../models/Channel')
 
 // Helper pour vérifier si l'utilisateur est admin global (à adapter selon votre logique)
 function isGlobalAdmin(user) {
@@ -19,7 +25,11 @@ exports.getAllWorkspaces = async (req, res) => {
         const workspaces = await workspaceService.findByUser(req.user)
         res.status(200).json(workspaces)
     } catch (error) {
-        res.status(500).json({ message: 'Erreur serveur', error })
+        console.error('Error in getAllWorkspaces:', error)
+        res.status(500).json({
+            message: 'Erreur serveur',
+            error: error.message,
+        })
     }
 }
 
@@ -86,7 +96,15 @@ exports.getWorkspaceById = async (req, res) => {
             }
         }
 
-        return res.status(200).json(workspace)
+        // Ajout du nombre de demandes de join dans la réponse
+        const joinRequestsCount = workspace.joinRequests
+            ? workspace.joinRequests.length
+            : 0
+
+        return res.status(200).json({
+            ...workspace.toObject(),
+            joinRequestsCount,
+        })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
     }
@@ -128,6 +146,23 @@ exports.getWorkspaceMembers = async (req, res) => {
         ) {
             return res.status(403).json({
                 message: "Accès refusé. Vous n'êtes pas membre de cet espace.",
+            })
+        }
+
+        // Vérifier si l'utilisateur peut voir tous les membres
+        const userRole = hasPermission
+            ? hasPermission.role
+            : isOwner
+              ? 'admin'
+              : 'membre'
+        if (
+            !canViewAllWorkspaceMembers(userRole) &&
+            !isOwner &&
+            !isGlobalAdmin(req.user)
+        ) {
+            return res.status(403).json({
+                message:
+                    "Accès refusé. Vous n'avez pas les permissions pour voir tous les membres.",
             })
         }
 
@@ -235,6 +270,14 @@ exports.inviteToWorkspace = async (req, res) => {
     try {
         const { id } = req.params // workspaceId
         const { email } = req.body
+
+        console.log('🔍 inviteToWorkspace - Paramètres reçus:', {
+            workspaceId: id,
+            email,
+            invitingUser: req.user?.id,
+            invitingUserEmail: req.user?.email,
+        })
+
         let workspace
         let invitedUser
         try {
@@ -242,6 +285,10 @@ exports.inviteToWorkspace = async (req, res) => {
             workspace = result.workspace
             invitedUser = result.invitedUser
         } catch (err) {
+            console.error(
+                '❌ Erreur dans workspaceService.invite:',
+                err.message
+            )
             if (err.message === 'NOT_ALLOWED') {
                 return res.status(403).json({
                     message:
@@ -257,7 +304,16 @@ exports.inviteToWorkspace = async (req, res) => {
                     .json({ message: 'Cet email est déjà invité.' })
             }
             if (err.message === 'USER_NOT_FOUND') {
-                return res.status(400).json({ message: 'USER_NOT_FOUND' })
+                return res.status(400).json({
+                    message:
+                        'Cette adresse email ne correspond à aucun utilisateur inscrit. Seuls les utilisateurs ayant un compte peuvent être invités.',
+                })
+            }
+            if (err.message === 'CANNOT_INVITE_YOURSELF') {
+                return res.status(400).json({
+                    message:
+                        'Vous ne pouvez pas vous inviter vous-même dans votre propre workspace.',
+                })
             }
             throw err
         }
@@ -380,9 +436,7 @@ exports.requestToJoinWorkspace = async (req, res) => {
             id,
             req.user,
             message
-        )
-
-        // Envoyer une notification au propriétaire
+        ) // Envoyer une notification au propriétaire
         const io = getIo()
         const notification = new Notification({
             userId: workspace.owner,
@@ -397,7 +451,7 @@ exports.requestToJoinWorkspace = async (req, res) => {
         })
         await notification.save()
 
-        io.emit('notification', notification)
+        io.to(`user_${workspace.owner}`).emit('notification', notification)
 
         res.status(200).json({
             message: 'Demande envoyée au propriétaire du workspace',
@@ -450,9 +504,7 @@ exports.approveJoinRequest = async (req, res) => {
             id,
             requestUserId,
             req.user
-        )
-
-        // Envoyer une notification à l'utilisateur qui a fait la demande
+        ) // Envoyer une notification à l'utilisateur qui a fait la demande
         const io = getIo()
         const notification = new Notification({
             userId: requestUserId,
@@ -465,7 +517,7 @@ exports.approveJoinRequest = async (req, res) => {
         })
         await notification.save()
 
-        io.emit('notification', notification)
+        io.to(`user_${requestUserId}`).emit('notification', notification)
 
         res.status(200).json({
             message: 'Demande approuvée avec succès',
@@ -473,6 +525,7 @@ exports.approveJoinRequest = async (req, res) => {
         })
     } catch (error) {
         console.error('❌ Erreur dans approveJoinRequest:', error)
+        console.error('❌ Stack trace:', error.stack)
         if (error.message === 'WORKSPACE_NOT_FOUND') {
             return res.status(404).json({ message: 'Workspace non trouvé' })
         }
@@ -485,6 +538,10 @@ exports.approveJoinRequest = async (req, res) => {
         res.status(500).json({
             message: 'Erreur serveur',
             error: error.message,
+            details:
+                process.env.NODE_ENV === 'development'
+                    ? error.stack
+                    : undefined,
         })
     }
 }
@@ -498,9 +555,7 @@ exports.rejectJoinRequest = async (req, res) => {
             id,
             requestUserId,
             req.user
-        )
-
-        // Envoyer une notification à l'utilisateur qui a fait la demande
+        ) // Envoyer une notification à l'utilisateur qui a fait la demande
         const io = getIo()
         const notification = new Notification({
             userId: requestUserId,
@@ -513,7 +568,7 @@ exports.rejectJoinRequest = async (req, res) => {
         })
         await notification.save()
 
-        io.emit('notification', notification)
+        io.to(`user_${requestUserId}`).emit('notification', notification)
 
         res.status(200).json({
             message: 'Demande rejetée avec succès',
@@ -587,6 +642,101 @@ exports.removeMember = async (req, res) => {
             })
         }
 
+        res.status(500).json({
+            message: 'Erreur serveur',
+            error: error.message,
+        })
+    }
+}
+
+// ✅ Inviter un invité avec accès limité à des channels spécifiques
+exports.inviteGuestToWorkspace = async (req, res) => {
+    try {
+        const { id } = req.params // workspaceId
+        const { email, allowedChannels = [] } = req.body
+
+        console.log('🔍 inviteGuestToWorkspace - Paramètres reçus:', {
+            workspaceId: id,
+            email,
+            allowedChannels,
+            invitingUser: req.user?.id,
+        })
+
+        const workspace = await workspaceService.findById(id)
+        if (!workspace) {
+            return res.status(404).json({ message: 'Espace non trouvé' })
+        }
+
+        // Vérifier les permissions de l'utilisateur qui invite
+        const isOwner =
+            String(workspace.owner._id || workspace.owner) ===
+            String(req.user.id)
+        const isAdmin = await Permission.findOne({
+            userId: req.user.id,
+            workspaceId: id,
+            role: 'admin',
+        })
+
+        if (!isOwner && !isAdmin && !isGlobalAdmin(req.user)) {
+            return res.status(403).json({
+                message:
+                    'Accès refusé. Seuls les admins peuvent inviter des invités.',
+            })
+        } // Vérifier que l'utilisateur invité existe
+        const invitedUser = await User.findOne({ email })
+        if (!invitedUser) {
+            return res.status(400).json({
+                message:
+                    'Cette adresse email ne correspond à aucun utilisateur inscrit. Seuls les utilisateurs ayant un compte peuvent être invités.',
+            })
+        }
+
+        // Vérifier que l'utilisateur n'est pas déjà membre
+        const existingPermission = await Permission.findOne({
+            userId: invitedUser._id,
+            workspaceId: id,
+        })
+        if (existingPermission) {
+            return res.status(400).json({
+                message: 'Cet utilisateur est déjà membre du workspace.',
+            })
+        }
+
+        // Créer les permissions d'invité
+        const permission = await workspaceService.createGuestPermission(
+            invitedUser._id,
+            id,
+            allowedChannels
+        )
+
+        // Ajouter l'utilisateur aux channels spécifiés
+        for (const channelId of allowedChannels) {
+            await Channel.findByIdAndUpdate(channelId, {
+                $addToSet: { members: invitedUser._id },
+            })
+        }
+
+        // Ajouter l'utilisateur aux membres du workspace
+        await Workspace.findByIdAndUpdate(id, {
+            $addToSet: { members: invitedUser._id },
+        })
+
+        // Envoyer une notification à l'invité
+        const io = getIo()
+        const notification = new Notification({
+            type: 'workspace_guest_invite',
+            userId: invitedUser._id,
+            workspaceId: id,
+        })
+        await notification.save()
+        io.to(`user_${invitedUser._id}`).emit('notification', notification)
+
+        res.status(200).json({
+            message: `${email} a été invité en tant qu'invité au workspace`,
+            permission,
+        })
+    } catch (error) {
+        console.error('❌ Erreur dans inviteGuestToWorkspace:', error)
         res.status(500).json({
             message: 'Erreur serveur',
             error: error.message,

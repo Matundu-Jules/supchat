@@ -84,12 +84,18 @@
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-1px);
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
   }
 }
 
@@ -97,7 +103,7 @@
   background: var(--color-success);
   color: white;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--color-success-dark, #059669);
   }
 }
@@ -106,7 +112,7 @@
   background: var(--color-error);
   color: white;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--color-error-dark, #dc2626);
   }
 }
@@ -119,11 +125,38 @@
   font-size: 1.3rem;
 }
 
-.error {
-  color: var(--color-error);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--color-error);
+.success {
+  background: var(--color-success-light, #d1fae5);
+  color: var(--color-success-dark, #065f46);
+  border: 1px solid var(--color-success, #10b981);
   border-radius: 0.5rem;
-  padding: 1rem;
-  font-size: 1.2rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.error {
+  background: var(--color-error-light, #fef2f2);
+  color: var(--color-error-dark, #7f1d1d);
+  border: 1px solid var(--color-error, #ef4444);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  i {
+    font-size: 1rem;
+  }
 }

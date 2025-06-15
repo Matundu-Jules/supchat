@@ -2,6 +2,10 @@ const Channel = require('../models/Channel')
 const Permission = require('../models/Permission')
 const Workspace = require('../models/Workspace')
 const User = require('../models/User')
+const {
+    canCreateChannels,
+    canAccessChannel,
+} = require('./rolePermissionService')
 
 const isAdminOrOwner = async (userId, workspaceId) => {
     const workspace = await Workspace.findById(workspaceId)
@@ -38,10 +42,20 @@ const isChannelAdmin = async (userId, channel) => {
 }
 
 const create = async ({ name, workspaceId, description, type }, user) => {
-    const allowed = await isAdminOrOwner(user.id, workspaceId)
-    if (!allowed) {
+    // Vérifier les permissions de création
+    const perm = await Permission.findOne({ userId: user.id, workspaceId })
+    if (!perm) {
         throw new Error('NOT_ALLOWED')
     }
+
+    // Vérifier si l'utilisateur peut créer des channels
+    const canCreate =
+        canCreateChannels(perm.role, type) ||
+        (await isAdminOrOwner(user.id, workspaceId))
+    if (!canCreate) {
+        throw new Error('NOT_ALLOWED')
+    }
+
     const channel = new Channel({
         name,
         workspace: workspaceId,
@@ -72,7 +86,19 @@ const findByWorkspace = async (workspaceId, user) => {
         throw new Error('NOT_ALLOWED')
     }
 
-    return Channel.find({ workspace: workspaceId })
+    const allChannels = await Channel.find({ workspace: workspaceId })
+    // Si c'est un invité, filtrer les channels selon ses permissions
+    if (perm && perm.role === 'invité') {
+        // Les invités ne voient que les channels où ils sont explicitement membres
+        return allChannels.filter((channel) =>
+            channel.members.some(
+                (memberId) => String(memberId) === String(user.id)
+            )
+        )
+    }
+
+    // Admins et membres voient tous les channels
+    return allChannels
 }
 
 const findById = (id) => {

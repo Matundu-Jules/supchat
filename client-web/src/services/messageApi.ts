@@ -21,6 +21,10 @@ export async function getMessages(channelId: string) {
 export async function sendMessage(formData: MessageFormData) {
   try {
     await fetchCsrfToken();
+    // Empêche l'envoi si text vide et pas de fichier
+    if ((!formData.text || !formData.text.trim()) && !formData.file) {
+      throw new Error("Le message ne peut pas être vide.");
+    }
     const dataToSend = new FormData();
     dataToSend.append("channelId", formData.channelId);
     dataToSend.append("text", formData.text);

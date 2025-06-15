@@ -12,7 +12,6 @@ import { usePasswordToggle } from "@hooks/usePasswordToggle";
 import styles from "./SetPasswordPage.module.scss";
 
 const SetPasswordPage: React.FC = () => {
-  console.log("🎯 SetPasswordPage component rendered");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => state.preferences.theme);
@@ -44,32 +43,8 @@ const SetPasswordPage: React.FC = () => {
     document.body.setAttribute("data-theme", newTheme);
   }; // Si l'utilisateur a déjà un mot de passe, rediriger
   React.useEffect(() => {
-    console.log("🔍 SetPasswordPage - useEffect triggered");
-    console.log("🔍 SetPasswordPage - user:", user);
-    console.log(
-      "🔍 SetPasswordPage - hasPassword type:",
-      typeof user?.hasPassword
-    );
-    console.log("🔍 SetPasswordPage - hasPassword value:", user?.hasPassword);
-    console.log(
-      "🔍 SetPasswordPage - hasPassword === true:",
-      user?.hasPassword === true
-    );
-    console.log(
-      "🔍 SetPasswordPage - hasPassword === false:",
-      user?.hasPassword === false
-    );
-
     if (user?.hasPassword === true) {
-      console.log(
-        "🔄 SetPasswordPage - Redirecting to / because hasPassword is true"
-      );
       navigate("/", { replace: true });
-    } else {
-      console.log(
-        "✅ SetPasswordPage - Staying on page, hasPassword is:",
-        user?.hasPassword
-      );
     }
   }, [user?.hasPassword, navigate]);
   return (

@@ -97,37 +97,24 @@ export function useLogin() {
   };
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      console.log('🚀 Starting Google login...');
       const res = await googleLogin(credentialResponse.credential);
-      console.log('📋 Google login response:', res);
 
       if (res && res.user) {
-        console.log('👤 User object:', res.user);
-        console.log('🔍 Has googleId:', !!res.user.googleId);
-        console.log('🔐 hasPassword value:', res.user.hasPassword);
+        dispatch(reduxLogin(res.user));
 
-        dispatch(reduxLogin(res.user)); // Rediriger les utilisateurs Google vers set-password SEULEMENT s'ils n'ont pas de mot de passe
+        // Rediriger les utilisateurs Google vers set-password SEULEMENT s'ils n'ont pas de mot de passe
         if (res.user.googleId && res.user.hasPassword === false) {
-          console.log(
-            '🔄 Redirecting Google user without password to /set-password'
-          );
           navigate('/set-password', { replace: true });
-          console.log('✅ Navigation to /set-password completed');
         } else {
-          console.log(
-            '🏠 Normal redirect - Google user with password or non-Google user'
-          );
           // Redirection normale
           const redirect =
             location.state?.redirect ||
             sessionStorage.getItem('redirectAfterAuth') ||
             '/';
-          console.log('🏠 Normal redirect to:', redirect);
           navigate(redirect, { replace: true });
           sessionStorage.removeItem('redirectAfterAuth');
         }
       } else {
-        console.log('❌ No user in response');
         alert('Erreur lors de la connexion Google : utilisateur non trouvé');
       }
     } catch (err) {
@@ -138,12 +125,10 @@ export function useLogin() {
     try {
       const res = await facebookLogin(response.accessToken);
       if (res && res.user) {
-        console.log('Facebook login response:', res.user); // Debug
-        dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
+        dispatch(reduxLogin(res.user));
+
+        // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
         if (res.user.facebookId && res.user.hasPassword === false) {
-          console.log(
-            'Redirecting Facebook user without password to set-password page'
-          );
           // Rediriger vers la page de création de mot de passe
           navigate('/set-password', { replace: true });
         } else {
