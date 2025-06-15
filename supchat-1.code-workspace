@@ -9,7 +9,7 @@
     },
     {
       "name": "client-mobile",
-      "path": "client-mobile/src"
+      "path": "client-mobile"
     },
     {
       "name": "supchat-server",

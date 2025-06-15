@@ -16,6 +16,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API_ENDPOINTS } from "../../constants/api";
 
 const forgotPasswordSchema = Yup.object().shape({
   email: Yup.string().required("Email requis").email("Email invalide"),
@@ -26,7 +27,7 @@ export default function ForgotPasswordScreen() {
 
   const handleSubmit = async (values: { email: string }) => {
     try {
-      await axios.post("http://localhost:3000/api/auth/forgot-password", {
+      await axios.post(API_ENDPOINTS.forgotPassword, {
         email: values.email,
       });
       Alert.alert(
