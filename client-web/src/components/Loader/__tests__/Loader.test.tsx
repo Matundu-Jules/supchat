@@ -17,11 +17,25 @@ describe("Loader", () => {
     const loader = screen.getByRole("status");
     expect(loader).toHaveClass("custom-loader");
   });
-  it("should render spinner element", () => {
+  it("should render logo and loading elements", () => {
     const { container } = render(<Loader />);
 
-    const spinner = container.querySelector('[class*="spinner"]');
-    expect(spinner).toBeInTheDocument();
+    // Vérifier que le logo est présent
+    const logo = container.querySelector('img[alt="SupChat Logo"]');
+    expect(logo).toBeInTheDocument();
+
+    // Vérifier que le texte SUPCHAT est présent
+    const loadingText = container.querySelector('[class*="loadingText"]');
+    expect(loadingText).toBeInTheDocument();
+    expect(loadingText).toHaveTextContent("SUPCHAT");
+
+    // Vérifier que les points de chargement sont présents
+    const loadingDots = container.querySelector('[class*="loadingDots"]');
+    expect(loadingDots).toBeInTheDocument();
+
+    // Vérifier qu'il y a 3 points
+    const dots = container.querySelectorAll('[class*="loadingDots"] span');
+    expect(dots).toHaveLength(3);
   });
 
   it("should have proper accessibility attributes", () => {
