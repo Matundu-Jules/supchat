@@ -129,6 +129,23 @@ export async function getWorkspaceDetails(workspaceId: string) {
 }
 
 /**
+ * Récupère la liste des membres d'un workspace
+ */
+export async function getWorkspaceMembers(workspaceId: string) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.get(`/workspaces/${workspaceId}/members`);
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors de la récupération des membres du workspace'
+    );
+  }
+}
+
+/**
  * Récupère les infos publiques d'un workspace (pas besoin d'être connecté)
  * Si workspace privé, il faut fournir l'email invité en query.
  */
@@ -146,6 +163,111 @@ export async function getWorkspacePublicInfo(
       err?.response?.data?.message ||
         err.message ||
         'Erreur lors de la récupération des infos publiques du workspace'
+    );
+  }
+}
+
+/**
+ * Demander à rejoindre un workspace public
+ */
+export async function requestToJoinWorkspace(
+  workspaceId: string,
+  message?: string
+) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.post(`/workspaces/${workspaceId}/request-join`, {
+      message: message || '',
+    });
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors de la demande de rejoindre le workspace'
+    );
+  }
+}
+
+/**
+ * Récupérer les demandes de rejoindre pour un workspace (propriétaire/admin seulement)
+ */
+export async function getJoinRequests(workspaceId: string) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.get(`/workspaces/${workspaceId}/join-requests`);
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors de la récupération des demandes de rejoindre'
+    );
+  }
+}
+
+/**
+ * Approuver une demande de rejoindre
+ */
+export async function approveJoinRequest(
+  workspaceId: string,
+  requestUserId: string
+) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.post(
+      `/workspaces/${workspaceId}/join-requests/${requestUserId}/approve`
+    );
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        "Erreur lors de l'approbation de la demande"
+    );
+  }
+}
+
+/**
+ * Rejeter une demande de rejoindre
+ */
+export async function rejectJoinRequest(
+  workspaceId: string,
+  requestUserId: string
+) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.post(
+      `/workspaces/${workspaceId}/join-requests/${requestUserId}/reject`
+    );
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors du rejet de la demande'
+    );
+  }
+}
+
+/**
+ * Supprimer un membre d'un workspace
+ */
+export async function removeMemberFromWorkspace(
+  workspaceId: string,
+  userId: string
+) {
+  try {
+    await fetchCsrfToken();
+    const { data } = await api.delete(
+      `/workspaces/${workspaceId}/members/${userId}`
+    );
+    return data;
+  } catch (err: any) {
+    throw new Error(
+      err?.response?.data?.message ||
+        err.message ||
+        'Erreur lors de la suppression du membre'
     );
   }
 }

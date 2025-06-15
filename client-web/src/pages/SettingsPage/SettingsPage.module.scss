@@ -1,30 +1,599 @@
+// Page des paramètres - Version simplifiée et claire
+@use "../../styles/themes" as *;
+
 .settingsPage {
-  padding: 2rem;
+  width: 70%;
+  min-height: calc(100vh - var(--header-height));
+  margin-top: var(--header-height);
+  background: var(--color-background);
+  padding: 2rem 1rem;
+
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .pageHeader {
+    text-align: center;
+    margin-bottom: 3rem;
+    h1 {
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 0.5rem 0;
+    }
+
+    p {
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+  }
+
+  .settingsList {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+  .settingsSection {
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    h2 {
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 1.5rem 0;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .editIndicator {
+        font-size: var(--font-size-m);
+        font-weight: 400;
+        color: var(--color-primary);
+        background: var(--color-primary-light);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        animation: pulse 2s infinite;
+      }
+    }
+
+    .field-presence {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+
+      label {
+        margin-right: 2rem;
+      }
+    }
+  }
+  // Section Profil
+  .profileContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  // Profil - Section avatars (mode lecture)
+  .avatarSection {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+
+    .avatarContainer {
+      position: relative;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--color-border);
+      flex-shrink: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .avatarPlaceholder {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--color-border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-primary);
+      color: white;
+      font-weight: 600;
+      font-size: var(--font-size-xl);
+    } // Boutons pour avatar - toujours visibles
+    .avatarButtons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 14rem;
+    }
+
+    .avatarChangeBtn {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: var(--font-size-s);
+
+      &:hover {
+        background: var(--color-primary-dark);
+      }
+    }
+
+    .avatarDeleteBtn {
+      background: transparent;
+      color: var(--color-error);
+      border: 1px solid var(--color-error);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: var(--font-size-s);
+
+      &:hover {
+        background: var(--color-error);
+        color: white;
+      }
+    }
+  }
+
+  // Mode édition - Styles pour l'édition du profil
+  .profileEdit {
+    background: var(--color-surface);
+    border: 2px solid var(--color-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+
+    .editHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--color-border);
+
+      h3 {
+        margin: 0;
+        color: var(--color-primary);
+        font-weight: 600;
+      }
+
+      .editIndicator {
+        background: var(--color-primary);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: var(--font-size-xs);
+        font-weight: 500;
+      }
+    }
+
+    .editForm {
+      .field {
+        margin-bottom: 1.5rem;
+
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+          color: var(--color-text-primary);
+        }
+
+        .input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          font-size: var(--font-size-m);
+          background: var(--color-background);
+          color: var(--color-text-primary);
+
+          &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+          }
+        }
+
+        .disabledField {
+          @extend .input;
+          background: var(--color-border);
+          color: var(--color-text-secondary);
+          cursor: not-allowed;
+        }
+
+        .fieldNote {
+          display: block;
+          margin-top: 0.5rem;
+          color: var(--color-text-secondary);
+          font-size: var(--font-size-s);
+        }
+      }
+
+      .editActions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+
+        .btnPrimary {
+          @extend .btn;
+          width: 28rem;
+        }
+
+        .btnSecondary {
+          @extend .btn-cancel;
+          width: 15rem;
+        }
+      }
+    }
+  }
+  .profileInfo {
+    background: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+
+    .infoItem {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--color-border);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      strong {
+        color: var(--color-text-primary);
+        font-weight: 600;
+        font-size: var(--font-size-m);
+        min-width: 140px;
+      }
+
+      span {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-m);
+        text-align: right;
+        flex: 1;
+      }
+    }
+  }
+  .editForm {
+    background: var(--color-background);
+    border: 2px solid var(--color-primary);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 1rem;
+    animation: slideDown 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    .field {
+      margin-bottom: 1.5rem;
+
+      &-presence {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
+
+      &:last-of-type {
+        margin-bottom: 2rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        margin-right: 1rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+        font-size: var(--font-size-m);
+        transition: border-color 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+        }
+      }
+    }
+
+    .editActions {
+      display: flex;
+      gap: 1rem;
+      justify-content: space-around;
+    }
+  }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  } // Boutons - héritent du style .btn du thème
+  .button,
+  .buttonPrimary,
+  .buttonSecondary {
+    @extend .btn;
+    width: 100%;
+  }
+
+  .buttonSecondary {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+
+    &:hover {
+      background: var(--color-background);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+  }
+
+  .buttonDanger {
+    @extend .btn-danger;
+    width: 100%;
+    background: var(--color-error);
+    color: white;
+
+    &:hover {
+      color: white;
+      background: var(--color-error-hover);
+      border: none;
+    }
+  }
+
+  .btnProfileInfo {
+    @extend .btn;
+    width: 16rem;
+  }
+
+  // Section Thème
+  .themeSection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--color-background);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+
+    .themeInfo {
+      strong {
+        display: block;
+        color: var(--color-text-primary);
+        margin-bottom: 0.25rem;
+      }
+      p {
+        color: var(--color-text-secondary);
+        margin: 0;
+      }
+    }
+    .themeToggle {
+      background-color: transparent;
+      color: white;
+      border: 1px solid var(--color-primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: var(--font-size-xl);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+
+      .themeIconCurrent,
+      .themeIconHover {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      .themeIconCurrent {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      }
+
+      .themeIconHover {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5) rotate(-180deg);
+      }
+
+      &:hover {
+        background: var(--color-primary-dark);
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+        .themeIconCurrent {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.5) rotate(180deg);
+        }
+
+        .themeIconHover {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        }
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+
+  // Section Intégrations
+  .integrationsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .integration {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--color-background);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+
+    .integrationInfo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      .integrationIcon {
+        font-size: var(--font-size-xxl);
+        margin-right: 1rem;
+
+        i.fa-google-drive {
+          color: #4285f4; // Couleur officielle Google Drive
+        }
+
+        i.fa-github {
+          color: var(
+            --color-text-primary
+          ); // Garde la couleur du thème pour GitHub
+        }
+      }
+
+      strong {
+        display: block;
+        color: var(--color-text-primary);
+        margin-bottom: 0.25rem;
+      }
+      p {
+        margin: 0;
+
+        &.connected {
+          color: var(--color-success);
+        }
+
+        &.disconnected {
+          color: var(--color-text-secondary);
+        }
+      }
+    }
+
+    .btn-integration {
+      @extend .btn;
+
+      &.connected {
+        background: var(--color-success);
+        color: white;
+
+        &:hover {
+          background: var(--color-success-dark);
+        }
+      }
+
+      &.disconnected {
+        background: transparent;
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-error);
+
+        &:hover {
+          background: var(--color-background);
+          border-color: var(--color-primary);
+          color: var(--color-primary);
+        }
+      }
+    }
+  }
+
+  // Section Sécurité
+  .securityActions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .dangerZone {
+    background: rgba(var(--color-error-rgb), 0.05);
+    border: 1px solid rgba(var(--color-error-rgb), 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    h3 {
+      color: var(--color-error);
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+
+    p {
+      color: var(--color-text-secondary);
+      margin: 0 0 1rem 0;
+    }
+  }
 }
 
-.profileSection,
-.prefSection,
-.notifSection {
-  margin-bottom: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+// Responsive
+@media (max-width: 768px) {
+  .settingsPage {
+    padding: 1rem 0.5rem;
+    .container {
+      max-width: 100%;
+    }
 
-.integrationSection {
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+    .settingsSection {
+      padding: 1.5rem;
+    }
 
-.securitySection {
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+    .profileContainer {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
 
-button {
-  width: fit-content;
+    .themeSection {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+  }
 }

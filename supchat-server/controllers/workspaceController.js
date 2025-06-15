@@ -92,6 +92,59 @@ exports.getWorkspaceById = async (req, res) => {
     }
 }
 
+// ✅ Récupérer les membres d'un workspace
+exports.getWorkspaceMembers = async (req, res) => {
+    try {
+        const { id } = req.params
+        const workspace = await workspaceService.findById(id)
+
+        if (!workspace) {
+            return res
+                .status(404)
+                .json({ message: 'Espace de travail non trouvé' })
+        }
+
+        // Vérifier les permissions d'accès
+        let ownerId = workspace.owner
+        if (typeof ownerId === 'object' && ownerId !== null) {
+            ownerId = ownerId._id || ownerId.id || ownerId
+        }
+        const isOwner = String(ownerId) === String(req.user.id)
+
+        const Permission = require('../models/Permission')
+        const isMember = workspace.members?.some(
+            (m) => String(m._id || m) === String(req.user.id)
+        )
+        const hasPermission = await Permission.findOne({
+            userId: req.user.id,
+            workspaceId: workspace._id,
+        })
+
+        if (
+            !isGlobalAdmin(req.user) &&
+            !isOwner &&
+            !isMember &&
+            !hasPermission
+        ) {
+            return res.status(403).json({
+                message: "Accès refusé. Vous n'êtes pas membre de cet espace.",
+            })
+        }
+
+        // Récupérer tous les membres (avec populate des infos utilisateur)
+        const User = require('../models/User')
+        const populatedWorkspace = await workspace.populate(
+            'members',
+            'username email _id'
+        )
+
+        return res.status(200).json(populatedWorkspace.members)
+    } catch (error) {
+        console.error('Erreur lors de la récupération des membres:', error)
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
 // ✅ Modifier un workspace (public : admin global ou owner, privé : admin global ou owner)
 exports.updateWorkspace = async (req, res) => {
     try {
@@ -314,5 +367,229 @@ exports.getWorkspacePublic = async (req, res) => {
         })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
+// ✅ Demander à rejoindre un workspace public
+exports.requestToJoinWorkspace = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { message } = req.body
+
+        const workspace = await workspaceService.requestToJoin(
+            id,
+            req.user,
+            message
+        )
+
+        // Envoyer une notification au propriétaire
+        const io = getIo()
+        const notification = new Notification({
+            userId: workspace.owner,
+            type: 'join_request',
+            message: `${req.user.name || req.user.email} demande à rejoindre ${workspace.name}`,
+            data: {
+                workspaceId: workspace._id,
+                requestUserId: req.user.id,
+                workspaceName: workspace.name,
+                requestUserName: req.user.name || req.user.email,
+            },
+        })
+        await notification.save()
+
+        io.emit('notification', notification)
+
+        res.status(200).json({
+            message: 'Demande envoyée au propriétaire du workspace',
+            workspace,
+        })
+    } catch (error) {
+        if (error.message === 'WORKSPACE_NOT_FOUND') {
+            return res.status(404).json({ message: 'Workspace non trouvé' })
+        }
+        if (error.message === 'WORKSPACE_NOT_PUBLIC') {
+            return res
+                .status(400)
+                .json({ message: "Ce workspace n'est pas public" })
+        }
+        if (error.message === 'ALREADY_MEMBER') {
+            return res
+                .status(400)
+                .json({ message: 'Vous êtes déjà membre de ce workspace' })
+        }
+        if (error.message === 'ALREADY_OWNER') {
+            return res
+                .status(400)
+                .json({ message: 'Vous êtes le propriétaire de ce workspace' })
+        }
+        if (error.message === 'REQUEST_ALREADY_EXISTS') {
+            return res.status(400).json({
+                message:
+                    'Vous avez déjà une demande en cours pour ce workspace',
+            })
+        }
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
+// ✅ Approuver une demande de rejoindre
+exports.approveJoinRequest = async (req, res) => {
+    try {
+        const { id, requestUserId } = req.params
+        console.log('🔍 approveJoinRequest - Paramètres reçus:', {
+            id,
+            requestUserId,
+        })
+        console.log(
+            '🔍 approveJoinRequest - Utilisateur qui approuve:',
+            req.user?.id,
+            req.user?.email
+        )
+
+        const workspace = await workspaceService.approveJoinRequest(
+            id,
+            requestUserId,
+            req.user
+        )
+
+        // Envoyer une notification à l'utilisateur qui a fait la demande
+        const io = getIo()
+        const notification = new Notification({
+            userId: requestUserId,
+            type: 'join_approved',
+            message: `Votre demande pour rejoindre ${workspace.name} a été acceptée`,
+            data: {
+                workspaceId: workspace._id,
+                workspaceName: workspace.name,
+            },
+        })
+        await notification.save()
+
+        io.emit('notification', notification)
+
+        res.status(200).json({
+            message: 'Demande approuvée avec succès',
+            workspace,
+        })
+    } catch (error) {
+        console.error('❌ Erreur dans approveJoinRequest:', error)
+        if (error.message === 'WORKSPACE_NOT_FOUND') {
+            return res.status(404).json({ message: 'Workspace non trouvé' })
+        }
+        if (error.message === 'REQUEST_NOT_FOUND') {
+            return res.status(404).json({ message: 'Demande non trouvée' })
+        }
+        if (error.message === 'PERMISSION_DENIED') {
+            return res.status(403).json({ message: 'Permission insuffisante' })
+        }
+        res.status(500).json({
+            message: 'Erreur serveur',
+            error: error.message,
+        })
+    }
+}
+
+// ✅ Rejeter une demande de rejoindre
+exports.rejectJoinRequest = async (req, res) => {
+    try {
+        const { id, requestUserId } = req.params
+
+        const workspace = await workspaceService.rejectJoinRequest(
+            id,
+            requestUserId,
+            req.user
+        )
+
+        // Envoyer une notification à l'utilisateur qui a fait la demande
+        const io = getIo()
+        const notification = new Notification({
+            userId: requestUserId,
+            type: 'join_rejected',
+            message: `Votre demande pour rejoindre ${workspace.name} a été refusée`,
+            data: {
+                workspaceId: workspace._id,
+                workspaceName: workspace.name,
+            },
+        })
+        await notification.save()
+
+        io.emit('notification', notification)
+
+        res.status(200).json({
+            message: 'Demande rejetée avec succès',
+        })
+    } catch (error) {
+        if (error.message === 'WORKSPACE_NOT_FOUND') {
+            return res.status(404).json({ message: 'Workspace non trouvé' })
+        }
+        if (error.message === 'REQUEST_NOT_FOUND') {
+            return res.status(404).json({ message: 'Demande non trouvée' })
+        }
+        if (error.message === 'PERMISSION_DENIED') {
+            return res.status(403).json({ message: 'Permission insuffisante' })
+        }
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
+// ✅ Récupérer les demandes de rejoindre pour un workspace
+exports.getJoinRequests = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const requests = await workspaceService.getJoinRequests(id, req.user)
+
+        res.status(200).json(requests)
+    } catch (error) {
+        if (error.message === 'WORKSPACE_NOT_FOUND') {
+            return res.status(404).json({ message: 'Workspace non trouvé' })
+        }
+        if (error.message === 'PERMISSION_DENIED') {
+            return res.status(403).json({ message: 'Permission insuffisante' })
+        }
+        res.status(500).json({ message: 'Erreur serveur', error })
+    }
+}
+
+// ✅ Supprimer un membre d'un workspace
+exports.removeMember = async (req, res) => {
+    try {
+        const { id, userId } = req.params
+
+        console.log("🗑️ Demande de suppression d'un membre:", {
+            workspaceId: id,
+            targetUserId: userId,
+            requestingUser: req.user.id,
+        })
+
+        const result = await workspaceService.removeMember(id, userId, req.user)
+
+        res.status(200).json(result)
+    } catch (error) {
+        console.error('❌ Erreur dans removeMember:', error)
+
+        if (error.message === 'WORKSPACE_NOT_FOUND') {
+            return res.status(404).json({ message: 'Workspace non trouvé' })
+        }
+        if (error.message === 'USER_NOT_IN_WORKSPACE') {
+            return res
+                .status(404)
+                .json({ message: 'Utilisateur non trouvé dans le workspace' })
+        }
+        if (error.message === 'CANNOT_REMOVE_OWNER') {
+            return res.status(403).json({
+                message: 'Impossible de supprimer le propriétaire du workspace',
+            })
+        }
+        if (error.message === 'PERMISSION_DENIED') {
+            return res.status(403).json({
+                message: 'Permission insuffisante pour supprimer ce membre',
+            })
+        }
+
+        res.status(500).json({
+            message: 'Erreur serveur',
+            error: error.message,
+        })
     }
 }

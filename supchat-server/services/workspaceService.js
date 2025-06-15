@@ -35,7 +35,39 @@ const findByUser = async (user) => {
             allWorkspaces.push(ws)
         }
     }
-    return allWorkspaces
+
+    // Ajouter des informations sur les demandes de rejoindre pour chaque workspace
+    const workspacesWithRequestInfo = allWorkspaces.map((workspace) => {
+        const workspaceObj = workspace.toObject()
+
+        // Vérifier si l'utilisateur a fait une demande pour ce workspace
+        const hasRequestedJoin =
+            workspace.joinRequests &&
+            workspace.joinRequests.some(
+                (request) => String(request.userId) === String(user.id)
+            )
+
+        // Vérifier si l'utilisateur est membre
+        const isMember =
+            workspace.members &&
+            workspace.members.some(
+                (memberId) => String(memberId) === String(user.id)
+            )
+
+        // Vérifier si l'utilisateur est propriétaire
+        const isOwner =
+            String(workspace.owner._id || workspace.owner) === String(user.id)
+
+        workspaceObj.userStatus = {
+            isMember,
+            isOwner,
+            hasRequestedJoin,
+        }
+
+        return workspaceObj
+    })
+
+    return workspacesWithRequestInfo
 }
 
 const findById = (id) => {
@@ -161,15 +193,253 @@ const join = async (inviteCode, user) => {
         },
     })
 
-  // Ajout dans members (évite doublons) et suppression de l'invitation
-  await Workspace.findByIdAndUpdate(workspace._id, {
-    $addToSet: { members: user.id },
-    $pull: { invitations: user.email },
-  })
+    // Ajout dans members (évite doublons) et suppression de l'invitation
+    await Workspace.findByIdAndUpdate(workspace._id, {
+        $addToSet: { members: user.id },
+        $pull: { invitations: user.email },
+    })
 
-  const updatedWorkspace = await Workspace.findById(workspace._id)
-  await updatedWorkspace.save()
-  return updatedWorkspace
+    const updatedWorkspace = await Workspace.findById(workspace._id)
+    await updatedWorkspace.save()
+    return updatedWorkspace
+}
+
+const requestToJoin = async (workspaceId, user, message = '') => {
+    const workspace = await Workspace.findById(workspaceId)
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    // Vérifier que le workspace est public
+    if (!workspace.isPublic) {
+        throw new Error('WORKSPACE_NOT_PUBLIC')
+    }
+
+    // Vérifier que l'utilisateur n'est pas déjà membre
+    const isMember = workspace.members.some(
+        (memberId) => String(memberId) === String(user.id)
+    )
+    if (isMember) {
+        throw new Error('ALREADY_MEMBER')
+    }
+
+    // Vérifier que l'utilisateur n'est pas le propriétaire
+    if (String(workspace.owner) === String(user.id)) {
+        throw new Error('ALREADY_OWNER')
+    }
+
+    // Vérifier qu'il n'y a pas déjà une demande en cours
+    const existingRequest = workspace.joinRequests.find(
+        (request) => String(request.userId) === String(user.id)
+    )
+    if (existingRequest) {
+        throw new Error('REQUEST_ALREADY_EXISTS')
+    }
+
+    // Ajouter la demande
+    workspace.joinRequests.push({
+        userId: user.id,
+        message: message,
+        requestedAt: new Date(),
+    })
+
+    await workspace.save()
+    return workspace
+}
+
+const approveJoinRequest = async (
+    workspaceId,
+    requestUserId,
+    approvingUser
+) => {
+    console.log('🔍 Service approveJoinRequest - Paramètres:', {
+        workspaceId,
+        requestUserId,
+        approvingUserId: approvingUser?.id,
+    })
+
+    const workspace = await Workspace.findById(workspaceId)
+    if (!workspace) {
+        console.error('❌ Workspace non trouvé:', workspaceId)
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    console.log('✅ Workspace trouvé:', workspace.name)
+    console.log('🔍 Demandes actuelles:', workspace.joinRequests?.length || 0)
+
+    // Vérifier que l'utilisateur qui approuve est le propriétaire ou admin
+    const isOwner = String(workspace.owner) === String(approvingUser.id)
+    const isAdmin = await Permission.findOne({
+        userId: approvingUser.id,
+        workspaceId: workspace._id,
+        role: 'admin',
+    })
+
+    if (!isOwner && !isAdmin && !isGlobalAdmin(approvingUser)) {
+        throw new Error('PERMISSION_DENIED')
+    } // Trouver la demande
+    const requestIndex = workspace.joinRequests.findIndex(
+        (request) => String(request.userId) === String(requestUserId)
+    )
+    console.log('🔍 Index de la demande trouvée:', requestIndex)
+    console.log(
+        '🔍 Demandes disponibles:',
+        workspace.joinRequests.map((r) => ({ userId: r.userId, requestUserId }))
+    )
+
+    if (requestIndex === -1) {
+        console.error(
+            "❌ Demande non trouvée pour l'utilisateur:",
+            requestUserId
+        )
+        throw new Error('REQUEST_NOT_FOUND')
+    }
+
+    // Supprimer la demande
+    workspace.joinRequests.splice(requestIndex, 1)
+
+    // Ajouter l'utilisateur comme membre
+    workspace.members.push(requestUserId)
+
+    // Créer les permissions
+    await Permission.create({
+        userId: requestUserId,
+        workspaceId: workspace._id,
+        role: 'membre',
+        permissions: {
+            canPost: true,
+            canDeleteMessages: false,
+            canManageMembers: false,
+            canManageChannels: false,
+        },
+    })
+
+    await workspace.save()
+    return workspace
+}
+
+const rejectJoinRequest = async (workspaceId, requestUserId, rejectingUser) => {
+    const workspace = await Workspace.findById(workspaceId)
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    // Vérifier que l'utilisateur qui rejette est le propriétaire ou admin
+    const isOwner = String(workspace.owner) === String(rejectingUser.id)
+    const isAdmin = await Permission.findOne({
+        userId: rejectingUser.id,
+        workspaceId: workspace._id,
+        role: 'admin',
+    })
+
+    if (!isOwner && !isAdmin && !isGlobalAdmin(rejectingUser)) {
+        throw new Error('PERMISSION_DENIED')
+    }
+
+    // Trouver et supprimer la demande
+    const requestIndex = workspace.joinRequests.findIndex(
+        (request) => String(request.userId) === String(requestUserId)
+    )
+    if (requestIndex === -1) {
+        throw new Error('REQUEST_NOT_FOUND')
+    }
+
+    workspace.joinRequests.splice(requestIndex, 1)
+    await workspace.save()
+    return workspace
+}
+
+const getJoinRequests = async (workspaceId, user) => {
+    const workspace = await Workspace.findById(workspaceId).populate(
+        'joinRequests.userId',
+        'name email avatar'
+    )
+
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    // Vérifier que l'utilisateur est propriétaire ou admin
+    const isOwner = String(workspace.owner) === String(user.id)
+    const isAdmin = await Permission.findOne({
+        userId: user.id,
+        workspaceId: workspace._id,
+        role: 'admin',
+    })
+
+    if (!isOwner && !isAdmin && !isGlobalAdmin(user)) {
+        throw new Error('PERMISSION_DENIED')
+    }
+
+    return workspace.joinRequests
+}
+
+const removeMember = async (workspaceId, targetUserId, requestingUser) => {
+    console.log("🗑️ Suppression d'un membre du workspace:", {
+        workspaceId,
+        targetUserId,
+        requestingUserId: requestingUser.id,
+    })
+
+    const workspace = await Workspace.findById(workspaceId).populate(
+        'members',
+        'username email'
+    )
+
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    // Vérifier que l'utilisateur demandeur est propriétaire ou admin
+    const isOwner = String(workspace.owner) === String(requestingUser.id)
+    const isAdmin = await Permission.findOne({
+        userId: requestingUser.id,
+        workspaceId: workspace._id,
+        role: 'admin',
+    })
+
+    if (!isOwner && !isAdmin && !isGlobalAdmin(requestingUser)) {
+        console.log('❌ Permission refusée pour supprimer un membre')
+        throw new Error('PERMISSION_DENIED')
+    }
+
+    // Vérifier que l'utilisateur cible existe dans le workspace
+    const targetUserExists = workspace.members.some(
+        (member) => String(member._id) === String(targetUserId)
+    )
+
+    if (!targetUserExists) {
+        console.log('❌ Utilisateur non trouvé dans le workspace')
+        throw new Error('USER_NOT_IN_WORKSPACE')
+    }
+
+    // Empêcher la suppression du propriétaire
+    if (String(workspace.owner) === String(targetUserId)) {
+        console.log('❌ Impossible de supprimer le propriétaire du workspace')
+        throw new Error('CANNOT_REMOVE_OWNER')
+    }
+
+    // Supprimer l'utilisateur des membres
+    workspace.members = workspace.members.filter(
+        (member) => String(member._id) !== String(targetUserId)
+    )
+
+    await workspace.save()
+
+    // Supprimer toutes les permissions de l'utilisateur pour ce workspace
+    await Permission.deleteMany({
+        userId: targetUserId,
+        workspaceId: workspace._id,
+    })
+
+    console.log('✅ Membre supprimé avec succès du workspace')
+
+    return {
+        message: 'Membre supprimé avec succès',
+        workspace: await Workspace.findById(workspaceId)
+            .populate('members', 'username email')
+            .populate('owner', 'username email'),
+    }
 }
 
 module.exports = {
@@ -180,4 +450,9 @@ module.exports = {
     remove,
     invite,
     join,
+    requestToJoin,
+    approveJoinRequest,
+    rejectJoinRequest,
+    getJoinRequests,
+    removeMember,
 }

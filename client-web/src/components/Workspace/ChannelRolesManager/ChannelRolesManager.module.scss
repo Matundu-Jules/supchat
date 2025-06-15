@@ -1,0 +1,270 @@
+.channelRolesManager {
+  background: var(--color-surface);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.channelRolesManager h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.8rem;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.description {
+  font-size: 1.4rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.channelSelector {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--color-background-light);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.channelSelector label {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+}
+
+.channelSelect {
+  width: 100%;
+  max-width: 400px;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 1.4rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.channelSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.channelRolesSection {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.channelHeader {
+  background: var(--color-primary-light);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.channelHeader h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.6rem;
+  color: var(--color-primary-dark);
+}
+
+.channelDescription {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.rolesList {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.roleItem {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.roleItem:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.userInfo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.userEmail {
+  font-size: 1.3rem;
+  color: var(--color-text-secondary);
+}
+
+.baseRole {
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  padding: 0.3rem 0.8rem;
+  background: var(--color-background-light);
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.baseRole strong {
+  color: var(--color-primary);
+}
+
+.channelRoleSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 220px;
+  align-items: flex-end;
+}
+
+.channelRoleSelector label {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.resetButton {
+  background: var(--color-warning);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.resetButton:hover {
+  background: var(--color-warning-dark);
+}
+
+.emptyState,
+.emptyChannels,
+.noAccess {
+  text-align: center;
+  padding: 3rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.emptyState {
+  background: var(--color-background-light);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.emptyChannels {
+  background: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning-dark);
+}
+
+.noAccess {
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  color: var(--color-error-dark);
+}
+
+.emptyState p,
+.emptyChannels p,
+.noAccess p {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.helpSection {
+  background: var(--color-background-light);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.helpSection h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+}
+
+.helpSection ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.helpSection li {
+  padding: 0.5rem 0;
+  font-size: 1.3rem;
+  color: var(--color-text-secondary);
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.helpSection li::before {
+  content: "•";
+  color: var(--color-primary);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .userInfo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .channelRoleSelector {
+    min-width: auto;
+    align-items: stretch;
+  }
+
+  .channelRolesManager {
+    padding: 1.5rem;
+  }
+
+  .channelRolesManager h3 {
+    font-size: 1.6rem;
+  }
+
+  .channelSelect {
+    max-width: none;
+  }
+}

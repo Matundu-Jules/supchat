@@ -3,6 +3,9 @@ import {
   getWorkspaceDetails,
   inviteToWorkspace,
   joinWorkspace,
+  removeMemberFromWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
 } from '@services/workspaceApi';
 
 export function useWorkspaceDetails(workspaceId: string) {
@@ -15,6 +18,8 @@ export function useWorkspaceDetails(workspaceId: string) {
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchDetails = async () => {
     setLoading(true);
@@ -74,12 +79,70 @@ export function useWorkspaceDetails(workspaceId: string) {
     }
   };
 
+  const handleRemoveMember = async (userId: string) => {
+    if (
+      !confirm('Êtes-vous sûr de vouloir supprimer ce membre du workspace ?')
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await removeMemberFromWorkspace(workspaceId, userId);
+      // Rafraîchir les détails du workspace pour mettre à jour la liste des membres
+      await fetchDetails();
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la suppression du membre');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (formData: {
+    name: string;
+    description?: string;
+    isPublic: boolean;
+  }) => {
+    setEditLoading(true);
+    setError(null);
+    try {
+      await updateWorkspace(workspaceId, formData);
+      // Rafraîchir les détails du workspace après modification
+      await fetchDetails();
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la modification du workspace');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        'Êtes-vous sûr de vouloir supprimer ce workspace ? Cette action est irréversible.'
+      )
+    ) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    setError(null);
+    try {
+      await deleteWorkspace(workspaceId);
+      // Rediriger vers la liste des workspaces après suppression
+      window.location.href = '/workspaces';
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la suppression du workspace');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
     setInviteSuccess(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
-
   return {
     workspace,
     loading,
@@ -93,7 +156,12 @@ export function useWorkspaceDetails(workspaceId: string) {
     joinCode,
     setJoinCode,
     joinLoading,
+    editLoading,
+    deleteLoading,
     handleInvite,
     handleJoin,
+    handleRemoveMember,
+    handleEdit,
+    handleDelete,
   };
 }

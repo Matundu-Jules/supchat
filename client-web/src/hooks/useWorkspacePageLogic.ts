@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@store/store';
 import { useWorkspaces } from '@hooks/useWorkspaces';
 import { updateWorkspace as updateWorkspaceApi } from '@services/workspaceApi';
 import { deleteWorkspace as deleteWorkspaceApi } from '@services/workspaceApi';
+import { requestJoinWorkspace } from '@store/workspacesSlice';
 
 export function useWorkspacePageLogic() {
   const {
@@ -14,6 +17,8 @@ export function useWorkspacePageLogic() {
     handleInvite,
     handleJoin,
   } = useWorkspaces();
+
+  const dispatch = useDispatch<AppDispatch>();
 
   const [showModal, setShowModal] = useState(false);
   const [inviteModal, setInviteModal] = useState<null | {
@@ -131,6 +136,21 @@ export function useWorkspacePageLogic() {
       setDeleteLoading(false);
     }
   };
+  const handleRequestJoin = async (workspace: any) => {
+    try {
+      await dispatch(
+        requestJoinWorkspace({
+          workspaceId: workspace._id,
+          message: `Bonjour, je souhaiterais rejoindre votre workspace "${workspace.name}".`,
+        })
+      );
+
+      alert('Demande envoyée au propriétaire du workspace !');
+      fetchWorkspaces(); // Rafraîchir pour mettre à jour le statut
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de l'envoi de la demande");
+    }
+  };
 
   return {
     workspaces,
@@ -159,6 +179,7 @@ export function useWorkspacePageLogic() {
     handleEdit,
     handleEditSubmit,
     handleDelete,
+    handleRequestJoin,
     editErrors,
     setEditErrors,
   };

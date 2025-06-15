@@ -18,7 +18,10 @@ const app = express()
 const port = process.env.PORT
 const server = http.createServer(app)
 const { initSocket } = require('../socket')
-const io = initSocket(server, ['http://localhost:5173', 'http://localhost:3000'])
+const io = initSocket(server, [
+    'http://localhost:5173',
+    'http://localhost:3000',
+])
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000']
 
@@ -106,7 +109,7 @@ const mongoUri =
     process.env.MONGO_URI ||
     `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${encodeURIComponent(
         MONGO_INITDB_ROOT_PASSWORD
-    )}@${MONGO_HOST || 'localhost'}:${MONGO_PORT || 27017}/$${
+    )}@${MONGO_HOST || 'localhost'}:${MONGO_PORT || 27017}/${
         MONGO_DB || 'supchat'
     }?authSource=${MONGO_AUTH_SOURCE || 'admin'}`
 
@@ -117,11 +120,10 @@ async function connectToDatabase(uri) {
 }
 
 if (process.env.NODE_ENV !== 'test') {
-    connectToDatabase()
-        .catch((err) => {
-            console.error('MongoDB connection error:', err)
-            process.exit(1)
-        })
+    connectToDatabase().catch((err) => {
+        console.error('MongoDB connection error:', err)
+        process.exit(1)
+    })
 } else {
     console.log('MongoDB connection skipped in test environment')
 }

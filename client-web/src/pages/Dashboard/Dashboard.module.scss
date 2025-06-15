@@ -1,7 +1,12 @@
 .container {
+  margin-top: var(--header-height);
   padding: 2rem;
   max-width: 60rem;
-  margin: 0 auto;
+  min-height: calc(100vh - (var(--header-height) + var(--footer-height)));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .title {

@@ -9,17 +9,18 @@ const {
     updateWorkspaceSchema,
     inviteToWorkspaceSchema,
     joinWorkspaceSchema,
+    requestJoinWorkspaceSchema,
     workspaceIdParamSchema,
+    requestUserIdParamSchema,
 } = require('../validators/workspaceValidators')
 const { validate } = require('../middlewares/validationMiddleware')
 
 const router = express.Router()
 
-// Créer un workspace (admin uniquement)
+// Créer un workspace (tous les utilisateurs authentifiés)
 router.post(
     '/',
     authMiddleware,
-    roleMiddleware(['admin']),
     validate({ body: createWorkspaceSchema }),
     workspaceController.createWorkspace
 )
@@ -33,6 +34,14 @@ router.get(
     authMiddleware,
     validate({ params: workspaceIdParamSchema }),
     workspaceController.getWorkspaceById
+)
+
+// Récupérer les membres d'un workspace
+router.get(
+    '/:id/members',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    workspaceController.getWorkspaceMembers
 )
 
 // Route publique pour infos publiques d'un workspace (pas d'authMiddleware)
@@ -71,6 +80,49 @@ router.post(
     authMiddleware,
     validate({ body: joinWorkspaceSchema }),
     workspaceController.joinWorkspace
+)
+
+// Demander à rejoindre un workspace public
+router.post(
+    '/:id/request-join',
+    authMiddleware,
+    validate({
+        params: workspaceIdParamSchema,
+        body: requestJoinWorkspaceSchema,
+    }),
+    workspaceController.requestToJoinWorkspace
+)
+
+// Récupérer les demandes de rejoindre pour un workspace
+router.get(
+    '/:id/join-requests',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    workspaceController.getJoinRequests
+)
+
+// Approuver une demande de rejoindre
+router.post(
+    '/:id/join-requests/:requestUserId/approve',
+    authMiddleware,
+    validate({ params: requestUserIdParamSchema }),
+    workspaceController.approveJoinRequest
+)
+
+// Rejeter une demande de rejoindre
+router.post(
+    '/:id/join-requests/:requestUserId/reject',
+    authMiddleware,
+    validate({ params: requestUserIdParamSchema }),
+    workspaceController.rejectJoinRequest
+)
+
+// Supprimer un membre d'un workspace
+router.delete(
+    '/:id/members/:userId',
+    authMiddleware,
+    validate({ params: requestUserIdParamSchema }), // Réutilise le même validateur car il valide id et userId
+    workspaceController.removeMember
 )
 
 module.exports = router

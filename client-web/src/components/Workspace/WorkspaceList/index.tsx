@@ -8,6 +8,11 @@ type Workspace = {
   isPublic: boolean;
   members?: any[];
   owner?: { email?: string; username?: string; _id?: string };
+  userStatus?: {
+    isMember: boolean;
+    isOwner: boolean;
+    hasRequestedJoin: boolean;
+  };
 };
 
 type WorkspaceListProps = {
@@ -18,6 +23,7 @@ type WorkspaceListProps = {
   onInvite?: (workspace: Workspace) => void;
   onEdit?: (workspace: Workspace) => void;
   onDelete?: (workspace: Workspace) => void;
+  onRequestJoin?: (workspace: Workspace) => void;
 };
 
 const WorkspaceList: React.FC<WorkspaceListProps> = ({
@@ -28,6 +34,7 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
   onInvite,
   onEdit,
   onDelete,
+  onRequestJoin,
 }) => {
   const lowered = filter ? filter.toLowerCase() : "";
   const filtered = lowered
@@ -50,8 +57,24 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
           ws.owner &&
           (user.email === ws.owner.email || user._id === ws.owner._id);
         const isAdmin = user && user.role === "admin";
+
+        // Utiliser userStatus si disponible, sinon fallback sur l'ancienne logique
+        const isMember =
+          ws.userStatus?.isMember ||
+          (ws.members &&
+            user &&
+            ws.members.some(
+              (m) => (m._id || m) === user._id || (m.email || m) === user.email
+            ));
+        const hasRequestedJoin = ws.userStatus?.hasRequestedJoin || false;
+
         // Invitation : seuls owner ou admin peuvent inviter
         const canInvite = isOwner || isAdmin;
+
+        // Peut demander à rejoindre : workspace public, utilisateur connecté, pas déjà membre, pas propriétaire, pas déjà demandé
+        const canRequestJoin =
+          user && ws.isPublic && !isMember && !isOwner && !hasRequestedJoin;
+
         return (
           <li key={ws._id} className={styles["workspace-list-item"]}>
             <div className={styles["workspace-list-header"]}>
@@ -74,6 +97,25 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               <button className={`btn`} onClick={() => onAccess?.(ws)}>
                 Accéder
               </button>
+
+              {canRequestJoin && (
+                <button
+                  onClick={() => onRequestJoin?.(ws)}
+                  className={`btn ${styles["btn-request-join"]}`}
+                  title="Demander à rejoindre"
+                  aria-label="Demander à rejoindre"
+                  type="button"
+                >
+                  Demander à rejoindre
+                </button>
+              )}
+
+              {hasRequestedJoin && (
+                <span className={styles["request-pending"]}>
+                  Demande en cours...
+                </span>
+              )}
+
               {canInvite && (
                 <button
                   onClick={() => onInvite?.(ws)}
