@@ -1,215 +1,323 @@
-import React, { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState, AppDispatch } from '@store/store'
-import {
-  setTheme,
-  setStatus,
-  Theme,
-  Status,
-} from '@store/preferencesSlice'
-import {
-  getProfile,
-  updateProfile,
-  getPreferences,
-  updatePreferences,
-  updateEmail,
-  uploadAvatar,
-  deleteAvatar,
-  exportUserData,
-} from '@services/userApi'
-import {
-  listIntegrations,
-  linkGoogleDrive,
-  unlinkGoogleDrive,
-  linkGithub,
-  unlinkGithub,
-  linkGoogleAccount,
-  unlinkGoogleAccount,
-  linkFacebookAccount,
-  unlinkFacebookAccount,
-} from '@services/integrationApi'
-import { useNotificationPrefs } from '@hooks/useNotificationPrefs'
-import NotificationPrefList from '@components/Notification/NotificationPrefList'
-import { logoutAll, deleteAccount } from '@services/authApi'
-import styles from './SettingsPage.module.scss'
+import React from "react";
+import { getAvatarUrl } from "@utils/avatarUtils";
+import { useNotificationPrefs } from "@hooks/useNotificationPrefs";
+import { useSettingsHandlers } from "@hooks/useSettingsHandlers";
+import NotificationPrefList from "@components/Notification/NotificationPrefList";
+import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>()
-  const { theme, status } = useSelector((state: RootState) => state.preferences)
-  const user = useSelector((state: RootState) => state.auth.user)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [avatar, setAvatar] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [integrations, setIntegrations] = useState({
-    googleDrive: false,
-    github: false,
-  })
-  const { prefs, updatePref } = useNotificationPrefs()
+  const {
+    // États
+    user,
+    theme,
+    name,
+    setName,
+    email,
+    avatar,
+    isEditingProfile,
+    integrations,
+    // Actions du profil
+    handleSaveProfileWithFeedback,
+    handleAvatarChangeWithFeedback,
+    startEditingProfile,
+    cancelEditingProfile,
+    // Actions du thème
+    handleThemeToggleWithFeedback,
+    // Actions des intégrations
+    handleLinkDriveWithPrompt,
+    handleUnlinkDriveWithFeedback,
+    handleLinkGithubWithPrompt,
+    handleUnlinkGithubWithFeedback,
+    // Actions de sécurité
+    handleLogoutAllWithFeedback,
+    handleExportWithFeedback,
+    handleDeleteAccountWithConfirmation,
+  } = useSettingsHandlers();
 
-  useEffect(() => {
-    getProfile().then((u) => {
-      setName(u.name)
-      setAvatar(u.avatar || '')
-      setEmail(u.email)
-    })
-    getPreferences().then((p) => {
-      dispatch(setTheme(p.theme as Theme))
-      dispatch(setStatus(p.status as Status))
-    })
-    listIntegrations().then(setIntegrations)
-  }, [dispatch])
+  const { prefs, updatePref } = useNotificationPrefs();
 
-  const handleSaveProfile = async () => {
-    await updateProfile({ name, avatar })
-    if (avatarFile) {
-      const { avatar: newUrl } = await uploadAvatar(avatarFile)
-      setAvatar(newUrl)
-      setAvatarFile(null)
-    }
-    if (email && user?.email !== email) {
-      await updateEmail(email)
-    }
-  }
-
-  const handleThemeToggle = async () => {
-    const newTheme: Theme = theme === 'light' ? 'dark' : 'light'
-    dispatch(setTheme(newTheme))
-    await updatePreferences({ theme: newTheme })
-    document.body.setAttribute('data-theme', newTheme)
-  }
-
-  const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value as Status
-    dispatch(setStatus(newStatus))
-    await updatePreferences({ status: newStatus })
-  }
-
-  const handleLinkDrive = async () => {
-    const code = prompt('Code Google OAuth')
-    if (code) {
-      await linkGoogleDrive(code)
-      setIntegrations({ ...integrations, googleDrive: true })
-    }
-  }
-
-  const handleUnlinkDrive = async () => {
-    await unlinkGoogleDrive()
-    setIntegrations({ ...integrations, googleDrive: false })
-  }
-
-  const handleLinkGithub = async () => {
-    const token = prompt('GitHub token')
-    if (token) {
-      await linkGithub(token)
-      setIntegrations({ ...integrations, github: true })
-    }
-  }
-
-  const handleUnlinkGithub = async () => {
-    await unlinkGithub()
-    setIntegrations({ ...integrations, github: false })
-  }
-
-  const handleLogoutAll = async () => {
-    await logoutAll()
-  }
-
-  const handleExport = async () => {
-    const data = await exportUserData()
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'supchat-data.json'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const handleDeleteAccount = async () => {
-    if (confirm('Supprimer votre compte ?')) {
-      await deleteAccount()
-    }
-  }
-
-  if (!user) return null
+  if (!user) return null;
 
   return (
-    <section className={styles.settingsPage}>
-      <h1>Paramètres</h1>
-      <div className={styles.profileSection}>
-        <label>
-          Nom affiché
-          <input value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <label>
-          Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label>
-          Avatar URL
-          <input value={avatar} onChange={(e) => setAvatar(e.target.value)} />
-        </label>
-        <label>
-          Fichier avatar
-          <input type="file" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />
-        </label>
-        <button onClick={() => deleteAvatar()}>Retirer avatar</button>
-        <button onClick={handleSaveProfile}>Sauvegarder</button>
-      </div>
-      <div className={styles.prefSection}>
-        <button onClick={handleThemeToggle}>
-          Thème : {theme === 'light' ? 'Clair' : 'Sombre'}
-        </button>
-        <label>
-          Statut
-          <select value={status} onChange={handleStatusChange}>
-            <option value="online">En ligne</option>
-            <option value="away">Absent</option>
-            <option value="busy">Occupé</option>
-            <option value="offline">Hors ligne</option>
-          </select>
-        </label>
-      </div>
-      <div className={styles.notifSection}>
-        <h2>Notifications</h2>
-        <NotificationPrefList items={prefs} onChange={updatePref} />
-      </div>
-      <div className={styles.integrationSection}>
-        <h2>Intégrations</h2>
-        <div>
-          <span>Google Drive: {integrations.googleDrive ? 'connecté' : 'déconnecté'}</span>
-          {integrations.googleDrive ? (
-            <button onClick={handleUnlinkDrive}>Déconnecter</button>
-          ) : (
-            <button onClick={handleLinkDrive}>Connecter</button>
-          )}
+    <section className={styles["settingsPage"]}>
+      <div className={styles["container"]}>
+        <header className={styles["pageHeader"]}>
+          <h1>Paramètres</h1>
+          <p>Gérez votre profil et vos préférences</p>
+        </header>
+
+        <div className={styles["settingsList"]}>
+          {" "}
+          {/* Section Profil */}
+          <section className={styles["settingsSection"]}>
+            <h2>👤 Profil utilisateur</h2>
+            {/* Section Avatar - TOUJOURS visible */}
+            <div className={styles["avatarSection"]}>
+              <div className={styles["avatarContainer"]}>
+                {avatar ? (
+                  <img
+                    src={getAvatarUrl(avatar) || ""}
+                    alt="Avatar"
+                    className={styles["avatar"]}
+                  />
+                ) : (
+                  <div className={styles["avatarPlaceholder"]}>
+                    {name
+                      ? name.charAt(0).toUpperCase()
+                      : user?.email?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>{" "}
+              {/* Boutons avatar - TOUJOURS visibles */}
+              <div className={styles["avatarButtons"]}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    e.target.files?.[0] &&
+                    handleAvatarChangeWithFeedback(e.target.files[0])
+                  }
+                  style={{ display: "none" }}
+                  id="avatar-upload"
+                />
+                <button
+                  onClick={() =>
+                    document.getElementById("avatar-upload")?.click()
+                  }
+                  className={styles["btn-secondary"]}
+                >
+                  {avatar ? "Changer l'avatar" : "Ajouter un avatar"}
+                </button>
+                {/* Bouton supprimer - seulement si on a un avatar */}
+                {avatar && (
+                  <button
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Êtes-vous sûr de vouloir supprimer votre avatar ?"
+                        )
+                      ) {
+                        // TODO: Implémenter handleDeleteAvatar dans les hooks
+                        console.log("Supprimer avatar");
+                      }
+                    }}
+                    className={styles["btn-delete"]}
+                  >
+                    Supprimer l'avatar
+                  </button>
+                )}
+              </div>
+            </div>{" "}
+            {!isEditingProfile ? (
+              <div className={styles["profileView"]}>
+                <div className={styles["profileInfo"]}>
+                  <div className={styles["infoItem"]}>
+                    <strong>Nom d'affichage</strong>
+                    <span>{name}</span>
+                  </div>
+                  <div className={styles["infoItem"]}>
+                    <strong>Email</strong>
+                    <span>{email}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={startEditingProfile}
+                  className={styles["btnProfileInfo"]}
+                >
+                  Modifier le profil
+                </button>
+              </div>
+            ) : (
+              <div className={styles["profileEdit"]}>
+                <div className={styles["editHeader"]}>
+                  <h3>✏️ Mode édition</h3>
+                  <span className={styles["editIndicator"]}>
+                    Edition en cours
+                  </span>
+                </div>
+
+                <div className={styles["editForm"]}>
+                  <div className={styles["field"]}>
+                    <label htmlFor="edit-name">Nom d'affichage</label>
+                    <input
+                      id="edit-name"
+                      name="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Votre nom"
+                      className={styles["input"]}
+                    />
+                  </div>
+
+                  <div className={styles["field"]}>
+                    <label htmlFor="edit-email">Email</label>
+                    <input
+                      id="edit-email"
+                      name="email"
+                      type="email"
+                      value={email}
+                      readOnly
+                      disabled
+                      placeholder="votre@email.com"
+                      className={styles["disabledField"]}
+                    />
+                    <small className={styles["fieldNote"]}>
+                      📧 L'email ne peut pas être modifié pour des raisons de
+                      sécurité
+                    </small>
+                  </div>
+
+                  <div className={styles["editActions"]}>
+                    <button
+                      onClick={handleSaveProfileWithFeedback}
+                      className={styles["btnPrimary"]}
+                    >
+                      Sauvegarder les modifications
+                    </button>
+                    <button
+                      onClick={cancelEditingProfile}
+                      className={styles["btnSecondary"]}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+          {/* Section Apparence */}
+          <section className={styles["settingsSection"]}>
+            <h2>🎨 Apparence</h2>
+            <div className={styles["themeSection"]}>
+              <div className={styles["themeInfo"]}>
+                <strong>Thème</strong>
+                <p>Choisissez entre le mode clair et sombre</p>
+              </div>
+              <button
+                onClick={handleThemeToggleWithFeedback}
+                className={styles["btn"]}
+              >
+                {theme === "light" ? "🌙 Mode sombre" : "☀️ Mode clair"}
+              </button>
+            </div>
+          </section>
+          {/* Section Intégrations */}
+          <section className={styles["settingsSection"]}>
+            <h2>🔗 Intégrations</h2>
+            <div className={styles["integrationsList"]}>
+              <div className={styles["integration"]}>
+                <div className={styles["integrationInfo"]}>
+                  <span className={styles["integrationIcon"]}>
+                    <i className="fa-brands fa-google-drive"></i>
+                  </span>
+                  <div>
+                    <strong>Google Drive</strong>
+                    <p
+                      className={
+                        integrations.googleDrive
+                          ? styles["connected"]
+                          : styles["disconnected"]
+                      }
+                    >
+                      {integrations.googleDrive ? "Connecté" : "Déconnecté"}
+                    </p>
+                  </div>
+                </div>
+                {integrations.googleDrive ? (
+                  <button
+                    onClick={handleUnlinkDriveWithFeedback}
+                    className={styles["btn"]}
+                  >
+                    Déconnecter
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLinkDriveWithPrompt}
+                    className={styles["btn"]}
+                  >
+                    Connecter
+                  </button>
+                )}
+              </div>
+
+              <div className={styles["integration"]}>
+                <div className={styles["integrationInfo"]}>
+                  <span className={styles["integrationIcon"]}>
+                    <i className="fa-brands fa-github"></i>
+                  </span>
+                  <div>
+                    <strong>GitHub</strong>
+                    <p
+                      className={
+                        integrations.github
+                          ? styles["connected"]
+                          : styles["disconnected"]
+                      }
+                    >
+                      {integrations.github ? "Connecté" : "Déconnecté"}
+                    </p>
+                  </div>
+                </div>
+                {integrations.github ? (
+                  <button
+                    onClick={handleUnlinkGithubWithFeedback}
+                    className={styles["btn"]}
+                  >
+                    Déconnecter
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLinkGithubWithPrompt}
+                    className={styles["btn"]}
+                  >
+                    Connecter
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+          {/* Section Notifications */}
+          <section className={styles["settingsSection"]}>
+            <h2>🔔 Notifications</h2>
+            <NotificationPrefList items={prefs} onChange={updatePref} />
+          </section>
+          {/* Section Sécurité */}
+          <section className={styles["settingsSection"]}>
+            <h2>🔐 Sécurité & Données</h2>
+            <div className={styles["securityActions"]}>
+              <button
+                onClick={handleLogoutAllWithFeedback}
+                className={styles["btn"]}
+              >
+                Déconnexion globale
+              </button>
+              <button
+                onClick={handleExportWithFeedback}
+                className={styles["btn"]}
+              >
+                Exporter mes données
+              </button>
+            </div>
+
+            <div className={styles["dangerZone"]}>
+              <h3>Zone dangereuse</h3>
+              <p>
+                Cette action est irréversible. Toutes vos données seront
+                définitivement supprimées.
+              </p>
+              <button
+                onClick={handleDeleteAccountWithConfirmation}
+                className={styles["buttonDanger"]}
+              >
+                Supprimer mon compte
+              </button>
+            </div>
+          </section>
         </div>
-        <div>
-          <span>GitHub: {integrations.github ? 'connecté' : 'déconnecté'}</span>
-          {integrations.github ? (
-            <button onClick={handleUnlinkGithub}>Déconnecter</button>
-          ) : (
-            <button onClick={handleLinkGithub}>Connecter</button>
-          )}
-        </div>
-        <div>
-          <button onClick={() => linkGoogleAccount(prompt('Google ID') || '')}>Lier Google</button>
-          <button onClick={unlinkGoogleAccount}>Délier Google</button>
-        </div>
-        <div>
-          <button onClick={() => linkFacebookAccount(prompt('Facebook ID') || '')}>Lier Facebook</button>
-          <button onClick={unlinkFacebookAccount}>Délier Facebook</button>
-        </div>
-      </div>
-      <div className={styles.securitySection}>
-        <h2>Sécurité</h2>
-        <button onClick={handleLogoutAll}>Déconnexion globale</button>
-        <button onClick={handleExport}>Exporter mes données</button>
-        <button onClick={handleDeleteAccount}>Supprimer mon compte</button>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default SettingsPage
+export default SettingsPage;

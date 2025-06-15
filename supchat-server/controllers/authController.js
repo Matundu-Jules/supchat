@@ -465,3 +465,51 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur.', error })
     }
 }
+
+// Déconnexion globale de tous les appareils
+exports.logoutAll = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        }
+
+        // Incrémente la version du token pour invalider tous les tokens existants
+        user.tokenVersion += 1
+        await user.save()
+
+        // Supprime les cookies du client actuel
+        res.clearCookie('accessToken', accessCookieOptions)
+        res.clearCookie('refreshToken', refreshCookieOptions)
+
+        res.status(200).json({
+            message:
+                'Déconnexion globale réussie. Tous les appareils ont été déconnectés.',
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}
+
+// Suppression du compte utilisateur
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+        }
+
+        // Supprime l'utilisateur de la base de données
+        await User.findByIdAndDelete(req.user.id)
+
+        // Supprime les cookies
+        res.clearCookie('accessToken', accessCookieOptions)
+        res.clearCookie('refreshToken', refreshCookieOptions)
+
+        res.status(200).json({
+            message: 'Compte supprimé avec succès.',
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur.', error })
+    }
+}

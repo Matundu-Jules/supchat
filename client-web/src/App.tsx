@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import { setAuth, logout, setAuthLoading } from "@store/authSlice";
 import { setTheme as setThemeAction } from "@store/preferencesSlice";
 import { getCurrentUser } from "@services/authApi";
+import { getProfile } from "@services/userApi";
 
 import styles from "./App.module.scss";
 
@@ -50,9 +51,8 @@ const AppContent = ({
 
   return (
     <div className={styles["appContainer"]}>
-      {!isAuthPage && user && (
-        <Header theme={theme} toggleTheme={toggleTheme} />
-      )}
+      {" "}
+      {!isAuthPage && user && <Header />}
       <main className={styles["main-container"]}>
         <Routes>
           <Route path="/invite/:id" element={<InviteWorkspacePage />} />
@@ -76,7 +76,6 @@ const AppContent = ({
           </Route>
         </Routes>
       </main>
-
       <Footer theme={theme} toggleTheme={toggleTheme} />
     </div>
   );
@@ -91,12 +90,19 @@ const App: React.FC = () => {
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
-
   useEffect(() => {
     dispatch(setAuthLoading(true));
     getCurrentUser()
-      .then((user) => {
+      .then(async (user) => {
         dispatch(setAuth(user));
+
+        // Récupérer aussi le profil complet (avec avatar)
+        try {
+          const profile = await getProfile();
+          dispatch(setAuth({ ...user, avatar: profile.avatar }));
+        } catch (error) {
+          console.log("Erreur lors de la récupération du profil:", error);
+        }
       })
       .catch(() => {
         dispatch(logout());

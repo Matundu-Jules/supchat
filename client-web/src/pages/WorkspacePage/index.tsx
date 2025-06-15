@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import WorkspaceCreateForm from "@components/Workspace/WorkspaceCreateForm";
 import WorkspaceList from "@components/Workspace/WorkspaceList";
 import Loader from "@components/Loader";
 import styles from "./WorkspacePage.module.scss";
 import { useWorkspacePageLogic } from "@hooks/useWorkspacePageLogic";
 import { useSelector } from "react-redux";
 import type { RootState } from "@store/store";
+import EditWorkspaceModal from "@components/Workspace/EditWorkspaceModal";
+import CreateWorkspaceModal from "@components/Workspace/CreateWorkspaceModal";
+import InviteWorkspaceModal from "@components/Workspace/InviteWorkspaceModal";
 
 const WorkspacesPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -19,22 +21,50 @@ const WorkspacesPage: React.FC = () => {
     setShowModal,
     inviteModal,
     setInviteModal,
-    inviteEmail,
-    setInviteEmail,
     editModal,
     setEditModal,
     handleAccess,
     handleInviteClick,
-    handleInviteSubmit,
+    handleInvite,
     handleEdit,
     handleEditSubmit,
     handleDelete,
-    editErrors,
+    handleRequestJoin,
     inviteError,
     inviteSuccess,
     setInviteSuccess,
   } = useWorkspacePageLogic();
   const [search, setSearch] = useState("");
+  // Fonction pour gérer l'invitation avec la nouvelle modale
+  const handleInviteModalSubmit = async (email: string) => {
+    if (!inviteModal) return;
+
+    console.log("Inviting:", email, "to workspace:", inviteModal.id);
+
+    try {
+      await handleInvite(inviteModal.id, email);
+      setInviteSuccess("Invitation envoyée avec succès !");
+    } catch (err: any) {
+      console.error("Invitation error:", err);
+      const msg = err?.response?.data?.message || err?.message || "";
+      if (
+        msg === "USER_NOT_FOUND" ||
+        msg.includes("utilisateur") ||
+        msg.toLowerCase().includes("n'existe")
+      ) {
+        // Cette erreur sera affichée dans la modale
+        throw new Error(
+          "L'adresse e-mail saisie ne correspond à aucun utilisateur inscrit. L'invitation n'a pas été envoyée."
+        );
+      } else {
+        throw new Error(msg || "Erreur lors de l'invitation");
+      }
+    }
+  };
+
+  const handleClearInviteMessages = () => {
+    if (inviteSuccess) setInviteSuccess(null);
+  };
 
   return (
     <section className={styles["workspaceSection"]}>
@@ -51,125 +81,57 @@ const WorkspacesPage: React.FC = () => {
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Rechercher..."
         className={styles["searchInput"]}
-      />
-
+      />{" "}
       {showModal && (
-        <div className={styles["modalOverlay"]}>
-          <div className={styles["modalContent"]}>
-            <button
-              onClick={() => setShowModal(false)}
-              className={styles["closeButton"]}
-              aria-label="Fermer"
-            >
-              x
-            </button>
-            <WorkspaceCreateForm
-              onCreated={() => {
-                setShowModal(false);
-                fetchWorkspaces();
-              }}
-              onCreate={handleCreateWorkspace}
-            />
-          </div>
-        </div>
-      )}
-
+        <CreateWorkspaceModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSave={async (formData) => {
+            await handleCreateWorkspace(formData);
+            setShowModal(false);
+            fetchWorkspaces();
+          }}
+          loading={false}
+        />
+      )}{" "}
       {inviteModal && (
-        <div className={styles["modalOverlay"]}>
-          <div className={styles["modalContent"]}>
-            <button
-              onClick={() => setInviteModal(null)}
-              className={styles["closeButton"]}
-              aria-label="Fermer"
-            >
-              ×
-            </button>
-            <h2>Inviter dans {inviteModal.name}</h2>
-            <form
-              onSubmit={handleInviteSubmit}
-              className={styles["inviteForm"]}
-            >
-              <input
-                type="email"
-                placeholder="Email du membre"
-                value={inviteEmail}
-                onChange={(e) => {
-                  setInviteEmail(e.target.value);
-                  if (inviteSuccess) setInviteSuccess(null);
-                }}
-                required
-                className={
-                  styles["input"] +
-                  (inviteError ? " " + styles["inputError"] : "")
-                }
-              />
-              <button type="submit" className={styles["submitButton"]}>
-                Envoyer l'invitation
-              </button>
-            </form>
-            {inviteError && (
-              <div className={styles["error"]}>{inviteError}</div>
-            )}
-            {inviteSuccess && !inviteError && (
-              <div className={styles["success"]}>{inviteSuccess}</div>
-            )}
-          </div>
-        </div>
-      )}
-
+        <InviteWorkspaceModal
+          workspace={{
+            _id: inviteModal.id,
+            name: inviteModal.name,
+          }}
+          isOpen={!!inviteModal}
+          onClose={() => setInviteModal(null)}
+          onInvite={handleInviteModalSubmit}
+          loading={false}
+          error={inviteError}
+          success={inviteSuccess}
+          onClearMessages={handleClearInviteMessages}
+        />
+      )}{" "}
       {editModal && (
-        <div className={styles["modalOverlay"]}>
-          <div className={styles["modalContent"]}>
-            <button
-              onClick={() => setEditModal(null)}
-              className={styles["closeButton"]}
-              aria-label="Fermer"
-            >
-              ×
-            </button>
-            <h2>Modifier {editModal.name}</h2>
-            <form onSubmit={handleEditSubmit} className={styles["editForm"]}>
-              <input
-                type="text"
-                name="name"
-                defaultValue={editModal.name}
-                className={
-                  styles["input-name"] +
-                  (editErrors?.name ? " " + styles["inputError"] : "")
-                }
-                required
-              />
-              {editErrors?.name && (
-                <div className={styles["error"]}>{editErrors.name}</div>
-              )}
-              <input
-                type="text"
-                name="description"
-                defaultValue={editModal.description}
-                className={
-                  styles["input-description"] +
-                  (editErrors?.description ? " " + styles["inputError"] : "")
-                }
-              />
-              {editErrors?.description && (
-                <div className={styles["error"]}>{editErrors.description}</div>
-              )}
-              <label className={styles["checkboxLabel"]}>
-                <input
-                  type="checkbox"
-                  name="isPublic"
-                  defaultChecked={editModal.isPublic}
-                />
-                Espace public
-              </label>
-              <button type="submit" className={styles["submitButton"]}>
-                Enregistrer
-              </button>
-            </form>
-          </div>
-        </div>
+        <EditWorkspaceModal
+          workspace={{
+            _id: editModal.id,
+            name: editModal.name,
+            description: editModal.description,
+            isPublic: editModal.isPublic,
+          }}
+          isOpen={!!editModal}
+          onClose={() => setEditModal(null)}
+          onSave={(formData) => {
+            handleEditSubmit({
+              preventDefault: () => {},
+              target: {
+                name: { value: formData.name },
+                description: { value: formData.description || "" },
+                isPublic: { checked: formData.isPublic },
+              },
+            } as any);
+          }}
+          loading={false}
+        />
       )}
-
       {loading ? (
         <Loader />
       ) : error ? (
@@ -183,6 +145,7 @@ const WorkspacesPage: React.FC = () => {
           onInvite={handleInviteClick}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onRequestJoin={handleRequestJoin}
         />
       )}
     </section>

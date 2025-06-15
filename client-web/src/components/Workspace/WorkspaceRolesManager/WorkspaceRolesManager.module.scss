@@ -1,0 +1,168 @@
+.rolesManager {
+  background: var(--color-surface);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.rolesManager h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.8rem;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.description {
+  font-size: 1.4rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.rolesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.roleItem {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.roleItem:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.userEmail {
+  font-size: 1.3rem;
+  color: var(--color-text-secondary);
+}
+
+.roleSelector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 200px;
+}
+
+.roleSelector label {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.emptyState p {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.roleInfo {
+  background: var(--color-background-light);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.roleInfo h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+}
+
+.roleInfo ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.roleInfo li {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: 1.3rem;
+  line-height: 1.4;
+}
+
+.roleInfo li:last-child {
+  border-bottom: none;
+}
+
+.roleInfo strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.noAccess {
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.noAccess p {
+  margin: 0;
+  color: var(--color-error-dark);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .userInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .roleSelector {
+    min-width: auto;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rolesManager {
+    padding: 1.5rem;
+  }
+
+  .rolesManager h3 {
+    font-size: 1.6rem;
+  }
+}
