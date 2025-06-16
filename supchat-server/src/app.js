@@ -106,16 +106,18 @@ const {
 } = process.env
 
 const mongoUri =
-    process.env.MONGO_URI ||
-    `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${encodeURIComponent(
-        MONGO_INITDB_ROOT_PASSWORD
-    )}@${MONGO_HOST || 'localhost'}:${MONGO_PORT || 27017}/${
-        MONGO_DB || 'supchat'
-    }?authSource=${MONGO_AUTH_SOURCE || 'admin'}`
+    process.env.MONGO_URI || `mongodb://db:27017/${MONGO_DB || 'supchat'}`
+
+console.log('🔍 MongoDB URI:', mongoUri)
 
 // Nouvelle fonction pour connecter à MongoDB (utilisable dans les tests)
 async function connectToDatabase(uri) {
-    await mongoose.connect(uri || mongoUri)
+    const options = {
+        connectTimeoutMS: 60000,
+        serverSelectionTimeoutMS: 60000,
+        socketTimeoutMS: 60000,
+    }
+    await mongoose.connect(uri || mongoUri, options)
     console.log('MongoDB connected')
 }
 
@@ -130,8 +132,10 @@ if (process.env.NODE_ENV !== 'test') {
 
 // ==== ROUTES ==== //
 const apiRoutes = require('../routes/index')
+const healthRoutes = require('../routes/health')
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
+app.use('/api', healthRoutes)
 app.use('/api', apiRoutes)
 
 // ==== 404 ==== //
