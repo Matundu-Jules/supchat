@@ -1,9 +1,14 @@
 // utils/axiosConfig.ts
 import axios from 'axios';
 import { AuthService } from '../services/authService';
-import { API_BASE_URL } from '../constants/api';
+import { API_BASE_URL } from '../constants/network'; // Utiliser network.ts pour la cohérence
 
-// Configuration de base
+// Affichage de la configuration en développement
+if (__DEV__) {
+  console.log('🔧 Axios Config - API Base URL:', API_BASE_URL);
+}
+
+// Configuration de base avec URL automatique
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -16,7 +21,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AuthService.getToken();
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

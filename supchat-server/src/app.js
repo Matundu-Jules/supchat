@@ -11,36 +11,23 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
 const path = require('path')
+const {
+    getLocalIP,
+    generateAllowedOrigins,
+    displayNetworkInfo,
+} = require('./utils/networkUtils')
 
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT
+const port = process.env.PORT || 3000
 const server = http.createServer(app)
-const { initSocket } = require('../socket')
-const io = initSocket(server, [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://localhost',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
-    'http://localhost:80',
-    'http://127.0.0.1:80',
-])
 
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://localhost',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
-    'http://localhost:80',
-    'http://127.0.0.1:80',
-]
+// Génération automatique des origines autorisées basée sur l'IP locale
+const allowedOrigins = generateAllowedOrigins(port)
+
+const { initSocket } = require('../socket')
+const io = initSocket(server, allowedOrigins)
 
 // ==== CORS ==== //
 app.use(
@@ -172,9 +159,10 @@ app.use((err, req, res, next) => {
 // ==== START ==== //
 if (process.env.NODE_ENV !== 'test') {
     server.listen(port, () => {
-        console.log(`Server listening on port ${port}`)
+        // Affichage des informations réseau avec IP locale
+        displayNetworkInfo(port)
         console.log(
-            `Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
+            `📖 Swagger docs available at http://localhost:${port}/api-docs/swagger-ui.html`
         )
     })
 }

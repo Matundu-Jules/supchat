@@ -3,9 +3,15 @@
 import axios from 'axios';
 import { store } from '@store/store';
 import { logout, setAuth } from '@store/authSlice';
+import { API_BASE_URL, getApiInfo } from '../config/api';
+
+// Afficher les infos de configuration en développement
+if (import.meta.env.DEV) {
+  getApiInfo();
+}
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });

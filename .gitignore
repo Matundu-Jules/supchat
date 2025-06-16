@@ -28,5 +28,4 @@ reset-docker.sh
 run-project.sh
 start-db.sh
 
-supchat-docs/
 supchat-server/uploads/

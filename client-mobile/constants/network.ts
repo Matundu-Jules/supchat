@@ -1,21 +1,26 @@
 // Configuration réseau dynamique
 import { Platform } from 'react-native';
 
-// Configuration de l'host
+// Configuration de l'host avec détection automatique IP
 const getApiHost = () => {
-  // Priorité 1: URL complète dans l'env
+  // Priorité 1: URL complète générée automatiquement par le script update-env.js
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  // Priorité 2: Host + Port séparés
-  if (process.env.EXPO_PUBLIC_HOST && process.env.EXPO_PUBLIC_PORT) {
+  // Priorité 2: Backend URL complète + /api
+  if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+    return `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`;
+  }
+
+  // Priorité 3: Host IP détectée automatiquement
+  if (process.env.EXPO_PUBLIC_HOST) {
     const host = process.env.EXPO_PUBLIC_HOST;
-    const port = process.env.EXPO_PUBLIC_PORT;
+    const port = process.env.EXPO_PUBLIC_PORT || '3000';
     return `http://${host}:${port}/api`;
   }
 
-  // Fallback par défaut - utilise les variables d'environnement par défaut
+  // Fallback par défaut - localhost pour développement
   const defaultHost = process.env.EXPO_PUBLIC_DEFAULT_HOST || 'localhost';
   const defaultPort = process.env.EXPO_PUBLIC_DEFAULT_PORT || '3000';
   return `http://${defaultHost}:${defaultPort}/api`;
@@ -24,11 +29,10 @@ const getApiHost = () => {
 // URL de base de l'API
 export const API_BASE_URL = getApiHost();
 
-// URL WebSocket
-export const WS_BASE_URL = API_BASE_URL.replace('http', 'ws').replace(
-  '/api',
-  ''
-);
+// URL WebSocket - mise à jour pour Socket.io
+export const WS_BASE_URL =
+  process.env.EXPO_PUBLIC_SOCKET_URL ||
+  API_BASE_URL.replace('http', 'ws').replace('/api', '');
 
 // Configuration pour les différents environnements (maintenant configurables)
 export const NETWORK_CONFIG = {
@@ -52,27 +56,42 @@ export const NETWORK_CONFIG = {
   ) => `http://${ip}:${port}/api`,
 };
 
-// Debug info
-if (__DEV__) {
-  console.log('📡 Configuration réseau:');
+// Debug info avec informations détaillées
+export const debugNetworkConfig = () => {
+  console.log('\n📡 SupChat Mobile - Configuration réseau:');
+  console.log('==========================================');
   console.log('API_BASE_URL:', API_BASE_URL);
   console.log('WS_BASE_URL:', WS_BASE_URL);
   console.log('Platform:', Platform.OS);
-  console.log('ENV HOST:', process.env.EXPO_PUBLIC_HOST);
-  console.log('ENV API URL:', process.env.EXPO_PUBLIC_API_URL);
-  console.log('ENV WS URL:', process.env.EXPO_PUBLIC_WS_URL);
+  console.log("\n🔧 Variables d'environnement:");
+  console.log('EXPO_PUBLIC_HOST:', process.env.EXPO_PUBLIC_HOST);
+  console.log('EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
+  console.log('EXPO_PUBLIC_SOCKET_URL:', process.env.EXPO_PUBLIC_SOCKET_URL);
+  console.log('EXPO_PUBLIC_BACKEND_URL:', process.env.EXPO_PUBLIC_BACKEND_URL);
 
   // Test de connectivité
-  console.log("🔍 Test de l'URL API construite:", API_BASE_URL);
+  console.log("\n🔍 Test de l'URL API construite:", API_BASE_URL);
 
-  if (API_BASE_URL.includes('localhost')) {
+  if (
+    API_BASE_URL.includes('localhost') ||
+    API_BASE_URL.includes('127.0.0.1')
+  ) {
     console.warn(
-      '⚠️  ATTENTION: Tu utilises localhost - ça ne marchera pas sur iPhone!'
+      '\n⚠️  ATTENTION: Tu utilises localhost - ça ne marchera pas sur un vrai appareil mobile!'
     );
-    console.log('💡 Change EXPO_PUBLIC_HOST dans .env avec ton IP');
+    console.log(
+      '💡 Solution: Lance le script update-env.js pour détecter automatiquement ton IP'
+    );
+    console.log('� Ou change EXPO_PUBLIC_HOST dans .env avec ton IP locale');
   } else {
-    console.log('✅ Configuration IP détectée pour mobile');
+    console.log('\n✅ Configuration IP réseau détectée - Compatible mobile');
   }
+  console.log('==========================================\n');
+};
+
+// Debug automatique en développement
+if (__DEV__) {
+  debugNetworkConfig();
 }
 
 export default {
