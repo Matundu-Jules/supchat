@@ -1,0 +1,109 @@
+// src/components/NetworkDebug.module.scss
+
+.networkDebug {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 350px;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  h4 {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.refreshBtn {
+  background: #007acc;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+
+  &:hover {
+    background: #005f9f;
+  }
+}
+
+.status {
+  margin-bottom: 8px;
+
+  small {
+    display: block;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+}
+
+.indicator {
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+
+  &.connected {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid #22c55e;
+  }
+
+  &.disconnected {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+  }
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  padding: 6px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.config {
+  margin-bottom: 8px;
+}
+
+.configItem {
+  margin-bottom: 4px;
+  word-break: break-all;
+
+  strong {
+    color: #60a5fa;
+  }
+
+  code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 11px;
+  }
+}
+
+.warning {
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid #fbbf24;
+  padding: 6px;
+  border-radius: 4px;
+
+  code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+}
