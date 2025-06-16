@@ -21,9 +21,26 @@ const { initSocket } = require('../socket')
 const io = initSocket(server, [
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://localhost:8080',
+    'http://localhost',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    'http://localhost:80',
+    'http://127.0.0.1:80',
 ])
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000']
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://localhost',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    'http://localhost:80',
+    'http://127.0.0.1:80',
+]
 
 // ==== CORS ==== //
 app.use(

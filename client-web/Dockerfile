@@ -8,17 +8,22 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set the working directory for the build
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock) for dependency installation
-COPY package*.json ./
+# Change ownership of the app directory and npm cache to nodejs user
+RUN chown -R nodejs:nodejs /app && \
+    mkdir -p /home/nodejs/.npm && \
+    chown -R nodejs:nodejs /home/nodejs/.npm
 
-# Install project dependencies
+# Copy package.json and package-lock.json (or yarn.lock) for dependency installation
+COPY --chown=nodejs:nodejs package*.json ./
+
+# Switch to non-root user before installing dependencies
+USER nodejs
+
+# Install project dependencies as nodejs user
 RUN npm ci && npm cache clean --force
 
 # Copy the rest of the project files
 COPY --chown=nodejs:nodejs . .
-
-# Switch to non-root user
-USER nodejs
 
 # Build the Vite application for production
 RUN npm run build

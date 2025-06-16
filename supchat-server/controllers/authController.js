@@ -396,7 +396,7 @@ exports.facebookLogin = async (req, res) => {
 }
 
 // ================== REFRESH ACCESS TOKEN ==================
-exports.refreshToken = (req, res) => {
+exports.refreshToken = async (req, res) => {
     try {
         const { refresh } = req.cookies
         if (!refresh) return res.sendStatus(401)
@@ -407,20 +407,20 @@ exports.refreshToken = (req, res) => {
             return res.sendStatus(403)
         }
 
-        User.findById(payload.id).then((user) => {
-            if (!user) return res.sendStatus(404)
-            if (payload.tokenVersion !== user.tokenVersion)
-                return res.sendStatus(401)
+        const user = await User.findById(payload.id)
+        if (!user) return res.sendStatus(404)
+        if (payload.tokenVersion !== user.tokenVersion)
+            return res.sendStatus(401)
 
-            const newAccess = generateAccessToken(user)
-            res.cookie('access', newAccess, accessCookieOptions)
+        const newAccess = generateAccessToken(user)
+        res.cookie('access', newAccess, accessCookieOptions)
 
-            // Génère un nouveau token CSRF à chaque refresh
-            generateCsrfToken(req, res, { overwrite: true })
+        // Génère un nouveau token CSRF à chaque refresh
+        generateCsrfToken(req, res, { overwrite: true })
 
-            return res.sendStatus(204)
-        })
-    } catch {
+        return res.sendStatus(204)
+    } catch (error) {
+        console.error('Error in refreshToken:', error)
         return res.sendStatus(500)
     }
 }
