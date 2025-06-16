@@ -9,6 +9,10 @@ const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
 const { messageFactory } = require('../factories/messageFactory')
+const {
+    generateUniqueEmail,
+    generateUniqueId,
+} = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 
 /**
@@ -29,11 +33,18 @@ describe("Notifications - Tests d'intégration", () => {
     let otherToken
 
     beforeEach(async () => {
+        // Nettoyer la base de données avant chaque test
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Notification.deleteMany({})
+        await Message.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
         user = await User.create(
             userFactory({
-                email: 'user@test.com',
+                email: generateUniqueEmail('user'),
                 password: hashedPassword,
                 username: 'testuser',
             })
@@ -41,7 +52,7 @@ describe("Notifications - Tests d'intégration", () => {
 
         otherUser = await User.create(
             userFactory({
-                email: 'other@test.com',
+                email: generateUniqueEmail('other'),
                 password: hashedPassword,
                 username: 'otheruser',
             })
@@ -64,12 +75,12 @@ describe("Notifications - Tests d'intégration", () => {
 
         const userLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'user@test.com', password: 'TestPassword123!' })
+            .send({ email: user.email, password: 'TestPassword123!' })
         authToken = userLogin.body.token
 
         const otherLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'other@test.com', password: 'TestPassword123!' })
+            .send({ email: otherUser.email, password: 'TestPassword123!' })
         otherToken = otherLogin.body.token
     })
 

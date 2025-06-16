@@ -8,6 +8,7 @@ const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
 const { messageFactory } = require('../factories/messageFactory')
+const TestHelpers = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 
 /**
@@ -25,13 +26,19 @@ describe("Intégrations & Recherche - Tests d'intégration", () => {
     let channel
 
     beforeEach(async () => {
+        // Nettoyer les données existantes
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Message.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
         user = await User.create(
             userFactory({
-                email: 'user@test.com',
+                email: TestHelpers.generateUniqueEmail(),
                 password: hashedPassword,
-                username: 'testuser',
+                username: TestHelpers.generateUniqueUsername(),
             })
         )
 

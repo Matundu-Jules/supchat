@@ -9,6 +9,10 @@ const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
 const { messageFactory } = require('../factories/messageFactory')
+const {
+    generateUniqueEmail,
+    generateUniqueId,
+} = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 const path = require('path')
 
@@ -31,11 +35,18 @@ describe("Messagerie - Tests d'intégration", () => {
     let otherToken
 
     beforeEach(async () => {
+        // Nettoyer la base de données avant chaque test
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Message.deleteMany({})
+        await Reaction.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
         user = await User.create(
             userFactory({
-                email: 'user@test.com',
+                email: generateUniqueEmail('user'),
                 password: hashedPassword,
                 username: 'testuser',
             })
@@ -43,7 +54,7 @@ describe("Messagerie - Tests d'intégration", () => {
 
         otherUser = await User.create(
             userFactory({
-                email: 'other@test.com',
+                email: generateUniqueEmail('other'),
                 password: hashedPassword,
                 username: 'otheruser',
             })
@@ -66,12 +77,12 @@ describe("Messagerie - Tests d'intégration", () => {
 
         const userLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'user@test.com', password: 'TestPassword123!' })
+            .send({ email: user.email, password: 'TestPassword123!' })
         authToken = userLogin.body.token
 
         const otherLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'other@test.com', password: 'TestPassword123!' })
+            .send({ email: otherUser.email, password: 'TestPassword123!' })
         otherToken = otherLogin.body.token
     })
 
@@ -154,9 +165,19 @@ describe("Messagerie - Tests d'intégration", () => {
         })
 
         it("devrait rejeter un message d'un non-membre du channel", async () => {
+            const hashedPassword = await bcrypt.hash('pass', 10)
             const outsider = await User.create(
-                userFactory({ email: 'outsider@test.com' })
+                userFactory({
+                    email: 'outsider@test.com',
+                    password: hashedPassword,
+                })
             )
+
+            // Ajouter l'outsider au workspace mais pas au channel
+            await Workspace.findByIdAndUpdate(workspace._id, {
+                $push: { members: outsider._id },
+            })
+
             const outsiderLogin = await request(app)
                 .post('/api/auth/login')
                 .send({ email: 'outsider@test.com', password: 'pass' })
@@ -232,7 +253,7 @@ describe("Messagerie - Tests d'intégration", () => {
                 messageFactory({
                     content: 'Premier message',
                     userId: user._id,
-                    channel: channel._id,
+                    channelId: channel._id,
                 })
             )
 
@@ -240,7 +261,7 @@ describe("Messagerie - Tests d'intégration", () => {
                 messageFactory({
                     content: 'Deuxième message',
                     userId: otherUser._id,
-                    channel: channel._id,
+                    channelId: channel._id,
                 })
             )
 
@@ -262,7 +283,7 @@ describe("Messagerie - Tests d'intégration", () => {
                     messageFactory({
                         content: `Message ${i}`,
                         userId: user._id,
-                        channel: channel._id,
+                        channelId: channel._id,
                     })
                 )
             }

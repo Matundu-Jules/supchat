@@ -6,6 +6,10 @@ const Channel = require('../../models/Channel')
 const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
+const {
+    generateUniqueEmail,
+    generateUniqueId,
+} = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 
 /**
@@ -24,11 +28,16 @@ describe("Channels - Tests d'intégration", () => {
     let adminUser
 
     beforeEach(async () => {
+        // Nettoyer la base de données avant chaque test
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
         user = await User.create(
             userFactory({
-                email: 'user@test.com',
+                email: generateUniqueEmail('user'),
                 password: hashedPassword,
                 role: 'membre',
             })
@@ -36,7 +45,7 @@ describe("Channels - Tests d'intégration", () => {
 
         adminUser = await User.create(
             userFactory({
-                email: 'admin@test.com',
+                email: generateUniqueEmail('admin'),
                 password: hashedPassword,
                 role: 'admin',
             })
@@ -51,12 +60,12 @@ describe("Channels - Tests d'intégration", () => {
 
         const userLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'user@test.com', password: 'TestPassword123!' })
+            .send({ email: user.email, password: 'TestPassword123!' })
         authToken = userLogin.body.token
 
         const adminLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'admin@test.com', password: 'TestPassword123!' })
+            .send({ email: adminUser.email, password: 'TestPassword123!' })
         adminToken = adminLogin.body.token
     })
 

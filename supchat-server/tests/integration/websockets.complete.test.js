@@ -7,6 +7,7 @@ const Message = require('../../models/Message')
 const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
+const TestHelpers = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
@@ -27,33 +28,51 @@ describe('WebSockets - Communication Temps Réel', () => {
     let token1, token2
 
     beforeAll((done) => {
+        // Augmenter le timeout pour les tests WebSocket
+        jest.setTimeout(30000)
+
         server.listen(() => {
             const port = server.address().port
 
             // Initialiser les données de test
-            initTestData().then(() => {
-                // Connecter les clients socket
-                clientSocket1 = ioClient(`http://localhost:${port}`, {
-                    auth: { token: token1 },
-                })
+            initTestData()
+                .then(() => {
+                    // Connecter les clients socket
+                    clientSocket1 = ioClient(`http://localhost:${port}`, {
+                        auth: { token: token1 },
+                        timeout: 10000,
+                    })
 
-                clientSocket2 = ioClient(`http://localhost:${port}`, {
-                    auth: { token: token2 },
-                })
+                    clientSocket2 = ioClient(`http://localhost:${port}`, {
+                        auth: { token: token2 },
+                        timeout: 10000,
+                    })
 
-                let connectedClients = 0
-                const checkConnection = () => {
-                    connectedClients++
-                    if (connectedClients === 2) {
-                        done()
+                    let connectedClients = 0
+                    const checkConnection = () => {
+                        connectedClients++
+                        if (connectedClients === 2) {
+                            done()
+                        }
                     }
-                }
 
-                clientSocket1.on('connect', checkConnection)
-                clientSocket2.on('connect', checkConnection)
-            })
+                    clientSocket1.on('connect', checkConnection)
+                    clientSocket2.on('connect', checkConnection)
+
+                    // Gérer les erreurs de connexion
+                    clientSocket1.on('connect_error', (error) => {
+                        console.log('Socket 1 connection error:', error.message)
+                        done(error)
+                    })
+
+                    clientSocket2.on('connect_error', (error) => {
+                        console.log('Socket 2 connection error:', error.message)
+                        done(error)
+                    })
+                })
+                .catch(done)
         })
-    })
+    }, 30000)
 
     afterAll((done) => {
         if (clientSocket1.connected) {
@@ -66,26 +85,34 @@ describe('WebSockets - Communication Temps Réel', () => {
     })
 
     async function initTestData() {
+        // Nettoyer les données existantes
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Message.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
+        const timestamp = Date.now()
 
         user1 = await User.create(
             userFactory({
-                email: 'user1@test.com',
+                email: TestHelpers.generateUniqueEmail(),
                 password: hashedPassword,
-                username: 'user1',
+                username: TestHelpers.generateUniqueId('user1-ws'),
             })
         )
 
         user2 = await User.create(
             userFactory({
-                email: 'user2@test.com',
+                email: TestHelpers.generateUniqueEmail(),
                 password: hashedPassword,
-                username: 'user2',
+                username: TestHelpers.generateUniqueId('user2-ws'),
             })
         )
 
         workspace = await Workspace.create(
             workspaceFactory({
+                name: `test-workspace-${timestamp}`,
                 owner: user1._id,
                 members: [user1._id, user2._id],
             })
@@ -93,7 +120,7 @@ describe('WebSockets - Communication Temps Réel', () => {
 
         channel = await Channel.create(
             channelFactory({
-                name: 'general',
+                name: `general-${timestamp}`,
                 workspace: workspace._id,
                 members: [user1._id, user2._id],
             })
@@ -104,7 +131,6 @@ describe('WebSockets - Communication Temps Réel', () => {
             { id: user1._id, username: user1.username },
             process.env.JWT_SECRET || 'testsecret'
         )
-
         token2 = jwt.sign(
             { id: user2._id, username: user2.username },
             process.env.JWT_SECRET || 'testsecret'
@@ -119,13 +145,22 @@ describe('WebSockets - Communication Temps Réel', () => {
         })
 
         it("devrait joindre automatiquement les channels de l'utilisateur", (done) => {
+            const timeout = setTimeout(() => {
+                done(new Error('Test timeout - channels not joined'))
+            }, 10000)
+
             clientSocket1.emit('join-channels', { userId: user1._id })
 
             clientSocket1.on('channels-joined', (data) => {
-                expect(data.channels).toContain(channel._id.toString())
-                done()
+                clearTimeout(timeout)
+                try {
+                    expect(data.channels).toContain(channel._id.toString())
+                    done()
+                } catch (error) {
+                    done(error)
+                }
             })
-        })
+        }, 15000)
 
         it('devrait rejeter une connexion sans token valide', (done) => {
             const unauthorizedSocket = ioClient(

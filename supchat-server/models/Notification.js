@@ -10,11 +10,13 @@ const NotificationSchema = new mongoose.Schema({
         enum: [
             'mention',
             'message',
+            'new_message',
             'workspace_invite',
             'channel_invite',
             'join_request',
             'join_approved',
             'join_rejected',
+            'direct_message',
         ],
         required: true,
     },

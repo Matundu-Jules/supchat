@@ -1,5 +1,7 @@
 const express = require('express')
 const rateLimit = require('express-rate-limit')
+const multer = require('multer')
+const path = require('path')
 const {
     createChannel,
     getChannels,
@@ -22,6 +24,22 @@ const {
     channelIdParamSchema,
     inviteToChannelSchema,
 } = require('../validators/channelValidators')
+
+// Configuration de multer pour l'upload de fichiers
+const uploadDir = path.join(__dirname, '../uploads')
+const storage = multer.diskStorage({
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
+        cb(null, `${unique}-${file.originalname}`)
+    },
+})
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+    },
+})
 
 const router = express.Router()
 
@@ -122,6 +140,61 @@ router.post(
         next()
     },
     require('../controllers/messageController').sendMessage
+)
+
+// Route pour récupérer les messages d'un channel
+router.get(
+    '/:id/messages',
+    authMiddleware,
+    validate({ params: channelIdParamSchema }),
+    async (req, res, next) => {
+        // Injecte channelId dans les params pour compatibilité avec le contrôleur
+        req.params.channelId = req.params.id
+        next()
+    },
+    require('../controllers/messageController').getMessagesByChannel
+)
+
+// Route pour uploader des fichiers dans un channel
+router.post(
+    '/:id/messages/upload',
+    authMiddleware,
+    messageRateLimiter,
+    upload.single('file'),
+    async (req, res, next) => {
+        // Injecte channelId dans le body pour compatibilité avec le contrôleur
+        req.body.channelId = req.params.id
+        next()
+    },
+    require('../controllers/messageController').uploadFile,
+    // Middleware de gestion d'erreurs Multer
+    (error, req, res, next) => {
+        if (error instanceof multer.MulterError) {
+            if (error.code === 'LIMIT_FILE_SIZE') {
+                return res
+                    .status(413)
+                    .json({ message: 'Fichier trop volumineux.' })
+            }
+            return res
+                .status(400)
+                .json({ message: "Erreur lors de l'upload du fichier." })
+        }
+        next(error)
+    }
+)
+
+// Routes pour les paramètres de notification par channel
+router.put(
+    '/:id/notification-settings',
+    authMiddleware,
+    validate({ params: channelIdParamSchema }),
+    async (req, res, next) => {
+        // Injecte channelId dans le body
+        req.body.channelId = req.params.id
+        next()
+    },
+    require('../controllers/notificationController')
+        .updateChannelNotificationSettings
 )
 
 module.exports = router

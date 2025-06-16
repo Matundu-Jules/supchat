@@ -4,6 +4,7 @@ const MessageSchema = new mongoose.Schema(
     {
         text: String,
         content: String,
+        type: { type: String, default: 'text' },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         channelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },
@@ -11,9 +12,16 @@ const MessageSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
         file: String,
         filename: String,
+        fileUrl: String, // Ajouté pour compatibilité avec les tests
+        fileName: String, // Ajouté pour compatibilité avec les tests
+        fileSize: Number, // Ajouté pour compatibilité avec les tests
         mimetype: String,
+        mimeType: String, // Ajouté pour compatibilité avec les tests
         size: Number,
         hashtags: [String],
+        mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        edited: { type: Boolean, default: false },
+        editedAt: Date,
     },
     { timestamps: true }
 )

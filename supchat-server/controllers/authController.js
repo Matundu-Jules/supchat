@@ -54,12 +54,48 @@ const generateRefreshToken = (user) =>
 // ================== REGISTER ==================
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body
+        const { name, email, password } = req.body
+
+        // Validation de sécurité côté serveur
+        if (
+            !name ||
+            typeof name !== 'string' ||
+            name.length < 1 ||
+            name.length > 255
+        ) {
+            return res
+                .status(400)
+                .json({
+                    message: 'Le nom doit contenir entre 1 et 255 caractères',
+                })
+        }
+
+        if (!email || typeof email !== 'string' || email.length > 255) {
+            return res
+                .status(400)
+                .json({ message: 'Email invalide ou trop long' })
+        }
+
+        if (!password || typeof password !== 'string' || password.length < 8) {
+            return res
+                .status(400)
+                .json({
+                    message:
+                        'Le mot de passe doit contenir au moins 8 caractères',
+                })
+        }
+
         let user = await User.findOne({ email })
         if (user) return res.status(400).json({ message: 'Email déjà utilisé' })
 
-        const hashedPassword = await bcrypt.hash(password, 10)
-        user = new User({ name, email, password: hashedPassword, role })
+        const hashedPassword = await bcrypt.hash(password, 12)
+        // Forcer le rôle par défaut à 'membre', ignorer tout rôle fourni dans req.body
+        user = new User({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'membre',
+        })
         await user.save()
 
         // (Optionnel) Générer le CSRF ici si tu connectes direct après register

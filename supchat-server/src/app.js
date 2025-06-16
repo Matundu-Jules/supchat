@@ -50,10 +50,16 @@ app.use(
     })
 )
 
-app.use(helmet())
+app.use(
+    helmet({
+        crossOriginEmbedderPolicy: false,
+        // Note: x-xss-protection est désactivé par défaut dans les nouvelles versions d'Helmet
+        // car il est considéré comme obsolète et potentiellement dangereux
+    })
+)
 app.use(morgan('dev'))
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '100kb' })) // Limite la taille des requêtes JSON
+app.use(express.urlencoded({ extended: true, limit: '100kb' }))
 app.use(cookieParser())
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 

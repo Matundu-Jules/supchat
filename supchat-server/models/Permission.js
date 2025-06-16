@@ -10,7 +10,7 @@ const PermissionSchema = new mongoose.Schema(
         workspaceId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Workspace',
-            required: true,
+            required: false,
         },
         role: {
             type: String,

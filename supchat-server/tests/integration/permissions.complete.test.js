@@ -8,6 +8,10 @@ const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
 const { permissionFactory } = require('../factories/permissionFactory')
+const {
+    generateUniqueEmail,
+    generateUniqueId,
+} = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 
 /**
@@ -29,11 +33,17 @@ describe("Permissions - Tests d'intégration", () => {
     let channel
 
     beforeEach(async () => {
+        // Nettoyer la base de données avant chaque test
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Permission.deleteMany({})
+
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
         adminUser = await User.create(
             userFactory({
-                email: 'admin@test.com',
+                email: generateUniqueEmail('admin'),
                 password: hashedPassword,
                 role: 'admin',
             })
@@ -41,7 +51,7 @@ describe("Permissions - Tests d'intégration", () => {
 
         memberUser = await User.create(
             userFactory({
-                email: 'member@test.com',
+                email: generateUniqueEmail('member'),
                 password: hashedPassword,
                 role: 'membre',
             })
@@ -49,7 +59,7 @@ describe("Permissions - Tests d'intégration", () => {
 
         guestUser = await User.create(
             userFactory({
-                email: 'guest@test.com',
+                email: generateUniqueEmail('guest'),
                 password: hashedPassword,
                 role: 'invité',
             })
@@ -73,17 +83,17 @@ describe("Permissions - Tests d'intégration", () => {
 
         const adminLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'admin@test.com', password: 'TestPassword123!' })
+            .send({ email: adminUser.email, password: 'TestPassword123!' })
         adminToken = adminLogin.body.token
 
         const memberLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'member@test.com', password: 'TestPassword123!' })
+            .send({ email: memberUser.email, password: 'TestPassword123!' })
         memberToken = memberLogin.body.token
 
         const guestLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'guest@test.com', password: 'TestPassword123!' })
+            .send({ email: guestUser.email, password: 'TestPassword123!' })
         guestToken = guestLogin.body.token
     })
 
@@ -135,7 +145,7 @@ describe("Permissions - Tests d'intégration", () => {
         describe('Gestion des membres de workspace', () => {
             it("devrait permettre au propriétaire d'inviter des membres", async () => {
                 const inviteData = {
-                    email: 'newmember@test.com',
+                    email: generateUniqueEmail('newmember'),
                     role: 'membre',
                 }
 
@@ -149,7 +159,7 @@ describe("Permissions - Tests d'intégration", () => {
 
             it("devrait rejeter l'invitation par un non-propriétaire", async () => {
                 const inviteData = {
-                    email: 'unauthorized@test.com',
+                    email: generateUniqueEmail('unauthorized'),
                     role: 'membre',
                 }
 

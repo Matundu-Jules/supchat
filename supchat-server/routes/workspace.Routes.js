@@ -29,6 +29,13 @@ router.post(
 // Récupérer tous les workspaces de l'utilisateur connecté
 router.get('/', authMiddleware, workspaceController.getAllWorkspaces)
 
+// Récupérer tous les workspaces publics
+router.get(
+    '/public',
+    authMiddleware,
+    workspaceController.getAllPublicWorkspaces
+)
+
 // Récupérer un workspace par ID
 router.get(
     '/:id',
@@ -131,6 +138,67 @@ router.post(
     '/:id/invite-guest',
     authMiddleware,
     workspaceController.inviteGuestToWorkspace
+)
+
+// Routes pour les channels dans un workspace
+router.post(
+    '/:id/channels',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    async (req, res, next) => {
+        // Injecte workspaceId dans le body pour compatibilité avec le contrôleur
+        req.body.workspace = req.params.id
+        next()
+    },
+    require('../controllers/channelController').createChannel
+)
+
+router.get(
+    '/:id/channels',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    async (req, res, next) => {
+        // Injecte workspaceId dans les query params pour filtrage
+        req.query.workspace = req.params.id
+        next()
+    },
+    require('../controllers/channelController').getChannels
+)
+
+// Route pour la recherche globale dans un workspace
+router.get(
+    '/:id/search/messages',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    async (req, res, next) => {
+        // Injecte workspaceId dans les query params
+        req.query.workspace = req.params.id
+        next()
+    },
+    require('../controllers/searchController').searchMessages
+)
+
+// Générer un lien d'invitation
+router.post(
+    '/:id/invite-link',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    workspaceController.generateInviteLink
+)
+
+// Rejoindre un workspace via un code d'invitation
+router.post(
+    '/join/:inviteCode',
+    authMiddleware,
+    workspaceController.joinWorkspaceByCode
+)
+
+// Quitter un workspace
+router.delete(
+    '/:id/leave',
+    authMiddleware,
+    validate({ params: workspaceIdParamSchema }),
+    workspaceController.leaveWorkspace
 )
 
 module.exports = router

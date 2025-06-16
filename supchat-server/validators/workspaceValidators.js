@@ -4,6 +4,7 @@ const createWorkspaceSchema = Joi.object({
     name: Joi.string().min(3).max(50).required(),
     description: Joi.string().max(500).allow(''),
     isPublic: Joi.boolean(),
+    type: Joi.string().valid('public', 'private'),
 })
 
 const updateWorkspaceSchema = Joi.object({
@@ -14,6 +15,7 @@ const updateWorkspaceSchema = Joi.object({
 
 const inviteToWorkspaceSchema = Joi.object({
     email: Joi.string().email().required(),
+    role: Joi.string().valid('membre', 'admin', 'moderateur').optional(),
 })
 
 const joinWorkspaceSchema = Joi.object({

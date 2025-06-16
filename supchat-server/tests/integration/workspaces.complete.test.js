@@ -4,6 +4,7 @@ const User = require('../../models/User')
 const Workspace = require('../../models/Workspace')
 const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
+const TestHelpers = require('../helpers/testHelpers')
 const bcrypt = require('bcryptjs')
 
 /**
@@ -20,36 +21,47 @@ describe("Workspaces - Tests d'intégration", () => {
     let user
     let adminToken
     let adminUser
+    let userEmail
+    let adminEmail
 
     beforeEach(async () => {
+        // Nettoyer les données existantes
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+
         // Créer un utilisateur normal et un admin
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
+        userEmail = TestHelpers.generateUniqueEmail()
+        adminEmail = TestHelpers.generateUniqueEmail()
+
         user = await User.create(
             userFactory({
-                email: 'user@test.com',
+                email: userEmail,
                 password: hashedPassword,
                 role: 'membre',
+                username: TestHelpers.generateUniqueUsername(),
             })
         )
 
         adminUser = await User.create(
             userFactory({
-                email: 'admin@test.com',
+                email: adminEmail,
                 password: hashedPassword,
                 role: 'admin',
+                username: TestHelpers.generateUniqueUsername(),
             })
         )
 
         // Obtenir les tokens d'authentification
         const userLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'user@test.com', password: 'TestPassword123!' })
+            .send({ email: userEmail, password: 'TestPassword123!' })
         authToken = userLogin.body.token
 
         const adminLogin = await request(app)
             .post('/api/auth/login')
-            .send({ email: 'admin@test.com', password: 'TestPassword123!' })
+            .send({ email: adminEmail, password: 'TestPassword123!' })
         adminToken = adminLogin.body.token
     })
 
@@ -158,7 +170,7 @@ describe("Workspaces - Tests d'intégration", () => {
 
         it('devrait récupérer uniquement les workspaces publics pour un utilisateur non membre', async () => {
             const otherUser = await User.create(
-                userFactory({ email: 'other@test.com' })
+                userFactory({ email: TestHelpers.generateUniqueEmail('other') })
             )
 
             // Workspace public

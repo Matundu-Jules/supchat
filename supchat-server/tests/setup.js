@@ -24,25 +24,56 @@ beforeAll(async () => {
     const uri = mongoServer.getUri()
     await connectToDatabase(uri)
 
-    // Seed users
+    // Clean databases before tests
+    await User.deleteMany({})
+    await Workspace.deleteMany({})
+    await Channel.deleteMany({})
+    await Message.deleteMany({})
+
+    // Seed users with unique data
     const admin = await User.create(
-        userFactory({ role: 'admin', password: 'pass' })
+        userFactory({
+            role: 'admin',
+            password: 'pass',
+            email: `admin-global-${Date.now()}@test.com`,
+            username: `admin-global-${Date.now()}`,
+        })
     )
     const member = await User.create(
-        userFactory({ role: 'membre', password: 'pass' })
+        userFactory({
+            role: 'membre',
+            password: 'pass',
+            email: `member-global-${Date.now()}@test.com`,
+            username: `member-global-${Date.now()}`,
+        })
     )
     const guest = await User.create(
-        userFactory({ role: 'invité', password: 'pass' })
+        userFactory({
+            role: 'invité',
+            password: 'pass',
+            email: `guest-global-${Date.now()}@test.com`,
+            username: `guest-global-${Date.now()}`,
+        })
     )
 
     global.adminId = admin._id
+    global.memberId = member._id
+    global.guestId = guest._id
 
     // Seed workspace and channel
     const workspace = await Workspace.create(
-        workspaceFactory({ owner: admin._id, members: [admin._id] })
+        workspaceFactory({
+            owner: admin._id,
+            members: [admin._id],
+            name: `test-workspace-${Date.now()}`,
+        })
     )
     const channel = await Channel.create(
-        channelFactory({ workspace: workspace._id, members: [admin._id] })
+        channelFactory({
+            workspace: workspace._id,
+            members: [admin._id],
+            name: `test-channel-${Date.now()}`,
+        })
     )
     await Message.create(
         messageFactory({ channel: channel._id, userId: admin._id })
@@ -78,8 +109,21 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-    await mongoose.connection.dropDatabase()
-    await mongoose.disconnect()
-    await mongoServer.stop()
-    global.socketClient.close()
+    try {
+        // Clean up all collections
+        await User.deleteMany({})
+        await Workspace.deleteMany({})
+        await Channel.deleteMany({})
+        await Message.deleteMany({})
+
+        await mongoose.connection.dropDatabase()
+        await mongoose.disconnect()
+        await mongoServer.stop()
+
+        if (global.socketClient) {
+            global.socketClient.close()
+        }
+    } catch (error) {
+        console.log('Cleanup error (can be ignored):', error.message)
+    }
 })
