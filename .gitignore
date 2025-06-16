@@ -20,6 +20,9 @@ coverage/
 client-web/dist
 client-mobile/.expo
 
+# Data persistence
+data/
+
 # Scripts
 reset-docker.sh
 run-project.sh
