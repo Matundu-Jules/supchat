@@ -4,6 +4,7 @@ npm-debug.log
 
 # Environment variables
 .env
+client-web/.env.secrets-to-move
 
 # Logs
 logs/
@@ -18,6 +19,9 @@ coverage/
 # Build output
 client-web/dist
 client-mobile/.expo
+
+# Data persistence
+data/
 
 # Scripts
 reset-docker.sh

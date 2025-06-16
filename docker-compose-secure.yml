@@ -1,0 +1,280 @@
+services:
+  # Backend API service
+  api:
+    build:
+      context: ./supchat-server
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:${PORT}:${PORT}" # bind API port to all interfaces for mobile access
+    volumes:
+      - ./supchat-server:/usr/src/app:ro # Read-only for security
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_AUTH_SOURCE=${MONGO_AUTH_SOURCE}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH=${JWT_REFRESH}
+      - CSRF_SECRET=${CSRF_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    # Security constraints
+    read_only: false # Needs write for logs/temp files
+    tmpfs:
+      - /tmp:noexec,nosuid,size=1g
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web client (React)
+  web:
+    build:
+      context: ./client-web
+      dockerfile: Dockerfile
+    ports:
+      - "80:80" # expose publicly for web access
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - VITE_REACT_APP_API_URL=${VITE_REACT_APP_API_URL}
+      - VITE_WEBSOCKET_URL=${WEBSOCKET_URL}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    # Security constraints
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:noexec,nosuid,size=100m
+      - /var/run:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 128M
+          cpus: "0.1"
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Mobile client (React Native)
+  mobile:
+    build:
+      context: ./client-mobile
+      dockerfile: Dockerfile
+    volumes:
+      - ./client-mobile:/app:ro # Read-only mount
+      - node_modules_mobile:/app/node_modules # Named volume for node_modules
+    networks:
+      - supchat-network
+    env_file:
+      - .env
+    environment:
+      - REACT_NATIVE_API_URL=${REACT_NATIVE_API_URL}
+      - REACT_NATIVE_ENV=${REACT_NATIVE_ENV}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    # Security constraints
+    read_only: false # Metro bundler needs write access
+    tmpfs:
+      - /tmp:noexec,nosuid,size=2g
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.75"
+        reservations:
+          memory: 512M
+          cpus: "0.25"
+
+  # MongoDB database service
+  db:
+    image: mongo:6.0
+    volumes:
+      - mongo-data:/data/db # persist database data
+      - mongo-config:/data/configdb # config persistence
+    networks:
+      - supchat-network
+    ports:
+      - "127.0.0.1:27017:27017" # bind MongoDB to localhost only
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    restart: unless-stopped
+    # Security constraints
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    # Health check
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Container monitoring with cAdvisor
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0 # Pinned version for security
+    container_name: supchat-cadvisor
+    privileged: false # Removed privileged mode
+    devices:
+      - /dev/kmsg:/dev/kmsg:ro
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - supchat-network
+    restart: unless-stopped
+    platform: linux/amd64
+    # Security constraints
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+      - SYS_PTRACE
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 128M
+          cpus: "0.1"
+
+  # Security scanner (optionnel)
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: supchat-security-scanner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - trivy-cache:/root/.cache/trivy
+    networks:
+      - supchat-network
+    profiles:
+      - security # Only run when explicitly requested
+    command: ["image", "--severity", "HIGH,CRITICAL", "supchat-1-api"]
+    restart: "no"
+
+# Define network for app services with custom configuration
+networks:
+  supchat-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+# Named volumes for persistent data
+volumes:
+  mongo-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/mongodb
+  mongo-config:
+    driver: local
+  node_modules_mobile:
+    driver: local
+  trivy-cache:
+    driver: local
+
+# Global logging configuration
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    labels: "com.docker.compose.service"

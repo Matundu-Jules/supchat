@@ -14,22 +14,20 @@ import {
 import { Formik } from "formik";
 import { registerSchema } from "../../utils/validation";
 import { useRouter } from "expo-router";
-import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AuthService } from "../../services/authService";
 
 export default function RegisterScreen() {
   const router = useRouter();
 
   const handleRegister = async (values: any) => {
     try {
-      await axios.post("http://localhost:3000/api/auth/register", {
+      await AuthService.register({
         username: values.name,
         email: values.email,
         password: values.password,
-        role: "admin  ", // ou "user" selon ton besoin
-        // role: "user" si tu veux un rôle utilisateur par défaut
       });
-      router.replace("/(auth)/login");
+      router.replace("../workspace.tsx");
     } catch (err) {
       Alert.alert("Erreur", "Inscription échouée");
     }
@@ -44,10 +42,6 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={{ alignItems: "center", marginTop: 30 }}>
-            <Image
-              source={require("../../assets/images/logo-couleur.png")}
-              style={{ width: 120, height: 120, resizeMode: "contain" }}
-            />
             <Image
               source={require("../../assets/images/logo-supchat-primary.png")}
               style={{ width: 120, height: 120, resizeMode: "contain" }}

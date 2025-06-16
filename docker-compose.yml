@@ -1,26 +1,11 @@
 services:
-  # Monitoring service (cAdvisor for container metrics)
-  cadvisor:
-    image: google/cadvisor:latest
-    container_name: cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - "127.0.0.1:8005:8080" # expose only on localhost to restrict access
-    restart: unless-stopped
-    networks:
-      - monitoring
-
   # Backend API service
   api:
     build:
       context: ./supchat-server
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:${PORT}:${PORT}" # bind API port to localhost only
+      - "0.0.0.0:${PORT}:${PORT}" # bind API port to all interfaces for mobile access
     volumes:
       - ./supchat-server:/usr/src/app
     networks:
@@ -96,11 +81,29 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     restart: unless-stopped
 
-# Define separate networks for app services and monitoring
+  # Container monitoring with cAdvisor
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: supchat-cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - supchat-network
+    restart: unless-stopped
+    platform: linux/amd64
+
+# Define network for app services
 networks:
   supchat-network:
-    driver: bridge
-  monitoring:
     driver: bridge
 
 # Named volume for persistent MongoDB data
