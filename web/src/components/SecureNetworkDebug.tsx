@@ -38,29 +38,28 @@ export const SecureNetworkDebug: React.FC<SecureNetworkDebugProps> = ({
     hostIP.startsWith("192.168.") ||
     hostIP.startsWith("10.") ||
     hostIP.startsWith("172.");
-
   return (
-    <div className={styles.networkDebug}>
-      <div className={styles.header}>
+    <div className={styles["networkDebug"]}>
+      <div className={styles["header"]}>
         <h4>🔒 Debug Réseau (Sécurisé)</h4>
         <div>
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className={styles.refreshBtn}
+            className={styles["refreshBtn"]}
             style={{ marginRight: "8px" }}
           >
             {showDetails ? "👁️‍🗨️" : "👁️"}
           </button>
-          <button onClick={checkConnection} className={styles.refreshBtn}>
+          <button onClick={checkConnection} className={styles["refreshBtn"]}>
             🔄
           </button>
         </div>
       </div>
 
-      <div className={styles.status}>
+      <div className={styles["status"]}>
         <div
-          className={`${styles.indicator} ${
-            isConnected ? styles.connected : styles.disconnected
+          className={`${styles["indicator"]} ${
+            isConnected ? styles["connected"] : styles["disconnected"]
           }`}
         >
           {isConnected ? "✅ API Connectée" : "❌ API Déconnectée"}
@@ -70,18 +69,18 @@ export const SecureNetworkDebug: React.FC<SecureNetworkDebugProps> = ({
         )}
       </div>
 
-      {error && <div className={styles.error}>⚠️ Erreur: {error}</div>}
+      {error && <div className={styles["error"]}>⚠️ Erreur: {error}</div>}
 
-      <div className={styles.config}>
-        <div className={styles.configItem}>
+      <div className={styles["config"]}>
+        <div className={styles["configItem"]}>
           <strong>Env:</strong> <code>{environment}</code>
         </div>
         {ipHash && (
-          <div className={styles.configItem}>
+          <div className={styles["configItem"]}>
             <strong>Config Hash:</strong> <code>{ipHash}</code>
           </div>
         )}
-        <div className={styles.configItem}>
+        <div className={styles["configItem"]}>
           <strong>Type:</strong>
           {isLocalhost ? (
             <span style={{ color: "#fbbf24" }}> 🏠 Localhost</span>
@@ -94,12 +93,12 @@ export const SecureNetworkDebug: React.FC<SecureNetworkDebugProps> = ({
       </div>
 
       {showDetails && (
-        <div className={styles.config}>
-          <div className={styles.configItem}>
+        <div className={styles["config"]}>
+          <div className={styles["configItem"]}>
             <strong>API:</strong>{" "}
             <code>{apiUrl.replace(/\/\/[^:]+/, "//[MASKED]")}</code>
           </div>
-          <div className={styles.configItem}>
+          <div className={styles["configItem"]}>
             <strong>Host:</strong>{" "}
             <code>
               {hostIP ? `${hostIP.substring(0, 7)}...` : "Non défini"}
@@ -109,7 +108,7 @@ export const SecureNetworkDebug: React.FC<SecureNetworkDebugProps> = ({
       )}
 
       {isLocalhost && (
-        <div className={styles.warning}>
+        <div className={styles["warning"]}>
           🚨 Configuration localhost - Non compatible mobile
           <br />
           💡 Utilisez: <code>npm run secure-env</code>
@@ -117,7 +116,7 @@ export const SecureNetworkDebug: React.FC<SecureNetworkDebugProps> = ({
       )}
 
       {!isPrivateIP && hostIP && (
-        <div className={styles.error}>
+        <div className={styles["error"]}>
           ⚠️ IP publique détectée - Risque de sécurité !
         </div>
       )}

@@ -1,0 +1,35 @@
+# Use a lightweight Node.js image with LTS support
+FROM node:lts-alpine
+
+# Install security updates and curl for health checks
+RUN apk update && apk upgrade && \
+    apk add --no-cache curl && \
+    rm -rf /var/cache/apk/*
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodeuser -u 1001 -G nodejs
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json for dependency installation
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies for development)
+RUN npm install && npm cache clean --force
+
+# Copy the rest of the project files and set ownership
+COPY --chown=nodeuser:nodejs . .
+
+# Create logs directory with proper permissions
+RUN mkdir -p logs && chown -R nodeuser:nodejs logs
+
+# Switch to non-root user
+USER nodeuser
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the application with nodemon for development
+CMD ["npm", "run", "dev"]

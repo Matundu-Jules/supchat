@@ -1,5 +1,6 @@
 services:
-  # Backend API service  api:
+  # Backend API service
+  api:
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -106,7 +107,8 @@ services:
       timeout: 10s
       retries: 3
 
-  # Mobile client (React Native)  mobile:
+  # Mobile client (React Native)
+  mobile:
     build:
       context: ./mobile
       dockerfile: Dockerfile

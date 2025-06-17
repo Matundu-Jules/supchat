@@ -50,7 +50,6 @@ const AppContent = ({
     location.pathname === "/login" ||
     location.pathname === "/register" ||
     location.pathname === "/set-password";
-
   return (
     <div className={styles["appContainer"]}>
       {" "}

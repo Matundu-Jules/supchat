@@ -115,27 +115,65 @@ const {
     MONGO_AUTH_SOURCE,
 } = process.env
 
-const mongoUri =
-    process.env.MONGO_URI || `mongodb://db:27017/${MONGO_DB || 'supchat'}`
+let mongoUri
+if (process.env.MONGO_URI) {
+    mongoUri = process.env.MONGO_URI
+} else if (MONGO_INITDB_ROOT_USERNAME && MONGO_INITDB_ROOT_PASSWORD) {
+    mongoUri = `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${MONGO_HOST || 'db'}:${MONGO_PORT || '27017'}/${MONGO_DB || 'supchat'}?authSource=${MONGO_AUTH_SOURCE || 'admin'}`
+} else {
+    mongoUri = `mongodb://${MONGO_HOST || 'db'}:${MONGO_PORT || '27017'}/${MONGO_DB || 'supchat'}`
+}
 
-console.log('🔍 MongoDB URI:', mongoUri)
+console.log('🔍 MongoDB URI:', mongoUri.replace(/:[^:]*@/, ':***@'))
 
 // Nouvelle fonction pour connecter à MongoDB (utilisable dans les tests)
 async function connectToDatabase(uri) {
-    const options = {
-        connectTimeoutMS: 60000,
-        serverSelectionTimeoutMS: 60000,
-        socketTimeoutMS: 60000,
+    try {
+        console.log('🔧 Tentative de connexion à MongoDB...')
+        const options = {
+            connectTimeoutMS: 10000, // 10s au lieu de 60s
+            serverSelectionTimeoutMS: 5000, // 5s au lieu de 60s
+            socketTimeoutMS: 10000, // 10s au lieu de 60s
+            maxPoolSize: 10,
+            retryWrites: true,
+        }
+        await mongoose.connect(uri || mongoUri, options)
+        console.log('✅ MongoDB connected successfully')
+    } catch (error) {
+        console.error('❌ MongoDB connection failed:', error.message)
+        throw error
     }
-    await mongoose.connect(uri || mongoUri, options)
-    console.log('MongoDB connected')
 }
 
 if (process.env.NODE_ENV !== 'test') {
-    connectToDatabase().catch((err) => {
-        console.error('MongoDB connection error:', err)
-        process.exit(1)
-    })
+    // Fonction pour attendre que MongoDB soit prêt
+    async function waitForMongoDB(maxRetries = 10, delay = 2000) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                console.log(
+                    `🔄 Tentative de connexion MongoDB ${i + 1}/${maxRetries}...`
+                )
+                await connectToDatabase()
+                return // Connexion réussie
+            } catch (error) {
+                console.log(`⚠️ Échec tentative ${i + 1}: ${error.message}`)
+                if (i === maxRetries - 1) {
+                    console.error(
+                        '❌ Impossible de se connecter à MongoDB après',
+                        maxRetries,
+                        'tentatives'
+                    )
+                    process.exit(1)
+                }
+                console.log(
+                    `⏰ Attente de ${delay / 1000}s avant nouvelle tentative...`
+                )
+                await new Promise((resolve) => setTimeout(resolve, delay))
+            }
+        }
+    }
+
+    waitForMongoDB()
 } else {
     console.log('MongoDB connection skipped in test environment')
 }

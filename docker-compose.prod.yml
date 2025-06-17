@@ -1,20 +1,21 @@
+# Docker Compose configuration for PRODUCTION
+# Usage: docker-compose -f docker-compose.prod.yml up
+version: "3.8"
+
 services:
-  # Backend API service
+  # Backend API service (Production)
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile.dev # Use development Dockerfile
+      dockerfile: Dockerfile # Use production Dockerfile
     ports:
-      - "0.0.0.0:${PORT}:${PORT}" # bind API port to all interfaces for mobile access
-    volumes:
-      - ./api:/usr/src/app
-      - /usr/src/app/node_modules # Preserve node_modules in container
+      - "0.0.0.0:${PORT}:${PORT}"
     networks:
       - supchat-network
     env_file:
-      - .env
+      - .env.production
     environment:
-      - NODE_ENV=${NODE_ENV}
+      - NODE_ENV=production
       - PORT=${PORT}
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
@@ -39,52 +40,41 @@ services:
       retries: 5
       start_period: 40s
 
-  # Web client (React)
+  # Web client (Production with Nginx)
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile.dev # Use development Dockerfile
+      dockerfile: Dockerfile # Use production Dockerfile with Nginx
     ports:
-      - "80:8080" # expose publicly for web access
-    volumes:
-      - ./web:/app
-      - /app/node_modules # Preserve node_modules in container
+      - "80:80"
     networks:
       - supchat-network
-    env_file:
-      - .env
     environment:
-      - VITE_API_URL=/api
-      - VITE_WEBSOCKET_URL=/socket.io
-      - VITE_APP_NAME=SupChat
-      - NODE_ENV=development # Changed to development for hot reload
+      - NODE_ENV=production
     depends_on:
       - api
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
 
-  # Mobile client (React Native)
+  # Mobile client (Production)
   mobile:
     build:
       context: ./mobile
-      dockerfile: Dockerfile.dev # Use development Dockerfile
-    volumes:
-      - ./mobile:/app
-      - /app/node_modules # Preserve node_modules in container
+      dockerfile: Dockerfile # Use production Dockerfile
     networks:
       - supchat-network
     env_file:
-      - .env
+      - .env.production
     environment:
       - EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
       - EXPO_PUBLIC_DEFAULT_HOST=${EXPO_PUBLIC_DEFAULT_HOST}
       - EXPO_PUBLIC_DEFAULT_PORT=${EXPO_PUBLIC_DEFAULT_PORT}
-      - NODE_ENV=${NODE_ENV}
+      - NODE_ENV=production
     depends_on:
       - api
     restart: unless-stopped
@@ -93,48 +83,58 @@ services:
   db:
     image: mongo:6.0
     volumes:
-      - mongo-data:/data/db # persist database data
+      - mongo-data:/data/db
     networks:
       - supchat-network
     ports:
-      - "127.0.0.1:27017:27017" # bind MongoDB to localhost only
+      - "127.0.0.1:27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
-  # Container monitoring with cAdvisor
+  # Monitoring service
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: supchat-cadvisor
-    privileged: true
-    devices:
-      - /dev/kmsg:/dev/kmsg
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
-    ports:
-      - "127.0.0.1:8080:8080"
+    privileged: true
+    devices:
+      - /dev/kmsg
     networks:
       - supchat-network
     restart: unless-stopped
-    platform: linux/amd64
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/healthz",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-# Define network for app services
+volumes:
+  mongo-data:
+
 networks:
   supchat-network:
     driver: bridge
-
-# Named volume for persistent MongoDB data
-volumes:
-  mongo-data:
-    driver: local
