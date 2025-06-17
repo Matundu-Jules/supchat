@@ -3,19 +3,19 @@ const User = require('../models/User')
 
 exports.getNotifications = async (req, res) => {
     try {
-        const { read } = req.query
+        const { unread } = req.query
         const filter = { userId: req.user.id }
 
-        if (read === 'false') {
+        if (unread === 'true') {
             filter.read = false
         }
 
-        const notifs = await Notification.find(filter)
+        const notifications = await Notification.find(filter)
             .sort({ createdAt: -1 })
             .populate('messageId')
             .populate('workspaceId', 'name')
             .populate('channelId', 'name')
-        res.status(200).json(notifs)
+        res.status(200).json({ notifications })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
     }
@@ -24,15 +24,21 @@ exports.getNotifications = async (req, res) => {
 exports.markAsRead = async (req, res) => {
     try {
         const { id } = req.params
-        const notification = await Notification.findOneAndUpdate(
-            { _id: id, userId: req.user.id },
-            { read: true },
-            { new: true }
-        )
+
+        // D'abord vérifier si la notification existe
+        const notification = await Notification.findById(id)
 
         if (!notification) {
             return res.status(404).json({ message: 'Notification non trouvée' })
         }
+
+        // Vérifier si la notification appartient à l'utilisateur connecté
+        if (String(notification.userId) !== String(req.user.id)) {
+            return res.status(403).json({ message: 'Accès refusé' })
+        }
+
+        notification.read = true
+        await notification.save()
 
         res.status(200).json({ message: 'Notification lue', notification })
     } catch (error) {
@@ -77,13 +83,26 @@ exports.getNotificationPreferences = async (req, res) => {
         const user = await User.findById(req.user.id).select(
             'notificationPrefs'
         )
-        const preferences = {
+
+        // Créer un objet de préférences par défaut
+        const defaultPreferences = {
             mentions: true,
             directMessages: true,
             channelMessages: true,
             emailNotifications: true,
-            ...user.notificationPrefs,
+            pushNotifications: true,
         }
+
+        // Si l'utilisateur a des préférences personnalisées, les utiliser
+        let preferences = defaultPreferences
+        if (
+            user.notificationPrefs &&
+            typeof user.notificationPrefs === 'object' &&
+            !Array.isArray(user.notificationPrefs)
+        ) {
+            preferences = { ...defaultPreferences, ...user.notificationPrefs }
+        }
+
         res.status(200).json({ preferences })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
@@ -93,9 +112,15 @@ exports.getNotificationPreferences = async (req, res) => {
 exports.updateNotificationPreferences = async (req, res) => {
     try {
         const { preferences } = req.body
+
+        // Stocker les préférences comme un objet simple plutôt qu'un tableau
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { notificationPrefs: preferences },
+            {
+                $set: {
+                    notificationPrefs: preferences,
+                },
+            },
             { new: true }
         ).select('notificationPrefs')
 
@@ -107,11 +132,45 @@ exports.updateNotificationPreferences = async (req, res) => {
 
 exports.updateChannelNotificationSettings = async (req, res) => {
     try {
-        const { channelId } = req.body
-        const { settings } = req.body
+        const { id: channelId } = req.params
+        const { enabled, allMessages, mentions } = req.body
 
-        // Ici vous pouvez implémenter la logique pour les paramètres de notification par channel
-        // Pour l'instant, on retourne une réponse de base
+        // Déterminer le mode basé sur les paramètres
+        let mode = 'mute'
+        if (enabled) {
+            if (allMessages) {
+                mode = 'all'
+            } else if (mentions) {
+                mode = 'mentions'
+            }
+        }
+
+        // Mettre à jour ou créer la préférence pour ce channel
+        const user = await User.findById(req.user.id)
+
+        if (!user.channelNotificationPrefs) {
+            user.channelNotificationPrefs = []
+        }
+
+        const existingPrefIndex = user.channelNotificationPrefs.findIndex(
+            (pref) => String(pref.channelId) === String(channelId)
+        )
+
+        if (existingPrefIndex >= 0) {
+            user.channelNotificationPrefs[existingPrefIndex].mode = mode
+        } else {
+            user.channelNotificationPrefs.push({ channelId, mode })
+        }
+
+        await user.save()
+
+        // Retourner les paramètres sous le format attendu par les tests
+        const settings = {
+            enabled,
+            allMessages: allMessages || false,
+            mentions: mentions || false,
+        }
+
         res.status(200).json({
             message: 'Paramètres de notification mis à jour',
             settings,

@@ -20,9 +20,11 @@ const NotificationSchema = new mongoose.Schema({
         ],
         required: true,
     },
+    title: { type: String }, // Titre de la notification
     message: { type: String }, // Message descriptif de la notification
     data: { type: mongoose.Schema.Types.Mixed }, // Données supplémentaires (workspaceName, etc.)
     read: { type: Boolean, default: false },
+    emailSent: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 })
 

@@ -165,6 +165,17 @@ describe("Messagerie - Tests d'intégration", () => {
         })
 
         it("devrait rejeter un message d'un non-membre du channel", async () => {
+            // Créer un channel privé spécifique pour ce test
+            const privateChannel = await Channel.create(
+                channelFactory({
+                    name: 'private-channel',
+                    workspace: workspace._id,
+                    type: 'private',
+                    members: [user._id], // Seul user est membre
+                    createdBy: user._id,
+                })
+            )
+
             const hashedPassword = await bcrypt.hash('pass', 10)
             const outsider = await User.create(
                 userFactory({
@@ -173,7 +184,7 @@ describe("Messagerie - Tests d'intégration", () => {
                 })
             )
 
-            // Ajouter l'outsider au workspace mais pas au channel
+            // Ajouter l'outsider au workspace mais pas au channel privé
             await Workspace.findByIdAndUpdate(workspace._id, {
                 $push: { members: outsider._id },
             })
@@ -189,7 +200,7 @@ describe("Messagerie - Tests d'intégration", () => {
             }
 
             const res = await request(app)
-                .post(`/api/channels/${channel._id}/messages`)
+                .post(`/api/channels/${privateChannel._id}/messages`)
                 .set('Authorization', `Bearer ${outsiderToken}`)
                 .send(messageData)
 

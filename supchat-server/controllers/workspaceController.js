@@ -41,6 +41,16 @@ exports.createWorkspace = async (req, res) => {
                 .status(401)
                 .json({ message: 'Utilisateur non authentifié' })
         }
+
+        // Vérifier que l'utilisateur n'est pas un invité
+        if (req.user.role === 'invité') {
+            return res
+                .status(403)
+                .json({
+                    message: 'Les invités ne peuvent pas créer de workspaces',
+                })
+        }
+
         const { name, description, isPublic, type } = req.body
         if (!name || name.trim() === '') {
             return res.status(400).json({ message: 'Le nom est requis' })

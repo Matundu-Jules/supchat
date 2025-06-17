@@ -10,9 +10,25 @@ const React = require('react')
 const { renderToStaticMarkup } = require('react-dom/server')
 const NotificationEmail = require('../emails/NotificationEmail')
 
+// Fonction pour vérifier si les notifications pour nouveaux messages sont activées
+async function shouldNotifyNewMessage(userId, channelId) {
+    const user = await User.findById(userId).select('channelNotificationPrefs')
+    const pref = user.channelNotificationPrefs?.find(
+        (p) => String(p.channelId) === String(channelId)
+    )
+
+    // Si une préférence spécifique existe pour ce channel
+    if (pref) {
+        return pref.mode === 'all'
+    }
+
+    // Par défaut, les notifications sont désactivées pour les nouveaux messages
+    return false
+}
+
 async function getChannelPref(userId, channelId) {
-    const user = await User.findById(userId).select('notificationPrefs')
-    const pref = user.notificationPrefs?.find(
+    const user = await User.findById(userId).select('channelNotificationPrefs')
+    const pref = user.channelNotificationPrefs?.find(
         (p) => String(p.channelId) === String(channelId)
     )
     return pref ? pref.mode : 'all'
@@ -35,18 +51,12 @@ exports.sendMessage = async (req, res) => {
                 .status(400)
                 .json({ message: 'Le message ne peut pas être vide.' })
         }
-
         const channel = await Channel.findById(channelId).populate('members')
         if (!channel) {
             return res.status(404).json({ message: 'Canal non trouvé.' })
         }
 
-        const isMember = channel.members?.some(
-            (m) => String(m._id || m) === String(req.user.id)
-        )
-        if (!isMember) {
-            return res.status(403).json({ message: 'Accès refusé.' })
-        } // Vérifier les permissions dans le workspace
+        // Vérifier les permissions dans le workspace
         const workspace = await Workspace.findById(channel.workspace)
         if (!workspace) {
             return res.status(404).json({ message: 'Workspace non trouvé.' })
@@ -62,20 +72,63 @@ exports.sendMessage = async (req, res) => {
                 .json({ message: "Vous n'êtes pas membre de ce workspace." })
         }
 
-        // Récupérer les permissions explicites (optionnel)
+        const isMember = channel.members?.some(
+            (m) => String(m._id || m) === String(req.user.id)
+        )
+
+        // Récupérer les permissions explicites
         const perm = await Permission.findOne({
             userId: req.user.id,
             workspaceId: channel.workspace,
         })
 
+        // Vérifier les permissions granulaires par ressource
+        const channelPermission = await Permission.findOne({
+            userId: req.user.id,
+            resourceType: 'channel',
+            resourceId: channelId,
+        })
+
+        // Déterminer si l'utilisateur peut poster
+        let canPost = false
+
+        // 1. Si c'est un channel public et l'utilisateur est membre du workspace
+        if (channel.type === 'public' && isWorkspaceMember) {
+            canPost = true
+        }
+
+        // 2. Si c'est un channel privé, il faut être membre OU avoir des permissions spécifiques
+        if (channel.type === 'private') {
+            if (isMember) {
+                canPost = true
+            } else if (
+                channelPermission &&
+                channelPermission.permissions?.includes('post')
+            ) {
+                canPost = true
+            }
+        }
+
+        // 3. Si l'utilisateur est propriétaire du workspace
+        const isOwner = String(workspace.owner) === String(req.user.id)
+        if (isOwner) {
+            canPost = true
+        }
+
+        // 4. Vérifier les rôles admin
+        if (perm && perm.role === 'admin') {
+            canPost = true
+        }
+
+        if (!canPost) {
+            return res.status(403).json({ message: 'Accès refusé.' })
+        }
+
         // Si des permissions explicites existent et interdisent de poster
         if (perm && perm.permissions?.canPost === false) {
-            return res
-                .status(403)
-                .json({
-                    message:
-                        "Vous n'avez pas le droit de poster dans ce channel.",
-                })
+            return res.status(403).json({
+                message: "Vous n'avez pas le droit de poster dans ce channel.",
+            })
         }
 
         // Déterminer le rôle effectif (par défaut 'membre' si pas de permissions explicites)
@@ -179,48 +232,65 @@ exports.sendMessage = async (req, res) => {
             io.to(channelId).emit('newMessage', message)
         } catch (e) {
             console.error('Socket emit error', e)
-        }
-
-        // Envoyer les notifications aux utilisateurs mentionnés
+        } // Envoyer les notifications aux utilisateurs mentionnés
         const mentionedUsers = messageData.mentions
             ? await User.find({ _id: { $in: messageData.mentions } })
             : []
 
         for (const user of mentionedUsers) {
+            // Ne pas créer de notification si l'utilisateur se mentionne lui-même
+            if (String(user._id) === String(req.user.id)) {
+                continue
+            }
+
             const mode = await getChannelPref(user._id, channelId)
             if (mode === 'mute') continue
+
+            let emailSent = false
             const notif = new Notification({
                 userId: user._id,
                 messageId: message._id,
                 channelId,
                 type: 'mention',
+                title: 'Vous avez été mentionné',
+                message: `Dans le channel ${channel.name}`,
+                emailSent: false,
             })
             await notif.save()
             io.to(`user_${user._id}`).emit('notification', notif)
+
             const room = io.sockets.adapter.rooms.get(`user_${user._id}`)
             if (!room || room.size === 0) {
-                const html = renderToStaticMarkup(
-                    React.createElement(NotificationEmail, {
-                        userName: user.name || user.email,
-                        messageText: messageText,
+                try {
+                    const html = renderToStaticMarkup(
+                        React.createElement(NotificationEmail, {
+                            userName: user.name || user.email,
+                            messageText: messageText,
+                        })
+                    )
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.GMAIL_USER,
+                            pass: process.env.GMAIL_PASS,
+                        },
                     })
-                )
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: process.env.GMAIL_USER,
-                        pass: process.env.GMAIL_PASS,
-                    },
-                })
-                await transporter.sendMail({
-                    from: `"SupChat" <${process.env.GMAIL_USER}>`,
-                    to: user.email,
-                    subject: 'Nouvelle mention SupChat',
-                    html,
-                })
+                    await transporter.sendMail({
+                        from: `"SupChat" <${process.env.GMAIL_USER}>`,
+                        to: user.email,
+                        subject: 'Nouvelle mention SupChat',
+                        html,
+                    })
+                    emailSent = true
+                } catch (emailError) {
+                    console.error('Erreur envoi email:', emailError)
+                }
+
+                // Mettre à jour la notification avec le statut d'envoi d'email
+                notif.emailSent = emailSent
+                await notif.save()
             }
         }
-
         if (channel.members && channel.members.length) {
             for (const member of channel.members) {
                 if (String(member._id) === String(req.user.id)) continue
@@ -231,13 +301,21 @@ exports.sendMessage = async (req, res) => {
                 ) {
                     continue
                 }
-                const mode = await getChannelPref(member._id, channelId)
-                if (mode !== 'all') continue
+
+                // Vérifier si les notifications pour nouveaux messages sont activées
+                const shouldNotify = await shouldNotifyNewMessage(
+                    member._id,
+                    channelId
+                )
+                if (!shouldNotify) continue
+
                 const notif = new Notification({
                     userId: member._id,
                     messageId: message._id,
                     channelId,
-                    type: 'message',
+                    type: 'new_message',
+                    title: 'Nouveau message',
+                    message: `Dans le channel ${channel.name}`,
                 })
                 await notif.save()
                 io.to(`user_${member._id}`).emit('notification', notif)
@@ -282,20 +360,24 @@ exports.getMessagesByChannel = async (req, res) => {
         })
 
         if (perm && perm.permissions?.canRead === false) {
-            return res
-                .status(403)
-                .json({
-                    message: "Vous n'avez pas le droit de lire ce channel.",
-                })
+            return res.status(403).json({
+                message: "Vous n'avez pas le droit de lire ce channel.",
+            })
+        } // Construire la requête de recherche
+        let query = {
+            $or: [{ channelId: channelId }, { channel: channelId }],
         }
-
-        // Construire la requête de recherche
-        let query = { channelId }
         if (search) {
-            query.$or = [
-                { text: { $regex: search, $options: 'i' } },
-                { content: { $regex: search, $options: 'i' } },
+            query.$and = [
+                { $or: query.$or }, // Assure qu'on cherche dans le bon channel
+                {
+                    $or: [
+                        { text: { $regex: search, $options: 'i' } },
+                        { content: { $regex: search, $options: 'i' } },
+                    ],
+                },
             ]
+            delete query.$or // Remplacer par $and
         }
 
         // Pagination
@@ -578,12 +660,9 @@ exports.uploadFile = async (req, res) => {
         })
 
         if (perm && perm.permissions?.canPost === false) {
-            return res
-                .status(403)
-                .json({
-                    message:
-                        "Vous n'avez pas le droit de poster dans ce channel.",
-                })
+            return res.status(403).json({
+                message: "Vous n'avez pas le droit de poster dans ce channel.",
+            })
         }
 
         // Créer le message avec le fichier

@@ -147,7 +147,7 @@ router.post(
     validate({ params: workspaceIdParamSchema }),
     async (req, res, next) => {
         // Injecte workspaceId dans le body pour compatibilité avec le contrôleur
-        req.body.workspace = req.params.id
+        req.body.workspaceId = req.params.id
         next()
     },
     require('../controllers/channelController').createChannel
@@ -159,7 +159,7 @@ router.get(
     validate({ params: workspaceIdParamSchema }),
     async (req, res, next) => {
         // Injecte workspaceId dans les query params pour filtrage
-        req.query.workspace = req.params.id
+        req.query.workspaceId = req.params.id
         next()
     },
     require('../controllers/channelController').getChannels

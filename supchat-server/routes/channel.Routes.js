@@ -23,6 +23,7 @@ const {
     updateChannelSchema,
     channelIdParamSchema,
     inviteToChannelSchema,
+    channelMemberParamSchema,
 } = require('../validators/channelValidators')
 
 // Configuration de multer pour l'upload de fichiers
@@ -94,7 +95,7 @@ router.post(
     joinChannel
 )
 
-router.post(
+router.delete(
     '/:id/leave',
     authMiddleware,
     validate({ params: channelIdParamSchema }),
@@ -112,14 +113,14 @@ router.get(
 router.put(
     '/:id/members/:userId/role',
     authMiddleware,
-    validate({ params: channelIdParamSchema }),
+    validate({ params: channelMemberParamSchema }),
     updateChannelMemberRole
 )
 
 router.delete(
     '/:id/members/:userId',
     authMiddleware,
-    validate({ params: channelIdParamSchema }),
+    validate({ params: channelMemberParamSchema }),
     removeChannelMember
 )
 

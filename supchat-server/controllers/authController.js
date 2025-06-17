@@ -63,26 +63,26 @@ exports.register = async (req, res) => {
             name.length < 1 ||
             name.length > 255
         ) {
-            return res
-                .status(400)
-                .json({
-                    message: 'Le nom doit contenir entre 1 et 255 caractères',
-                })
+            return res.status(400).json({
+                message: 'Le nom doit contenir entre 1 et 255 caractères',
+            })
         }
-
         if (!email || typeof email !== 'string' || email.length > 255) {
             return res
                 .status(400)
                 .json({ message: 'Email invalide ou trop long' })
         }
 
+        // Validation du format d'email avec regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Format d'email invalide" })
+        }
+
         if (!password || typeof password !== 'string' || password.length < 8) {
-            return res
-                .status(400)
-                .json({
-                    message:
-                        'Le mot de passe doit contenir au moins 8 caractères',
-                })
+            return res.status(400).json({
+                message: 'Le mot de passe doit contenir au moins 8 caractères',
+            })
         }
 
         let user = await User.findOne({ email })
@@ -96,12 +96,13 @@ exports.register = async (req, res) => {
             password: hashedPassword,
             role: 'membre',
         })
-        await user.save()
-
-        // (Optionnel) Générer le CSRF ici si tu connectes direct après register
-        generateCsrfToken(req, res, { overwrite: true })
-
-        res.status(201).json({ message: 'Utilisateur créé avec succès', user })
+        await user.save() // (Optionnel) Générer le CSRF ici si tu connectes direct après register
+        generateCsrfToken(req, res, { overwrite: true }) // Retourner seulement les informations non sensibles de l'utilisateur
+        const { _id, name: userName, email: userEmail, role, createdAt } = user
+        res.status(201).json({
+            message: 'Utilisateur créé avec succès',
+            user: { _id, name: userName, email: userEmail, role, createdAt },
+        })
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error })
     }

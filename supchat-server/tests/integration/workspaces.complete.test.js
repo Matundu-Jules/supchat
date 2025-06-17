@@ -298,6 +298,14 @@ describe("Workspaces - Tests d'intégration", () => {
 
     describe('POST /api/workspaces/:id/invite', () => {
         it('devrait inviter un utilisateur par email', async () => {
+            // Créer un utilisateur à inviter
+            const inviteUser = await User.create(
+                userFactory({
+                    email: 'invite@test.com',
+                    password: await bcrypt.hash('TestPassword123!', 10),
+                })
+            )
+
             const workspace = await Workspace.create(
                 workspaceFactory({
                     owner: user._id,
@@ -306,7 +314,7 @@ describe("Workspaces - Tests d'intégration", () => {
             )
 
             const inviteData = {
-                email: 'invite@test.com',
+                email: inviteUser.email,
                 role: 'membre',
             }
 

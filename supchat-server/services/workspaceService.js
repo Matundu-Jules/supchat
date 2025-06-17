@@ -121,7 +121,18 @@ const create = async ({ name, description, isPublic, type, owner }) => {
         userId: owner,
         workspaceId: workspace._id,
         role: 'admin',
-        permissions: getDefaultPermissions('admin'),
+        permissions: [
+            'post',
+            'view',
+            'moderate',
+            'manage_members',
+            'manage_channels',
+            'delete_messages',
+            'upload_files',
+            'react',
+            'invite_members',
+        ],
+        legacyPermissions: getDefaultPermissions('admin'),
     })
     return workspace
 }
@@ -184,18 +195,12 @@ const invite = async (workspaceId, email, user) => {
     if (!isAdmin) {
         console.log('❌ Accès refusé - utilisateur pas admin')
         throw new Error('NOT_ALLOWED')
-    }
-    // Vérifier que l'utilisateur existe ou gérer l'invitation par email
+    } // Vérifier que l'utilisateur existe ou gérer l'invitation par email
     let invitedUser = await User.findOne({ email })
     if (!invitedUser) {
-        // Pour les tests, on peut permettre l'invitation d'emails non existants
-        // En production, on pourrait créer un utilisateur invité ou stocker l'invitation
-        console.log("⚠️ Invitation d'un email non existant:", email)
-        invitedUser = {
-            _id: `invite_${Date.now()}`, // ID temporaire
-            email: email,
-            name: 'Utilisateur invité',
-        }
+        // En production, on doit rejeter les invitations d'emails non existants
+        console.log("❌ Invitation d'un email non existant:", email)
+        throw new Error('USER_NOT_FOUND')
     } else {
         // Vérifier que l'utilisateur ne s'invite pas lui-même
         if (String(invitedUser._id) === String(user.id)) {
@@ -204,16 +209,13 @@ const invite = async (workspaceId, email, user) => {
         }
     }
 
-    // On autorise la ré-invitation si l'utilisateur n'est pas encore membre
-    // Seulement pour les vrais utilisateurs (avec un vrai ObjectId)
-    if (invitedUser._id && typeof invitedUser._id === 'object') {
-        const alreadyMember = await Permission.findOne({
-            userId: invitedUser._id,
-            workspaceId,
-        })
-        if (alreadyMember) {
-            throw new Error('ALREADY_MEMBER')
-        }
+    // Vérifier que l'utilisateur n'est pas déjà membre
+    const alreadyMember = await Permission.findOne({
+        userId: invitedUser._id,
+        workspaceId,
+    })
+    if (alreadyMember) {
+        throw new Error('ALREADY_MEMBER')
     }
 
     // On retire l'unicité sur invitations : on peut ré-inviter si pas encore membre

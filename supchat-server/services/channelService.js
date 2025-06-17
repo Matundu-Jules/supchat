@@ -42,25 +42,76 @@ const isChannelAdmin = async (userId, channel) => {
 }
 
 const create = async ({ name, workspaceId, description, type }, user) => {
-    // Vérifier les permissions de création
-    const perm = await Permission.findOne({ userId: user.id, workspaceId })
-    if (!perm) {
-        throw new Error('NOT_ALLOWED')
+    // Vérifier que le workspace existe
+    const workspace = await Workspace.findById(workspaceId)
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
     }
 
+    // Vérifier que l'utilisateur est membre du workspace
+    const isOwner = String(workspace.owner) === String(user.id)
+    const isMember = workspace.members?.some(
+        (m) => String(m._id || m) === String(user.id)
+    )
+
+    if (!isOwner && !isMember) {
+        throw new Error('NOT_ALLOWED')
+    } // Vérifier les permissions de création
+    const perm = await Permission.findOne({ userId: user.id, workspaceId })
+
     // Vérifier si l'utilisateur peut créer des channels
-    const canCreate =
-        canCreateChannels(perm.role, type) ||
-        (await isAdminOrOwner(user.id, workspaceId))
+    let canCreate = isOwner
+
+    if (perm) {
+        // Vérifier par rôle
+        canCreate = canCreate || canCreateChannels(perm.role, type)
+
+        // Vérifier par permissions granulaires
+        if (perm.permissions && Array.isArray(perm.permissions)) {
+            canCreate =
+                canCreate || perm.permissions.includes('manage_channels')
+        }
+
+        // Vérifier les permissions legacy
+        if (
+            perm.legacyPermissions?.canCreateChannels ||
+            perm.legacyPermissions?.canManageChannels
+        ) {
+            canCreate = true
+        }
+    } else {
+        // Si pas de permission explicite, vérifier le rôle par défaut de l'utilisateur
+        if (user.role === 'membre' && isMember) {
+            canCreate = canCreateChannels('membre', type)
+        }
+    }
+
+    // Si l'utilisateur est admin du workspace
+    if (!canCreate) {
+        canCreate = await isAdminOrOwner(user.id, workspaceId)
+    }
+
     if (!canCreate) {
         throw new Error('NOT_ALLOWED')
     }
+
+    // Vérifier l'unicité du nom dans le workspace
+    const existingChannel = await Channel.findOne({
+        name,
+        workspace: workspaceId,
+    })
+    if (existingChannel) {
+        const error = new Error('Channel name already exists in this workspace')
+        error.statusCode = 409
+        throw error
+    }
+
     const channel = new Channel({
         name,
         workspace: workspaceId,
         description: description || '',
-        type,
-        owner: user.id,
+        type: type || 'public',
+        createdBy: user.id,
         members: [user.id],
     })
     await channel.save()
@@ -71,25 +122,27 @@ const create = async ({ name, workspaceId, description, type }, user) => {
     })
 
     // CORRECTIF: Donner automatiquement le rôle admin du canal au créateur
-    // Vérifier si l'utilisateur a déjà un rôle spécifique pour ce canal
-    const existingChannelRole = perm.channelRoles?.find(
-        (cr) => String(cr.channelId) === String(channel._id)
-    )
+    if (perm) {
+        // Vérifier si l'utilisateur a déjà un rôle spécifique pour ce canal
+        const existingChannelRole = perm.channelRoles?.find(
+            (cr) => String(cr.channelId) === String(channel._id)
+        )
 
-    if (!existingChannelRole) {
-        // Ajouter le rôle admin pour ce canal
-        perm.channelRoles = perm.channelRoles || []
-        perm.channelRoles.push({
-            channelId: channel._id,
-            role: 'admin',
-        })
-        await perm.save()
+        if (!existingChannelRole) {
+            // Ajouter le rôle admin pour ce canal
+            perm.channelRoles = perm.channelRoles || []
+            perm.channelRoles.push({
+                channelId: channel._id,
+                role: 'admin',
+            })
+            await perm.save()
+        }
     }
 
     return channel
 }
 
-const findByWorkspace = async (workspaceId, user) => {
+const findByWorkspace = async (workspaceId, user, searchQuery = '') => {
     const workspace = await Workspace.findById(workspaceId)
     if (!workspace) {
         throw new Error('WORKSPACE_NOT_FOUND')
@@ -105,26 +158,47 @@ const findByWorkspace = async (workspaceId, user) => {
         throw new Error('NOT_ALLOWED')
     }
 
-    const allChannels = await Channel.find({ workspace: workspaceId }).populate(
-        'owner',
+    let query = { workspace: workspaceId }
+
+    // Ajouter la recherche si un terme est fourni
+    if (searchQuery) {
+        query.name = { $regex: searchQuery, $options: 'i' }
+    }
+    const allChannels = await Channel.find(query).populate(
+        'createdBy',
         'username email'
     )
-    // Si c'est un invité, filtrer les channels selon ses permissions
-    if (perm && perm.role === 'invité') {
-        // Les invités ne voient que les channels où ils sont explicitement membres
-        return allChannels.filter((channel) =>
-            channel.members.some(
+
+    // Filtrer les channels selon le rôle et l'appartenance
+    if (perm && (perm.role === 'invité' || perm.role === 'membre')) {
+        // Les invités et membres ne voient que :
+        // - Les channels publics où ils sont membres
+        // - Les channels privés où ils sont membres
+        return allChannels.filter((channel) => {
+            const isMemberOfChannel = channel.members.some(
                 (memberId) => String(memberId) === String(user.id)
             )
-        )
+
+            // Si c'est un channel public, l'utilisateur doit être membre
+            if (channel.type === 'public') {
+                return isMemberOfChannel
+            }
+
+            // Si c'est un channel privé, l'utilisateur doit être membre
+            if (channel.type === 'private') {
+                return isMemberOfChannel
+            }
+
+            return false
+        })
     }
 
-    // Admins et membres voient tous les channels
+    // Admins et propriétaires voient tous les channels correspondant à la recherche
     return allChannels
 }
 
 const findById = (id) => {
-    return Channel.findById(id).populate('owner', 'username email')
+    return Channel.findById(id).populate('createdBy', 'username email')
 }
 
 const update = async (id, { name, description }, user) => {
@@ -132,12 +206,13 @@ const update = async (id, { name, description }, user) => {
     if (!channel) {
         return null
     }
-    const allowed =
-        (await isAdminOrOwner(user.id, channel.workspace)) ||
-        (await isChannelAdmin(user.id, channel))
-    if (!allowed) {
+
+    // Seul le créateur peut modifier le channel
+    const isCreator = String(channel.createdBy) === String(user.id)
+    if (!isCreator) {
         throw new Error('NOT_ALLOWED')
     }
+
     if (name) {
         channel.name = name
     }
@@ -154,6 +229,7 @@ const remove = async (id, user) => {
         return null
     }
     const allowed =
+        String(channel.createdBy) === String(user.id) ||
         (await isAdminOrOwner(user.id, channel.workspace)) ||
         (await isChannelAdmin(user.id, channel))
     if (!allowed) {
@@ -174,12 +250,17 @@ const invite = async (channelId, email, user) => {
     if (!channel) {
         throw new Error('NOT_FOUND')
     }
-    const allowed =
-        (await isAdminOrOwner(user.id, channel.workspace)) ||
-        (await isChannelAdmin(user.id, channel))
-    if (!allowed) {
+
+    // Pour les channels privés, seuls les membres du channel ou le créateur peuvent inviter
+    const isCreator = String(channel.createdBy) === String(user.id)
+    const isMemberOfChannel = channel.members.some(
+        (m) => String(m) === String(user.id)
+    )
+
+    if (!isCreator && !isMemberOfChannel) {
         throw new Error('NOT_ALLOWED')
     }
+
     const invitedUser = await User.findOne({ email })
     if (!invitedUser) {
         throw new Error('USER_NOT_FOUND')
@@ -187,10 +268,14 @@ const invite = async (channelId, email, user) => {
     if (channel.members.some((m) => String(m) === String(invitedUser._id))) {
         throw new Error('ALREADY_MEMBER')
     }
+
+    // Ajouter directement l'utilisateur aux membres au lieu de juste l'inviter
+    channel.members.push(invitedUser._id)
+
     if (!channel.invitations.includes(email)) {
         channel.invitations.push(email)
-        await channel.save()
     }
+    await channel.save()
     return channel
 }
 
@@ -202,12 +287,34 @@ const join = async (channelId, user) => {
     if (channel.members.some((m) => String(m) === String(user.id))) {
         throw new Error('ALREADY_MEMBER')
     }
+
+    // Pour les channels privés, vérifier l'invitation
     if (
         channel.type === 'private' &&
         !channel.invitations.includes(user.email)
     ) {
-        throw new Error('INVALID_INVITE')
+        const error = new Error('Access denied. Channel is private.')
+        error.statusCode = 403
+        throw error
     }
+
+    // Pour les channels publics, vérifier que l'utilisateur est membre du workspace
+    const workspace = await Workspace.findById(channel.workspace)
+    if (!workspace) {
+        throw new Error('WORKSPACE_NOT_FOUND')
+    }
+
+    const isMemberOfWorkspace =
+        workspace.members?.some(
+            (m) => String(m._id || m) === String(user.id)
+        ) || String(workspace.owner) === String(user.id)
+
+    if (!isMemberOfWorkspace) {
+        const error = new Error('Access denied. Not a member of the workspace.')
+        error.statusCode = 403
+        throw error
+    }
+
     await Channel.findByIdAndUpdate(channelId, {
         $addToSet: { members: user.id },
         $pull: { invitations: user.email },
@@ -220,6 +327,16 @@ const leave = async (channelId, user) => {
     if (!channel) {
         throw new Error('NOT_FOUND')
     }
+
+    // Empêcher le créateur de quitter son propre channel
+    if (String(channel.createdBy) === String(user.id)) {
+        const error = new Error(
+            'Le créateur ne peut pas quitter son propre channel'
+        )
+        error.statusCode = 400
+        throw error
+    }
+
     await Channel.findByIdAndUpdate(channelId, {
         $pull: { members: user.id },
     })
@@ -328,9 +445,15 @@ const removeChannelMember = async (channelId, userId, adminUser) => {
         throw new Error('CHANNEL_NOT_FOUND')
     }
 
-    // Vérifier que l'admin a les droits
+    // Vérifier que l'admin a les droits (créateur ou admin)
+    const isCreator = String(channel.createdBy) === String(adminUser.id)
     const isAdmin = await isChannelAdmin(adminUser.id, channel)
-    if (!isAdmin) {
+    const isWorkspaceAdmin = await isAdminOrOwner(
+        adminUser.id,
+        channel.workspace
+    )
+
+    if (!isCreator && !isAdmin && !isWorkspaceAdmin) {
         throw new Error('NOT_ALLOWED')
     }
 

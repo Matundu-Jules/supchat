@@ -94,8 +94,8 @@ const canCreateChannels = (userRole, channelType = 'private') => {
     }
 
     if (userRole === 'membre') {
-        // Les membres peuvent créer des channels privés uniquement
-        return channelType === 'private'
+        // Les membres peuvent créer des channels publics et privés
+        return channelType === 'private' || channelType === 'public'
     }
 
     // Les invités ne peuvent pas créer de channels

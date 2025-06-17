@@ -36,7 +36,7 @@ describe("Intégrations & Recherche - Tests d'intégration", () => {
 
         user = await User.create(
             userFactory({
-                email: TestHelpers.generateUniqueEmail(),
+                email: 'user@test.com', // Email fixe pour les tests
                 password: hashedPassword,
                 username: TestHelpers.generateUniqueUsername(),
             })

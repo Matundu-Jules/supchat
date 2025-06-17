@@ -30,7 +30,17 @@ const UserSchema = new mongoose.Schema(
         },
         githubToken: String,
         tokenVersion: { type: Number, default: 0 },
-        notificationPrefs: [
+        notificationPrefs: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {
+                mentions: true,
+                directMessages: true,
+                channelMessages: true,
+                emailNotifications: true,
+                pushNotifications: true,
+            },
+        },
+        channelNotificationPrefs: [
             {
                 channelId: {
                     type: mongoose.Schema.Types.ObjectId,

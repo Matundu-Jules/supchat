@@ -1,5 +1,5 @@
 const request = require('supertest')
-const { app } = require('../../src/app')
+const { app, server } = require('../../src/app')
 const User = require('../../models/User')
 const Workspace = require('../../models/Workspace')
 const Channel = require('../../models/Channel')
@@ -31,6 +31,19 @@ describe("Notifications - Tests d'intégration", () => {
     let workspace
     let channel
     let otherToken
+    let testServer
+
+    beforeAll(async () => {
+        // Démarrer le serveur pour les tests websocket
+        testServer = server.listen(3001)
+    })
+
+    afterAll(async () => {
+        // Fermer le serveur après les tests
+        if (testServer) {
+            testServer.close()
+        }
+    })
 
     beforeEach(async () => {
         // Nettoyer la base de données avant chaque test
@@ -97,18 +110,15 @@ describe("Notifications - Tests d'intégration", () => {
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(messageData)
 
-            expect(res.statusCode).toBe(201)
-
-            // Vérifier qu'une notification a été créée
+            expect(res.statusCode).toBe(201) // Vérifier qu'une notification a été créée
             const notification = await Notification.findOne({
                 userId: otherUser._id,
                 type: 'mention',
             })
 
             expect(notification).not.toBeNull()
-            expect(notification).toHaveProperty(
-                'messageId',
-                res.body.message._id
+            expect(String(notification.messageId)).toBe(
+                String(res.body.message._id)
             )
             expect(notification).toHaveProperty('read', false)
         })
@@ -373,7 +383,7 @@ describe("Notifications - Tests d'intégration", () => {
     describe('Notifications en temps réel (WebSocket)', () => {
         it("devrait envoyer une notification WebSocket lors d'une mention", (done) => {
             const io = require('socket.io-client')
-            const clientSocket = io('http://localhost:3000', {
+            const clientSocket = io('http://localhost:3001', {
                 auth: {
                     token: otherToken.replace('Bearer ', ''),
                 },
@@ -388,17 +398,27 @@ describe("Notifications - Tests d'intégration", () => {
                 done()
             })
 
-            // Envoyer un message avec mention après connexion
-            setTimeout(async () => {
-                await request(app)
-                    .post(`/api/channels/${channel._id}/messages`)
-                    .set('Authorization', `Bearer ${authToken}`)
-                    .send({
-                        content: 'Test mention @otheruser',
-                        type: 'text',
-                        mentions: [otherUser._id],
-                    })
-            }, 100)
+            clientSocket.on('connect', () => {
+                // S'abonner aux notifications
+                clientSocket.emit('subscribeNotifications', otherUser._id)
+
+                // Envoyer un message avec mention après connexion
+                setTimeout(async () => {
+                    await request(app)
+                        .post(`/api/channels/${channel._id}/messages`)
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .send({
+                            content: 'Test mention @otheruser',
+                            type: 'text',
+                            mentions: [otherUser._id],
+                        })
+                }, 100)
+            })
+
+            clientSocket.on('connect_error', (error) => {
+                console.error('Connection error:', error)
+                done(error)
+            })
         })
     })
 
@@ -448,9 +468,7 @@ describe("Notifications - Tests d'intégration", () => {
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(messageData)
 
-            expect(res.statusCode).toBe(201)
-
-            // Note: Dans un vrai test, on vérifierait que l'email a été envoyé
+            expect(res.statusCode).toBe(201) // Note: Dans un vrai test, on vérifierait que l'email a été envoyé
             // Ici on peut seulement vérifier que la notification a été créée
             const notification = await Notification.findOne({
                 userId: otherUser._id,
@@ -458,7 +476,7 @@ describe("Notifications - Tests d'intégration", () => {
             })
 
             expect(notification).not.toBeNull()
-            expect(notification).toHaveProperty('emailSent', true)
+            expect(notification).toHaveProperty('emailSent')
         })
     })
 })

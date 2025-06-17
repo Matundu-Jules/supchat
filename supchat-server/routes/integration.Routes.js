@@ -10,15 +10,35 @@ const {
     unlinkGoogleAccount,
     linkFacebookAccount,
     unlinkFacebookAccount,
+    connectGoogleDrive,
+    shareGoogleDriveFile,
+    connectGithub,
+    githubWebhook,
+    connectTeams,
+    deleteIntegration,
 } = require('../controllers/integrationController')
 
 const router = express.Router()
 
 router.get('/', authMiddleware, listIntegrations)
+router.delete('/:id', authMiddleware, deleteIntegration)
+
+// Routes Google Drive
 router.post('/google-drive', authMiddleware, linkGoogleDrive)
 router.delete('/google-drive', authMiddleware, unlinkGoogleDrive)
+router.post('/google-drive/connect', authMiddleware, connectGoogleDrive)
+router.post('/google-drive/share', authMiddleware, shareGoogleDriveFile)
+
+// Routes GitHub
 router.post('/github', authMiddleware, linkGithub)
 router.delete('/github', authMiddleware, unlinkGithub)
+router.post('/github/connect', authMiddleware, connectGithub)
+router.post('/github/webhook', githubWebhook)
+
+// Routes Microsoft Teams
+router.post('/teams/connect', authMiddleware, connectTeams)
+
+// Routes OAuth
 router.post('/google', authMiddleware, linkGoogleAccount)
 router.delete('/google', authMiddleware, unlinkGoogleAccount)
 router.post('/facebook', authMiddleware, linkFacebookAccount)

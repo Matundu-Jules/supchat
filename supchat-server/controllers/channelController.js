@@ -31,6 +31,9 @@ exports.createChannel = async (req, res) => {
         if (error.message === 'WORKSPACE_NOT_FOUND') {
             return res.status(404).json({ message: 'Workspace non trouvé' })
         }
+        if (error.statusCode === 409) {
+            return res.status(409).json({ message: error.message })
+        }
         return res.status(500).json({ message: 'Erreur serveur', error })
     }
 }
@@ -38,7 +41,7 @@ exports.createChannel = async (req, res) => {
 // ✅ Récupérer tous les canaux d'un workspace
 exports.getChannels = async (req, res) => {
     try {
-        const { workspaceId } = req.query // On récupère workspaceId depuis les paramètres de requête
+        const { workspaceId, search } = req.query // Ajouter support de la recherche
 
         if (!workspaceId) {
             return res.status(400).json({ message: 'ID du workspace requis' })
@@ -46,9 +49,10 @@ exports.getChannels = async (req, res) => {
 
         const channels = await channelService.findByWorkspace(
             workspaceId,
-            req.user
+            req.user,
+            search || ''
         )
-        return res.status(200).json(channels)
+        return res.status(200).json({ channels })
     } catch (error) {
         if (error.message === 'WORKSPACE_NOT_FOUND') {
             return res.status(404).json({ message: 'Workspace non trouvé' })
@@ -157,10 +161,20 @@ exports.deleteChannel = async (req, res) => {
 exports.inviteToChannel = async (req, res) => {
     try {
         const { id } = req.params
-        const { email } = req.body
+        const { userId } = req.body
         let channel
         try {
-            channel = await channelService.invite(id, email, req.user)
+            // Trouver l'utilisateur par ID au lieu d'email
+            const userToInvite = await User.findById(userId)
+            if (!userToInvite) {
+                return res.status(400).json({ message: 'USER_NOT_FOUND' })
+            }
+
+            channel = await channelService.invite(
+                id,
+                userToInvite.email,
+                req.user
+            )
         } catch (err) {
             if (err.message === 'NOT_ALLOWED') {
                 return res
@@ -179,7 +193,7 @@ exports.inviteToChannel = async (req, res) => {
             throw err
         }
 
-        const invitedUser = await User.findOne({ email })
+        const invitedUser = await User.findById(userId)
         if (invitedUser) {
             const io = getIo()
             const notif = new Notification({
@@ -192,7 +206,7 @@ exports.inviteToChannel = async (req, res) => {
         }
         return res
             .status(200)
-            .json({ message: `Invitation envoyée à ${email}`, channel })
+            .json({ message: `Invitation envoyée à l'utilisateur`, channel })
     } catch (error) {
         return res
             .status(500)
@@ -208,16 +222,14 @@ exports.joinChannel = async (req, res) => {
         try {
             channel = await channelService.join(id, req.user)
         } catch (err) {
-            if (err.message === 'INVALID_INVITE') {
-                return res
-                    .status(404)
-                    .json({ message: 'Invitation invalide ou expirée' })
-            }
             if (err.message === 'NOT_FOUND') {
                 return res.status(404).json({ message: 'Canal non trouvé' })
             }
             if (err.message === 'ALREADY_MEMBER') {
                 return res.status(400).json({ message: 'ALREADY_MEMBER' })
+            }
+            if (err.statusCode === 403) {
+                return res.status(403).json({ message: err.message })
             }
             throw err
         }
@@ -242,6 +254,9 @@ exports.leaveChannel = async (req, res) => {
             if (err.message === 'NOT_FOUND') {
                 return res.status(404).json({ message: 'Canal non trouvé' })
             }
+            if (err.statusCode === 400) {
+                return res.status(400).json({ message: err.message })
+            }
             throw err
         }
         return res
@@ -255,16 +270,13 @@ exports.leaveChannel = async (req, res) => {
 // ✅ Obtenir les membres d'un canal
 exports.getChannelMembers = async (req, res) => {
     try {
-        const { channelId } = req.params
+        const { id } = req.params // Utiliser id au lieu de channelId
 
-        if (!channelId) {
+        if (!id) {
             return res.status(400).json({ message: 'ID du canal requis' })
         }
 
-        const members = await channelService.getChannelMembers(
-            channelId,
-            req.user
-        )
+        const members = await channelService.getChannelMembers(id, req.user)
         return res.status(200).json(members)
     } catch (error) {
         if (error.message === 'CHANNEL_NOT_FOUND') {
@@ -280,10 +292,10 @@ exports.getChannelMembers = async (req, res) => {
 // ✅ Mettre à jour le rôle d'un membre dans un canal
 exports.updateChannelMemberRole = async (req, res) => {
     try {
-        const { channelId, userId } = req.params
+        const { id, userId } = req.params // Utiliser id au lieu de channelId
         const { role } = req.body
 
-        if (!channelId || !userId || !role) {
+        if (!id || !userId || !role) {
             return res.status(400).json({
                 message: "ID du canal, ID de l'utilisateur et rôle requis",
             })
@@ -297,7 +309,7 @@ exports.updateChannelMemberRole = async (req, res) => {
         }
 
         const updatedPermission = await channelService.updateChannelMemberRole(
-            channelId,
+            id,
             userId,
             role,
             req.user
@@ -324,16 +336,16 @@ exports.updateChannelMemberRole = async (req, res) => {
 // ✅ Supprimer un membre d'un canal
 exports.removeChannelMember = async (req, res) => {
     try {
-        const { channelId, userId } = req.params
+        const { id, userId } = req.params // Utiliser id au lieu de channelId
 
-        if (!channelId || !userId) {
+        if (!id || !userId) {
             return res.status(400).json({
                 message: "ID du canal et ID de l'utilisateur requis",
             })
         }
 
         const updatedChannel = await channelService.removeChannelMember(
-            channelId,
+            id,
             userId,
             req.user
         )
@@ -361,17 +373,17 @@ exports.removeChannelMember = async (req, res) => {
 // ✅ Ajouter un membre à un canal
 exports.addChannelMember = async (req, res) => {
     try {
-        const { channelId } = req.params
+        const { id } = req.params // Utiliser id au lieu de channelId
         const { userId } = req.body
 
-        if (!channelId || !userId) {
+        if (!id || !userId) {
             return res.status(400).json({
                 message: "ID du canal et ID de l'utilisateur requis",
             })
         }
 
         const updatedChannel = await channelService.addChannelMember(
-            channelId,
+            id,
             userId,
             req.user
         )

@@ -1,28 +1,34 @@
-const Joi = require("joi");
+const Joi = require('joi')
 
 const createChannelSchema = Joi.object({
-  name: Joi.string().min(3).max(50).required(),
-  workspaceId: Joi.string().hex().length(24).required(),
-  description: Joi.string().max(500).allow(""),
-  type: Joi.string().valid("public", "private").required()
-});
+    name: Joi.string().min(3).max(50).required(),
+    workspaceId: Joi.string().hex().length(24).required(),
+    description: Joi.string().max(500).allow(''),
+    type: Joi.string().valid('public', 'private').required(),
+})
 
 const updateChannelSchema = Joi.object({
-  name: Joi.string().min(3).max(50),
-  description: Joi.string().max(500).allow("")
-}).min(1);
+    name: Joi.string().min(3).max(50),
+    description: Joi.string().max(500).allow(''),
+}).min(1)
 
 const channelIdParamSchema = Joi.object({
-  id: Joi.string().hex().length(24).required()
-});
+    id: Joi.string().hex().length(24).required(),
+})
 
 const inviteToChannelSchema = Joi.object({
-  email: Joi.string().email().required()
-});
+    userId: Joi.string().hex().length(24).required(),
+})
+
+const channelMemberParamSchema = Joi.object({
+    id: Joi.string().hex().length(24).required(),
+    userId: Joi.string().hex().length(24).required(),
+})
 
 module.exports = {
-  createChannelSchema,
-  updateChannelSchema,
-  channelIdParamSchema,
-  inviteToChannelSchema
-};
+    createChannelSchema,
+    updateChannelSchema,
+    channelIdParamSchema,
+    inviteToChannelSchema,
+    channelMemberParamSchema,
+}

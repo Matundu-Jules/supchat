@@ -38,8 +38,11 @@ describe("Authentification - Tests d'intégration", () => {
             expect(res.statusCode).toBe(201)
             expect(res.body.user).toHaveProperty('email', userData.email)
             expect(res.body.user).toHaveProperty('name', userData.name)
-            // Note: L'API actuelle retourne le mot de passe hashé (problème de sécurité à corriger)
-            expect(res.body.user).toHaveProperty('password')
+            // L'API ne retourne plus le mot de passe hashé (sécurité améliorée)
+            expect(res.body.user).not.toHaveProperty('password')
+            expect(res.body.user).toHaveProperty('role', 'membre')
+            expect(res.body.user).toHaveProperty('_id')
+            expect(res.body.user).toHaveProperty('createdAt')
             expect(res.body).toHaveProperty(
                 'message',
                 'Utilisateur créé avec succès'
@@ -57,25 +60,31 @@ describe("Authentification - Tests d'intégration", () => {
                 .post('/api/auth/register')
                 .send(userData)
 
-            // L'API actuelle accepte les emails invalides (comportement à corriger)
-            // Pour l'instant, on teste le comportement actuel
-            expect(res.statusCode).toBe(201) // Devrait être 400 mais l'API accepte tout
+            // L'API valide maintenant le format d'email
+            expect(res.statusCode).toBe(400)
+            expect(res.body).toHaveProperty(
+                'message',
+                "Format d'email invalide"
+            )
         })
 
         it('devrait rejeter une inscription avec un mot de passe trop faible', async () => {
             const userData = {
                 name: 'Jean Dupont',
                 email: generateUniqueEmail('faible'),
-                password: '123', // Mot de passe trop faible
+                password: '123', // Mot de passe trop faible (moins de 8 caractères)
             }
 
             const res = await request(app)
                 .post('/api/auth/register')
                 .send(userData)
 
-            // L'API actuelle n'a pas de validation de mot de passe fort
-            // Pour l'instant, on teste le comportement actuel
-            expect(res.statusCode).toBe(201) // Devrait être 400 mais l'API accepte tout
+            // L'API valide que le mot de passe doit contenir au moins 8 caractères
+            expect(res.statusCode).toBe(400)
+            expect(res.body).toHaveProperty(
+                'message',
+                'Le mot de passe doit contenir au moins 8 caractères'
+            )
         })
 
         it('devrait rejeter une inscription avec un email déjà utilisé', async () => {

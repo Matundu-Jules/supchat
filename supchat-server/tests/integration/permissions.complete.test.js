@@ -144,8 +144,18 @@ describe("Permissions - Tests d'intégration", () => {
 
         describe('Gestion des membres de workspace', () => {
             it("devrait permettre au propriétaire d'inviter des membres", async () => {
+                // Créer d'abord un utilisateur réel à inviter
+                const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
+                const userToInvite = await User.create(
+                    userFactory({
+                        email: generateUniqueEmail('newmember'),
+                        password: hashedPassword,
+                        role: 'membre',
+                    })
+                )
+
                 const inviteData = {
-                    email: generateUniqueEmail('newmember'),
+                    email: userToInvite.email,
                     role: 'membre',
                 }
 
@@ -155,6 +165,9 @@ describe("Permissions - Tests d'intégration", () => {
                     .send(inviteData)
 
                 expect(res.statusCode).toBe(200)
+
+                // Nettoyer l'utilisateur créé
+                await User.findByIdAndDelete(userToInvite._id)
             })
 
             it("devrait rejeter l'invitation par un non-propriétaire", async () => {

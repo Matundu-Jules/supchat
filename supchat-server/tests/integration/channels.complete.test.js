@@ -3,6 +3,7 @@ const { app } = require('../../src/app')
 const User = require('../../models/User')
 const Workspace = require('../../models/Workspace')
 const Channel = require('../../models/Channel')
+const Permission = require('../../models/Permission')
 const { userFactory } = require('../factories/userFactory')
 const { workspaceFactory } = require('../factories/workspaceFactory')
 const { channelFactory } = require('../factories/channelFactory')
@@ -32,6 +33,7 @@ describe("Channels - Tests d'intégration", () => {
         await User.deleteMany({})
         await Workspace.deleteMany({})
         await Channel.deleteMany({})
+        await Permission.deleteMany({})
 
         const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
 
@@ -56,7 +58,52 @@ describe("Channels - Tests d'intégration", () => {
                 owner: user._id,
                 members: [user._id, adminUser._id],
             })
-        )
+        ) // Créer les permissions pour les utilisateurs
+        await Permission.create({
+            userId: user._id,
+            workspaceId: workspace._id,
+            role: 'membre',
+            permissions: ['post', 'view', 'upload_files', 'react'],
+            legacyPermissions: {
+                canPost: true,
+                canDeleteMessages: false,
+                canManageMembers: false,
+                canManageChannels: false,
+                canCreateChannels: true,
+                canViewAllMembers: true,
+                canViewPublicChannels: true,
+                canUploadFiles: true,
+                canReact: true,
+            },
+        })
+
+        await Permission.create({
+            userId: adminUser._id,
+            workspaceId: workspace._id,
+            role: 'admin',
+            permissions: [
+                'post',
+                'view',
+                'moderate',
+                'manage_members',
+                'manage_channels',
+                'delete_messages',
+                'upload_files',
+                'react',
+                'invite_members',
+            ],
+            legacyPermissions: {
+                canPost: true,
+                canDeleteMessages: true,
+                canManageMembers: true,
+                canManageChannels: true,
+                canCreateChannels: true,
+                canViewAllMembers: true,
+                canViewPublicChannels: true,
+                canUploadFiles: true,
+                canReact: true,
+            },
+        })
 
         const userLogin = await request(app)
             .post('/api/auth/login')
@@ -110,12 +157,16 @@ describe("Channels - Tests d'intégration", () => {
         })
 
         it('devrait rejeter la création par un non-membre du workspace', async () => {
+            const hashedPassword = await bcrypt.hash('TestPassword123!', 10)
             const otherUser = await User.create(
-                userFactory({ email: 'other@test.com' })
+                userFactory({
+                    email: 'other@test.com',
+                    password: hashedPassword,
+                })
             )
             const otherLogin = await request(app)
                 .post('/api/auth/login')
-                .send({ email: 'other@test.com', password: 'pass' })
+                .send({ email: 'other@test.com', password: 'TestPassword123!' })
             const otherToken = otherLogin.body.token
 
             const channelData = {
@@ -332,7 +383,9 @@ describe("Channels - Tests d'intégration", () => {
             expect(res.statusCode).toBe(200)
 
             const updatedChannel = await Channel.findById(channel._id)
-            expect(updatedChannel.members).toContain(adminUser._id)
+            expect(updatedChannel.members.map((id) => String(id))).toContain(
+                String(adminUser._id)
+            )
         })
 
         it("devrait rejeter l'invitation par un non-membre", async () => {
@@ -378,7 +431,9 @@ describe("Channels - Tests d'intégration", () => {
             expect(res.statusCode).toBe(200)
 
             const updatedChannel = await Channel.findById(channel._id)
-            expect(updatedChannel.members).toContain(user._id)
+            expect(updatedChannel.members.map((id) => String(id))).toContain(
+                String(user._id)
+            )
         })
 
         it('devrait rejeter la tentative de rejoindre un channel privé sans invitation', async () => {
@@ -414,7 +469,9 @@ describe("Channels - Tests d'intégration", () => {
             expect(res.statusCode).toBe(200)
 
             const updatedChannel = await Channel.findById(channel._id)
-            expect(updatedChannel.members).not.toContain(user._id)
+            expect(
+                updatedChannel.members.map((id) => String(id))
+            ).not.toContain(String(user._id))
         })
 
         it('devrait empêcher le créateur de quitter son propre channel', async () => {
@@ -452,7 +509,9 @@ describe("Channels - Tests d'intégration", () => {
             expect(res.statusCode).toBe(200)
 
             const updatedChannel = await Channel.findById(channel._id)
-            expect(updatedChannel.members).not.toContain(adminUser._id)
+            expect(
+                updatedChannel.members.map((id) => String(id))
+            ).not.toContain(String(adminUser._id))
         })
     })
 })
