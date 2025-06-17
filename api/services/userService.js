@@ -1,7 +1,9 @@
 const User = require('../models/User')
 
 const getById = (id) => {
-    return User.findById(id).select('-password -resetPasswordToken -resetPasswordExpires')
+    return User.findById(id).select(
+        '-password -resetPasswordToken -resetPasswordExpires'
+    )
 }
 
 const updateProfile = async (id, { name, avatar }) => {
@@ -11,6 +13,26 @@ const updateProfile = async (id, { name, avatar }) => {
     if (avatar !== undefined) user.avatar = avatar
     await user.save()
     return user
+}
+
+/**
+ * Met à jour l'avatar et retourne l'ancien chemin pour suppression
+ * @param {string} id - ID de l'utilisateur
+ * @param {string} newAvatarPath - Nouveau chemin de l'avatar
+ * @returns {Object} - { user, oldAvatarPath }
+ */
+const updateAvatar = async (id, newAvatarPath) => {
+    const user = await User.findById(id)
+    if (!user) return null
+
+    const oldAvatarPath = user.avatar // Sauvegarder l'ancien chemin
+    user.avatar = newAvatarPath
+    await user.save()
+
+    return {
+        user,
+        oldAvatarPath,
+    }
 }
 
 const updatePreferences = async (id, { theme, status }) => {
@@ -44,6 +66,7 @@ const updateEmail = async (id, newEmail) => {
 module.exports = {
     getById,
     updateProfile,
+    updateAvatar,
     updatePreferences,
     exportData,
     updateEmail,

@@ -10,7 +10,10 @@
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
     "test:e2e": "jest --testPathPattern=e2e",
-    "test:coverage": "jest --coverage --coverageThreshold=80"
+    "test:coverage": "jest --coverage --coverageThreshold=80",
+    "cleanup:avatars": "node scripts/cleanup-avatars.js",
+    "cleanup:avatars:dry": "node scripts/cleanup-avatars.js --dry-run",
+    "cleanup:avatars:old": "node scripts/cleanup-avatars.js --days=7"
   },
   "description": "Supchat-server",
   "author": "",

@@ -5,6 +5,10 @@ const userController = require('../controllers/userController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
 const { validate } = require('../middlewares/validationMiddleware')
 const {
+    handleMulterError,
+    createAvatarUploadConfig,
+} = require('../middlewares/uploadMiddleware')
+const {
     updateProfileSchema,
     updatePreferencesSchema,
     updateEmailSchema,
@@ -13,14 +17,7 @@ const {
 const router = express.Router()
 
 const avatarDir = path.join(__dirname, '../uploads')
-const storage = multer.diskStorage({
-    destination: avatarDir,
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
-        cb(null, `${unique}-${file.originalname}`)
-    },
-})
-const upload = multer({ storage })
+const upload = createAvatarUploadConfig(avatarDir)
 
 router.get('/profile', authMiddleware, userController.getProfile)
 router.put(
@@ -41,7 +38,8 @@ router.post(
     '/avatar',
     authMiddleware,
     upload.single('avatar'),
-    userController.uploadAvatar
+    userController.uploadAvatar,
+    handleMulterError
 )
 router.delete('/avatar', authMiddleware, userController.deleteAvatar)
 
