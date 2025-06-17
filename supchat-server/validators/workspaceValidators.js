@@ -1,15 +1,30 @@
 const Joi = require('joi')
 
+// Fonction de sanitisation XSS
+const sanitizeString = (value, helpers) => {
+    if (typeof value !== 'string') return value;
+    
+    // Remplace les caractères dangereux
+    const sanitized = value
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+    
+    return sanitized;
+}
+
 const createWorkspaceSchema = Joi.object({
-    name: Joi.string().min(3).max(50).required(),
-    description: Joi.string().max(500).allow(''),
+    name: Joi.string().min(3).max(50).custom(sanitizeString).required(),
+    description: Joi.string().max(500).custom(sanitizeString).allow(''),
     isPublic: Joi.boolean(),
     type: Joi.string().valid('public', 'private'),
 })
 
 const updateWorkspaceSchema = Joi.object({
-    name: Joi.string().min(3).max(50),
-    description: Joi.string().max(500).allow(''),
+    name: Joi.string().min(3).max(50).custom(sanitizeString),
+    description: Joi.string().max(500).custom(sanitizeString).allow(''),
     isPublic: Joi.boolean(),
 }).min(1)
 

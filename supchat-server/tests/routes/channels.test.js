@@ -73,15 +73,32 @@ describe('Channel routes', () => {
             console.log('DEBUG res.body:', JSON.stringify(res.body, null, 2))
 
             expect(res.status).toBe(201)
-            expect(res.body.channel.name).toBe('my channel')
+            expect(res.body.channel.name).toBe('my channel')        })
+
+        it('allows workspace member to create channel', async () => {
+            // D'abord, ajoutons l'utilisateur membre au workspace
+            workspace.members.push(global.memberId)
+            await workspace.save()
+
+            const res = await request(app)
+                .post('/api/channels')
+                .set('Authorization', `Bearer ${global.tokens.member}`)
+                .send({
+                    name: 'member channel',
+                    workspaceId: workspace._id,
+                    type: 'public',
+                })
+
+            expect(res.status).toBe(201)
+            expect(res.body.channel.name).toBe('member channel')
         })
 
-        it('denies guest', async () => {
+        it('denies non-workspace member', async () => {
             const res = await request(app)
                 .post('/api/channels')
                 .set('Authorization', `Bearer ${global.tokens.guest}`)
                 .send({
-                    name: 'guest',
+                    name: 'guest channel',
                     workspaceId: workspace._id,
                     type: 'public',
                 })
@@ -116,28 +133,28 @@ describe('Channel routes', () => {
                 channelFactory({
                     workspace: workspace._id,
                     members: [global.adminId],
-                })
-            )
+                })            )
 
             await Permission.create({
                 userId: global.adminId,
                 workspaceId: workspace._id,
                 role: 'admin',
-                permissions: { canPost: true },
+                permissions: ['post', 'view', 'moderate'],
             })
 
             const res = await request(app)
-                .post(`/api/channels/${channel._id}/messages`)
-                .set('Authorization', `Bearer ${global.tokens.admin}`)
+                .post(`/api/channels/${channel._id}/messages`)                .set('Authorization', `Bearer ${global.tokens.admin}`)
                 .send({ text: 'hello' })
 
             expect(res.status).toBe(201)
-            expect(res.body.message).toBe('Message envoyé.')
-            expect(res.body.data).toBeDefined()
-            expect(res.body.data.text).toBe('hello')
+            // Le contrôleur retourne { message: messageObj, success: true }
+            expect(res.body.success).toBe(true)
+            expect(res.body.message).toBeDefined()
+            expect(res.body.message.text).toBe('hello')
+            expect(res.body.message.channelId).toBe(channel._id.toString())
 
             // Vérifier que le message a été créé en base
-            const createdMessage = await Message.findById(res.body.data._id)
+            const createdMessage = await Message.findById(res.body.message._id)
             expect(createdMessage).toBeTruthy()
             expect(createdMessage.text).toBe('hello')
             expect(createdMessage.channelId.toString()).toBe(
