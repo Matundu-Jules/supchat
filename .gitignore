@@ -4,7 +4,7 @@ npm-debug.log
 
 # Environment variables
 .env
-client-web/.env.secrets-to-move
+web/.env.secrets-to-move
 
 # Logs
 logs/
@@ -17,8 +17,8 @@ coverage/
 **/.env
 
 # Build output
-client-web/dist
-client-mobile/.expo
+web/dist
+mobile/.expo
 
 # Data persistence
 data/
@@ -28,4 +28,4 @@ reset-docker.sh
 run-project.sh
 start-db.sh
 
-supchat-server/uploads/
+api/uploads/

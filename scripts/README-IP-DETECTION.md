@@ -27,14 +27,14 @@ node scripts/start-dev.js
 
 ## 📁 Fichiers .env Générés
 
-### supchat-server/.env
+### api/.env
 
 ```bash
 HOST_IP=192.168.1.100  # Votre IP locale détectée
 PORT=3000
 ```
 
-### client-web/.env
+### web/.env
 
 ```bash
 VITE_BACKEND_URL=http://192.168.1.100:3000
@@ -43,7 +43,7 @@ VITE_SOCKET_URL=http://192.168.1.100:3000
 VITE_HOST_IP=192.168.1.100
 ```
 
-### client-mobile/.env
+### mobile/.env
 
 ```bash
 EXPO_PUBLIC_HOST=192.168.1.100
@@ -54,7 +54,7 @@ EXPO_PUBLIC_BACKEND_URL=http://192.168.1.100:3000
 
 ## 🔧 Utilisation des Fonctions dans le Code
 
-### Serveur Express (supchat-server)
+### Serveur Express (api)
 
 ```javascript
 // src/utils/networkUtils.js
@@ -74,7 +74,7 @@ const allowedOrigins = generateAllowedOrigins(3000);
 displayNetworkInfo(3000);
 ```
 
-### Client Web (client-web)
+### Client Web (web)
 
 ```typescript
 // src/config/api.ts
@@ -85,7 +85,7 @@ console.log("Backend:", BACKEND_URL); // http://192.168.1.100:3000
 console.log("API:", API_BASE_URL); // http://192.168.1.100:3000/api
 ```
 
-### Client Mobile (client-mobile)
+### Client Mobile (mobile)
 
 ```typescript
 // constants/network.ts
@@ -122,12 +122,10 @@ console.log("Socket:", WS_BASE_URL); // http://192.168.1.100:3000
 
    ```bash
    # Option 1: Tout en une fois
-   node scripts/start-dev.js
-
-   # Option 2: Service par service
-   npm run dev        # client-web
-   npm start          # supchat-server
-   npm start          # client-mobile
+   node scripts/start-dev.js   # Option 2: Service par service
+   npm run dev        # web
+   npm start          # api
+   npm start          # mobile
    ```
 
 4. **Connectez-vous depuis votre mobile :**
@@ -158,7 +156,7 @@ ipconfig    # Windows
 ifconfig    # Mac/Linux
 
 # Ou utilisez la fonction dans Node.js
-node -e "console.log(require('./supchat-server/src/utils/networkUtils').getLocalIP())"
+node -e "console.log(require('./api/src/utils/networkUtils').getLocalIP())"
 ```
 
 ## 🎯 Intégration avec les Tâches VS Code

@@ -1,13 +1,12 @@
 services:
-  # Backend API service
-  api:
+  # Backend API service  api:
     build:
-      context: ./supchat-server
+      context: ./api
       dockerfile: Dockerfile
     ports:
       - "0.0.0.0:${PORT}:${PORT}" # bind API port to all interfaces for mobile access
     volumes:
-      - ./supchat-server:/usr/src/app:ro # Read-only for security
+      - ./api:/usr/src/app:ro # Read-only for security
     networks:
       - supchat-network
     env_file:
@@ -59,11 +58,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
   # Web client (React)
   web:
     build:
-      context: ./client-web
+      context: ./web
       dockerfile: Dockerfile
     ports:
       - "80:80" # expose publicly for web access
@@ -108,13 +106,12 @@ services:
       timeout: 10s
       retries: 3
 
-  # Mobile client (React Native)
-  mobile:
+  # Mobile client (React Native)  mobile:
     build:
-      context: ./client-mobile
+      context: ./mobile
       dockerfile: Dockerfile
     volumes:
-      - ./client-mobile:/app:ro # Read-only mount
+      - ./mobile:/app:ro # Read-only mount
       - node_modules_mobile:/app/node_modules # Named volume for node_modules
     networks:
       - supchat-network

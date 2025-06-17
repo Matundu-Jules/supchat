@@ -65,13 +65,11 @@ async function startDevEnvironment() {
 
     // 1. Mise à jour automatique des .env
     console.log('📝 Étape 1: Mise à jour des fichiers .env...')
-    generateAllEnvFiles()
-
-    // Chemins des projets
+    generateAllEnvFiles() // Chemins des projets
     const projectRoot = path.resolve(__dirname, '..')
-    const serverPath = path.join(projectRoot, 'supchat-server')
-    const webPath = path.join(projectRoot, 'client-web')
-    const mobilePath = path.join(projectRoot, 'client-mobile')
+    const serverPath = path.join(projectRoot, 'api')
+    const webPath = path.join(projectRoot, 'web')
+    const mobilePath = path.join(projectRoot, 'mobile')
 
     // 2. Vérifier les dépendances
     console.log('\n📦 Étape 2: Vérification des dépendances...')

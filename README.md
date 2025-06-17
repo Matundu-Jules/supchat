@@ -6,9 +6,9 @@ SUPCHAT is a collaborative messaging platform that enables teams to communicate,
 
 ## 📦 Project Content
 
-- `client-web` → Web application (React + Vite)
-- `client-mobile` → Mobile application (React Native / Expo)
-- `supchat-server` → API server (Node.js, Express, MongoDB)
+- `web` → Web application (React + Vite)
+- `mobile` → Mobile application (React Native / Expo)
+- `api` → API server (Node.js, Express, MongoDB)
 - `docker-compose.yml` → Containerization and service orchestration
 
 ---

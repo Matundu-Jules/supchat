@@ -4,7 +4,7 @@
     {
       "label": "Start Backend",
       "type": "shell",
-      "command": "cd supchat-server && npm start",
+      "command": "cd api && npm start",
       "problemMatcher": [],
       "group": "build",
       "presentation": { "group": "SUPCHAT - API" }
@@ -12,7 +12,7 @@
     {
       "label": "Start Frontend Web",
       "type": "shell",
-      "command": "cd client-web && npm run dev",
+      "command": "cd web && npm run dev",
       "problemMatcher": [],
       "group": "build",
       "presentation": { "group": "SUPCHAT - WEB" }
@@ -20,7 +20,7 @@
     {
       "label": "Start Mobile",
       "type": "shell",
-      "command": "cd client-mobile && npm start",
+      "command": "cd mobile && npm start",
       "problemMatcher": [],
       "group": "build",
       "presentation": { "group": "SUPCHAT - MOBILE" }

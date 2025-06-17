@@ -218,10 +218,8 @@ function secureGenerateEnvFiles() {
     console.log(`🔌 Port serveur: ${serverPort}`)
     console.log(`🌍 Environnement: ${currentEnv}\n`)
 
-    const projectRoot = path.resolve(__dirname, '..')
-
-    // 1. client-web (.env) - ATTENTION: variables exposées côté client
-    const webEnvPath = path.join(projectRoot, 'client-web', '.env')
+    const projectRoot = path.resolve(__dirname, '..') // 1. web (.env) - ATTENTION: variables exposées côté client
+    const webEnvPath = path.join(projectRoot, 'web', '.env')
     secureUpdateEnvFile(
         webEnvPath,
         {
@@ -233,10 +231,8 @@ function secureGenerateEnvFiles() {
             VITE_IP_HASH: ipHash, // Pour validation sans exposer l'IP complète
         },
         true
-    )
-
-    // 2. client-mobile (.env) - ATTENTION: variables exposées côté client
-    const mobileEnvPath = path.join(projectRoot, 'client-mobile', '.env')
+    ) // 2. mobile (.env) - ATTENTION: variables exposées côté client
+    const mobileEnvPath = path.join(projectRoot, 'mobile', '.env')
     secureUpdateEnvFile(
         mobileEnvPath,
         {
@@ -248,10 +244,8 @@ function secureGenerateEnvFiles() {
             EXPO_PUBLIC_IP_HASH: ipHash,
         },
         true
-    )
-
-    // 3. supchat-server (.env) - Variables serveur sécurisées
-    const serverEnvPath = path.join(projectRoot, 'supchat-server', '.env')
+    ) // 3. api (.env) - Variables serveur sécurisées
+    const serverEnvPath = path.join(projectRoot, 'api', '.env')
     const serverEnvVars = {}
 
     // Préserver les secrets existants
@@ -274,7 +268,7 @@ function secureGenerateEnvFiles() {
 
     console.log('\n🔒 Variables générées de manière sécurisée:')
     console.log(`   ✅ client-web: Configuration IP privée (${ipHash})`)
-    console.log(`   ✅ client-mobile: Configuration IP privée (${ipHash})`)
+    console.log(`   ✅ mobile: Configuration IP privée (${ipHash})`)
     console.log(`   ✅ server: Configuration réseau sécurisée`)
 
     console.log('\n⚠️  AVERTISSEMENTS DE SÉCURITÉ:')

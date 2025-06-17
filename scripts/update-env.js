@@ -75,28 +75,22 @@ function generateAllEnvFiles() {
     console.log(`🔌 Port serveur: ${serverPort}\n`)
 
     // Chemin de base du projet
-    const projectRoot = path.resolve(__dirname, '..')
-
-    // 1. client-web (.env)
-    const webEnvPath = path.join(projectRoot, 'client-web', '.env')
+    const projectRoot = path.resolve(__dirname, '..') // 1. web (.env)
+    const webEnvPath = path.join(projectRoot, 'web', '.env')
     updateEnvFile(webEnvPath, {
         VITE_BACKEND_URL: `http://${localIP}:${serverPort}`,
         VITE_API_URL: `http://${localIP}:${serverPort}/api`,
         VITE_SOCKET_URL: `http://${localIP}:${serverPort}`,
         VITE_HOST_IP: localIP,
-    })
-
-    // 2. client-mobile (.env)
-    const mobileEnvPath = path.join(projectRoot, 'client-mobile', '.env')
+    }) // 2. mobile (.env)
+    const mobileEnvPath = path.join(projectRoot, 'mobile', '.env')
     updateEnvFile(mobileEnvPath, {
         EXPO_PUBLIC_HOST: localIP,
         EXPO_PUBLIC_API_URL: `http://${localIP}:${serverPort}/api`,
         EXPO_PUBLIC_SOCKET_URL: `http://${localIP}:${serverPort}`,
         EXPO_PUBLIC_BACKEND_URL: `http://${localIP}:${serverPort}`,
-    })
-
-    // 3. supchat-server (.env) - au cas où
-    const serverEnvPath = path.join(projectRoot, 'supchat-server', '.env')
+    }) // 3. api (.env) - au cas où
+    const serverEnvPath = path.join(projectRoot, 'api', '.env')
     const serverEnvVars = {}
 
     // Lire le .env existant pour ne pas écraser les secrets
@@ -114,13 +108,10 @@ function generateAllEnvFiles() {
     if (Object.keys(serverEnvVars).length > 0) {
         updateEnvFile(serverEnvPath, serverEnvVars)
     }
-
     console.log('\n🎯 Variables générées:')
+    console.log(`   web: VITE_BACKEND_URL=http://${localIP}:${serverPort}`)
     console.log(
-        `   client-web: VITE_BACKEND_URL=http://${localIP}:${serverPort}`
-    )
-    console.log(
-        `   client-mobile: EXPO_PUBLIC_API_URL=http://${localIP}:${serverPort}/api`
+        `   mobile: EXPO_PUBLIC_API_URL=http://${localIP}:${serverPort}/api`
     )
     console.log(
         '\n✨ Tous les .env sont à jour ! Vous pouvez maintenant lancer vos services.'
