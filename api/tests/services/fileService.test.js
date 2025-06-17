@@ -1,4 +1,4 @@
-const FileService = require('../services/fileService')
+const FileService = require('../../services/fileService')
 const fs = require('fs')
 const path = require('path')
 

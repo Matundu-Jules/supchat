@@ -250,8 +250,8 @@ describe("Authentification - Tests d'intégration", () => {
 
     describe('Token Validation', () => {
         it('devrait valider un token JWT valide', async () => {
-            const TestPassword123! = 'TestPassword123!'
-            const hashedPassword = await bcrypt.hash(TestPassword123!, 10)
+            const testPassword = 'TestPassword123!'
+            const hashedPassword = await bcrypt.hash(testPassword, 10)
 
             const user = await User.create(
                 userFactory({
@@ -262,7 +262,7 @@ describe("Authentification - Tests d'intégration", () => {
 
             const loginRes = await request(app)
                 .post('/api/auth/login')
-                .send({ email: user.email, password: TestPassword123! })
+                .send({ email: user.email, password: testPassword })
 
             expect(loginRes.statusCode).toBe(200)
             expect(loginRes.body).toHaveProperty('token')
@@ -298,8 +298,8 @@ describe("Authentification - Tests d'intégration", () => {
 
     describe('Logout', () => {
         it('devrait déconnecter un utilisateur', async () => {
-            const TestPassword123! = 'TestPassword123!'
-            const hashedPassword = await bcrypt.hash(TestPassword123!, 10)
+            const testPassword = 'TestPassword123!'
+            const hashedPassword = await bcrypt.hash(testPassword, 10)
 
             const user = await User.create(
                 userFactory({
@@ -310,7 +310,7 @@ describe("Authentification - Tests d'intégration", () => {
 
             const loginRes = await request(app)
                 .post('/api/auth/login')
-                .send({ email: user.email, password: TestPassword123! })
+                .send({ email: user.email, password: testPassword })
 
             expect(loginRes.statusCode).toBe(200)
             const token = loginRes.body.token

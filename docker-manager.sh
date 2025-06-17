@@ -69,6 +69,7 @@ show_menu() {
     echo -e "${BLUE} 14)${NC} 💾 Backup de la base de données"
     echo -e "${BLUE} 15)${NC} 📦 Voir l'utilisation des ressources"
     echo -e "${BLUE} 16)${NC} 🌐 Ouvrir les URLs de l'application"
+    echo -e "${BLUE} 17)${NC} 🔍 Diagnostic des services (debug)"
     echo ""
     echo -e "${WHITE} 0)${NC} ❌ Quitter"
     echo ""
@@ -78,15 +79,16 @@ show_menu() {
 # Fonction pour sélectionner un service
 select_service() {
     local prompt="$1"
-    echo -e "\n${CYAN}$prompt${NC}"
-    echo "Services disponibles:"
+    echo -e "\n${CYAN}$prompt${NC}" >&2
+    echo "Services disponibles:" >&2
     for i in "${!SERVICES[@]}"; do
-        echo "  $((i+1))) ${SERVICES[$i]}"
+        echo "  $((i+1))) ${SERVICES[$i]}" >&2
     done
-    echo ""
+    echo "" >&2
     read -p "Sélectionnez un service (numéro): " service_choice
     
-    if [[ $service_choice -ge 1 && $service_choice -le ${#SERVICES[@]} ]]; then
+    # Vérifier si l'entrée est un nombre valide
+    if [[ "$service_choice" =~ ^[0-9]+$ ]] && [[ $service_choice -ge 1 && $service_choice -le ${#SERVICES[@]} ]]; then
         echo "${SERVICES[$((service_choice-1))]}"
     else
         echo ""
@@ -142,10 +144,13 @@ start_service() {
     service=$(select_service "Quel service voulez-vous démarrer ?")
     if [[ -n "$service" ]]; then
         echo -e "\n${GREEN}🔧 Démarrage du service: $service${NC}"
-        docker-compose up -d "$service"
-        echo -e "${GREEN}✅ Service $service démarré !${NC}"
+        if docker-compose up -d "$service"; then
+            echo -e "${GREEN}✅ Service $service démarré !${NC}"
+        else
+            echo -e "${RED}❌ Erreur lors du démarrage du service $service${NC}"
+        fi
     else
-        echo -e "${RED}❌ Service invalide${NC}"
+        echo -e "${RED}❌ Service invalide. Veuillez choisir un numéro entre 1 et ${#SERVICES[@]}.${NC}"
     fi
     pause
 }
@@ -155,10 +160,13 @@ stop_service() {
     service=$(select_service "Quel service voulez-vous arrêter ?")
     if [[ -n "$service" ]]; then
         echo -e "\n${RED}⏹️ Arrêt du service: $service${NC}"
-        docker-compose stop "$service"
-        echo -e "${GREEN}✅ Service $service arrêté !${NC}"
+        if docker-compose stop "$service"; then
+            echo -e "${GREEN}✅ Service $service arrêté !${NC}"
+        else
+            echo -e "${RED}❌ Erreur lors de l'arrêt du service $service${NC}"
+        fi
     else
-        echo -e "${RED}❌ Service invalide${NC}"
+        echo -e "${RED}❌ Service invalide. Veuillez choisir un numéro entre 1 et ${#SERVICES[@]}.${NC}"
     fi
     pause
 }
@@ -168,10 +176,13 @@ restart_service() {
     service=$(select_service "Quel service voulez-vous redémarrer ?")
     if [[ -n "$service" ]]; then
         echo -e "\n${YELLOW}🔄 Redémarrage du service: $service${NC}"
-        docker-compose restart "$service"
-        echo -e "${GREEN}✅ Service $service redémarré !${NC}"
+        if docker-compose restart "$service"; then
+            echo -e "${GREEN}✅ Service $service redémarré !${NC}"
+        else
+            echo -e "${RED}❌ Erreur lors du redémarrage du service $service${NC}"
+        fi
     else
-        echo -e "${RED}❌ Service invalide${NC}"
+        echo -e "${RED}❌ Service invalide. Veuillez choisir un numéro entre 1 et ${#SERVICES[@]}.${NC}"
     fi
     pause
 }
@@ -207,9 +218,14 @@ view_logs() {
     if [[ -n "$service" ]]; then
         echo -e "\n${YELLOW}📝 Logs du service: $service${NC}"
         echo "════════════════════════════════════════════════════════"
-        docker-compose logs --tail=50 "$service"
+        echo -e "${CYAN}Affichage des 50 dernières lignes de logs...${NC}"
+        if docker-compose logs --tail=50 "$service"; then
+            echo -e "\n${GREEN}✅ Logs affichés avec succès${NC}"
+        else
+            echo -e "\n${RED}❌ Erreur lors de l'affichage des logs pour le service $service${NC}"
+        fi
     else
-        echo -e "${RED}❌ Service invalide${NC}"
+        echo -e "${RED}❌ Service invalide. Veuillez choisir un numéro entre 1 et ${#SERVICES[@]}.${NC}"
     fi
     pause
 }
@@ -221,10 +237,15 @@ follow_logs() {
         echo -e "\n${YELLOW}📈 Logs en temps réel du service: $service${NC}"
         echo -e "${CYAN}Appuyez sur Ctrl+C pour arrêter${NC}"
         echo "════════════════════════════════════════════════════════"
-        docker-compose logs -f "$service"
+        if docker-compose logs -f "$service"; then
+            echo -e "\n${GREEN}✅ Suivi des logs terminé${NC}"
+        else
+            echo -e "\n${RED}❌ Erreur lors du suivi des logs pour le service $service${NC}"
+        fi
     else
-        echo -e "${RED}❌ Service invalide${NC}"
+        echo -e "${RED}❌ Service invalide. Veuillez choisir un numéro entre 1 et ${#SERVICES[@]}.${NC}"
     fi
+    pause
 }
 
 # Fonction pour ouvrir un shell dans un container
@@ -450,6 +471,45 @@ open_urls() {
     pause
 }
 
+# Fonction de diagnostic des services
+diagnostic_services() {
+    echo -e "\n${BLUE}🔍 Diagnostic des services Docker...${NC}"
+    echo "════════════════════════════════════════════════════════"
+    
+    echo -e "\n${CYAN}📋 Services configurés dans le script:${NC}"
+    for i in "${!SERVICES[@]}"; do
+        echo "  $((i+1))) ${SERVICES[$i]}"
+    done
+    
+    echo -e "\n${CYAN}🐳 État détaillé des containers:${NC}"
+    docker-compose ps -a
+    
+    echo -e "\n${CYAN}🔗 Services dans docker-compose.yml:${NC}"
+    docker-compose config --services 2>/dev/null || echo "Erreur lors de la lecture de docker-compose.yml"
+    
+    echo -e "\n${CYAN}📊 Test de connectivité aux services:${NC}"
+    for service in "${SERVICES[@]}"; do
+        echo -n "  • $service: "
+        if docker-compose ps "$service" | grep -q "Up"; then
+            echo -e "${GREEN}✅ En fonctionnement${NC}"
+            echo "    Logs récents:"
+            docker-compose logs --tail=3 "$service" 2>/dev/null | sed 's/^/      /' || echo "      Erreur lors de la lecture des logs"
+        else
+            echo -e "${RED}❌ Arrêté ou non trouvé${NC}"
+        fi
+        echo ""
+    done
+    
+    echo -e "${CYAN}🔧 Informations de debugging:${NC}"
+    echo "  • Docker version: $(docker --version 2>/dev/null || echo 'Non disponible')"
+    echo "  • Docker Compose version: $(docker-compose --version 2>/dev/null || echo 'Non disponible')"
+    echo "  • Répertoire courant: $(pwd)"
+    echo "  • Fichiers docker-compose disponibles:"
+    ls -la docker-compose*.yml 2>/dev/null | sed 's/^/    /' || echo "    Aucun fichier docker-compose trouvé"
+    
+    pause
+}
+
 # Fonction pour faire une pause
 pause() {
     echo ""
@@ -482,6 +542,7 @@ main() {
             14) backup_database ;;
             15) show_resources ;;
             16) open_urls ;;
+            17) diagnostic_services ;;
             0) 
                 echo -e "\n${GREEN}👋 Au revoir !${NC}"
                 exit 0

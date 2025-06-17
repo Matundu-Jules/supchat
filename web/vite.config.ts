@@ -11,9 +11,12 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(({ mode }) => {
   // Charger les variables d'environnement
   const env = loadEnv(mode, process.cwd(), '');
-
-  // URL du serveur backend (par défaut localhost:3000)
-  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:3000';
+  // URL du serveur backend - utilise le service Docker 'api' si disponible
+  const backendUrl =
+    env.VITE_BACKEND_URL ||
+    (process.env.NODE_ENV === 'development' && process.env.DOCKER_ENV
+      ? 'http://api:3000'
+      : 'http://127.0.0.1:3000');
 
   return {
     plugins: [react()],
