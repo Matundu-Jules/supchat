@@ -73,7 +73,8 @@ describe('Channel routes', () => {
             console.log('DEBUG res.body:', JSON.stringify(res.body, null, 2))
 
             expect(res.status).toBe(201)
-            expect(res.body.channel.name).toBe('my channel')        })
+            expect(res.body.channel.name).toBe('my channel')
+        })
 
         it('allows workspace member to create channel', async () => {
             // D'abord, ajoutons l'utilisateur membre au workspace
@@ -133,7 +134,8 @@ describe('Channel routes', () => {
                 channelFactory({
                     workspace: workspace._id,
                     members: [global.adminId],
-                })            )
+                })
+            )
 
             await Permission.create({
                 userId: global.adminId,
@@ -143,7 +145,8 @@ describe('Channel routes', () => {
             })
 
             const res = await request(app)
-                .post(`/api/channels/${channel._id}/messages`)                .set('Authorization', `Bearer ${global.tokens.admin}`)
+                .post(`/api/channels/${channel._id}/messages`)
+                .set('Authorization', `Bearer ${global.tokens.admin}`)
                 .send({ text: 'hello' })
 
             expect(res.status).toBe(201)

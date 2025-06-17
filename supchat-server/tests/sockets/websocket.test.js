@@ -18,12 +18,15 @@ describe('WebSocket Basic Tests', () => {
         const mockSocket = {
             emit: jest.fn(),
             on: jest.fn(),
-            connected: true
+            connected: true,
         }
 
         // Simule la logique des notifications
         mockSocket.emit('subscribeNotifications', 'test-user')
-        expect(mockSocket.emit).toHaveBeenCalledWith('subscribeNotifications', 'test-user')
+        expect(mockSocket.emit).toHaveBeenCalledWith(
+            'subscribeNotifications',
+            'test-user'
+        )
         done()
     })
 
@@ -32,13 +35,13 @@ describe('WebSocket Basic Tests', () => {
         const mockNotification = {
             type: 'workspace_invite',
             userId: 'test-user-123',
-            message: 'Test notification'
+            message: 'Test notification',
         }
 
         // Vérifie que l'objet io a les bonnes méthodes
         expect(typeof io.to).toBe('function')
         expect(typeof io.emit).toBe('function')
-        
+
         // Simule l'émission (sans vraie connexion)
         io.emit('test-notification', mockNotification)
     })

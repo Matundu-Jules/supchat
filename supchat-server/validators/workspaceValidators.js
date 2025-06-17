@@ -2,17 +2,17 @@ const Joi = require('joi')
 
 // Fonction de sanitisation XSS
 const sanitizeString = (value, helpers) => {
-    if (typeof value !== 'string') return value;
-    
+    if (typeof value !== 'string') return value
+
     // Remplace les caractères dangereux
     const sanitized = value
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;')
-        .replace(/\//g, '&#x2F;');
-    
-    return sanitized;
+        .replace(/\//g, '&#x2F;')
+
+    return sanitized
 }
 
 const createWorkspaceSchema = Joi.object({

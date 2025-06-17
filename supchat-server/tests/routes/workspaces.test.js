@@ -13,13 +13,17 @@ describe('POST /workspaces', () => {
             .send({ name: 'Test Workspace' })
 
         expect(res.status).toBe(201)
-        expect(res.body.workspace.name).toBe('Test Workspace')    })
+        expect(res.body.workspace.name).toBe('Test Workspace')
+    })
 
     it('allows member to create workspace', async () => {
         const res = await request(app)
             .post('/api/workspaces')
             .set('Authorization', `Bearer ${global.tokens.member}`)
-            .send({ name: 'Member Workspace', description: 'Created by member' })
+            .send({
+                name: 'Member Workspace',
+                description: 'Created by member',
+            })
 
         expect(res.status).toBe(201)
         expect(res.body.workspace.name).toBe('Member Workspace')
