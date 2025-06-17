@@ -36,14 +36,21 @@ function generateAllowedOrigins(port = 3000) {
     ports.forEach((clientPort) => {
         origins.push(`http://localhost:${clientPort}`)
         origins.push(`http://127.0.0.1:${clientPort}`)
-    })
-
-    // Ajouter l'IP locale détectée
+    }) // Ajouter l'IP locale détectée
     if (localIP !== 'localhost') {
         ports.forEach((clientPort) => {
             origins.push(`http://${localIP}:${clientPort}`)
         })
     }
+
+    // Ajouter les IPs VirtualBox communes pour le développement
+    const virtualBoxIPs = ['localhost', '10.0.2.2', '192.168.1.1']
+    virtualBoxIPs.forEach((vbIP) => {
+        ports.forEach((clientPort) => {
+            origins.push(`http://${vbIP}:${clientPort}`)
+        })
+        origins.push(`http://${vbIP}`)
+    })
 
     // Ajouter les versions sans port pour 80
     origins.push('http://localhost')
