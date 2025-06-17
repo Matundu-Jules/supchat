@@ -1,0 +1,62 @@
+services:
+  # Base de données MongoDB dédiée aux tests
+  db-test:
+    image: mongo:6.0
+    volumes:
+      - mongo-test-data:/data/db
+    networks:
+      - supchat-test-network
+    ports:
+      - "127.0.0.1:27018:27017" # Port différent pour éviter les conflits
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Service API pour les tests
+  api-test:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - supchat-test-network
+    environment:
+      - NODE_ENV=test
+      - PORT=3001
+      - CSRF_DEV_MODE=true
+
+      # Configuration de la base de données de test
+      - MONGO_HOST=db-test
+      - MONGO_PORT=27017
+      - MONGO_DB=supchat_test
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+      - MONGO_AUTH_SOURCE=admin
+
+      # Secrets pour les tests
+      - JWT_SECRET=test_jwt_secret
+      - JWT_REFRESH=test_jwt_refresh
+      - CSRF_SECRET=test_csrf_secret
+
+    depends_on:
+      db-test:
+        condition: service_healthy
+    restart: "no" # Ne pas redémarrer automatiquement pour les tests
+    command: npm test -- tests/routes/user.test.js
+
+networks:
+  supchat-test-network:
+    driver: bridge
+
+volumes:
+  mongo-test-data:
+    driver: local

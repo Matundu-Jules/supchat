@@ -101,6 +101,168 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    // ========================================
+    // DOCKER LOGS TASKS - Terminaux séparés
+    // ========================================
+    {
+      "label": "📋 Logs: API (Dev)",
+      "type": "shell",
+      "command": "docker-compose logs -f api",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: Web (Dev)",
+      "type": "shell",
+      "command": "docker-compose logs -f web",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: Database (Dev)",
+      "type": "shell",
+      "command": "docker-compose logs -f db",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: Mobile (Dev)",
+      "type": "shell",
+      "command": "docker-compose logs -f mobile",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: cAdvisor (Dev)",
+      "type": "shell",
+      "command": "docker-compose logs -f cadvisor",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // LOGS PRODUCTION - Terminaux séparés
+    // ========================================
+    {
+      "label": "📋 Logs: API (Prod)",
+      "type": "shell",
+      "command": "docker-compose -f docker-compose.prod.yml logs -f api",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: Web (Prod)",
+      "type": "shell",
+      "command": "docker-compose -f docker-compose.prod.yml logs -f web",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: Database (Prod)",
+      "type": "shell",
+      "command": "docker-compose -f docker-compose.prod.yml logs -f db",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Logs: cAdvisor (Prod)",
+      "type": "shell",
+      "command": "docker-compose -f docker-compose.prod.yml logs -f cadvisor",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // TÂCHES COMBINÉES - Ouvrir TOUS les logs
+    // ========================================
+    {
+      "label": "🚀 Ouvrir TOUS les Logs (Développement)",
+      "dependsOn": [
+        "📋 Logs: API (Dev)",
+        "📋 Logs: Web (Dev)",
+        "📋 Logs: Database (Dev)",
+        "📋 Logs: Mobile (Dev)",
+        "📋 Logs: cAdvisor (Dev)"
+      ],
+      "dependsOrder": "parallel",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "🏭 Ouvrir TOUS les Logs (Production)",
+      "dependsOn": [
+        "📋 Logs: API (Prod)",
+        "📋 Logs: Web (Prod)",
+        "📋 Logs: Database (Prod)",
+        "📋 Logs: cAdvisor (Prod)"
+      ],
+      "dependsOrder": "parallel",
+      "group": "build",
+      "problemMatcher": []
     }
   ]
 }

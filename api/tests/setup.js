@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
 process.env.NODE_ENV = 'test'
-const { MongoMemoryServer } = require('mongodb-memory-server')
-const ioClient = require('socket.io-client')
 const jwt = require('jsonwebtoken')
 const { faker } = require('@faker-js/faker')
 
@@ -17,12 +15,12 @@ const { messageFactory } = require('./factories/messageFactory')
 
 const { connectToDatabase } = require('../src/app')
 
-let mongoServer
-
 beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create()
-    const uri = mongoServer.getUri()
-    await connectToDatabase(uri)
+    // Utiliser la base de données de test MongoDB
+    const mongoUri =
+        process.env.MONGO_URI ||
+        'mongodb://root:rootpassword@db-test:27017/supchat_test?authSource=admin'
+    await connectToDatabase(mongoUri)
 
     // Clean databases before tests
     await User.deleteMany({})
@@ -80,9 +78,7 @@ beforeAll(async () => {
     )
 
     workspace.channels.push(channel._id)
-    await workspace.save()
-
-    // JWT tokens
+    await workspace.save() // JWT tokens
     process.env.JWT_SECRET = 'testsecret'
     process.env.JWT_REFRESH = 'testrefresh'
     global.tokens = {
@@ -103,9 +99,6 @@ beforeAll(async () => {
             process.env.JWT_SECRET
         ),
     }
-
-    // Socket.io client for tests
-    global.socketClient = ioClient('http://localhost')
 })
 
 afterAll(async () => {
@@ -118,11 +111,6 @@ afterAll(async () => {
 
         await mongoose.connection.dropDatabase()
         await mongoose.disconnect()
-        await mongoServer.stop()
-
-        if (global.socketClient) {
-            global.socketClient.close()
-        }
     } catch (error) {
         console.log('Cleanup error (can be ignored):', error.message)
     }

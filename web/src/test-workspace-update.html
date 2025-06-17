@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Workspace Update</title>
+  </head>
+  <body>
+    <h1>Test API Workspace Update</h1>
+    <div id="result"></div>
+
+    <script>
+      // Test simple pour vérifier si l'API de mise à jour fonctionne
+      async function testWorkspaceUpdate() {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "Test en cours...";
+
+        try {
+          // D'abord, récupérer un token (simulé ici)
+          const loginResponse = await fetch(
+            "http://localhost:3000/api/auth/login",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                email: "test@example.com", // Remplacez par un email valide
+                password: "password123", // Remplacez par un mot de passe valide
+              }),
+            }
+          );
+
+          if (!loginResponse.ok) {
+            throw new Error("Échec de connexion");
+          }
+
+          // Ensuite, récupérer les workspaces
+          const workspacesResponse = await fetch(
+            "http://localhost:3000/api/workspaces",
+            {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+
+          if (!workspacesResponse.ok) {
+            throw new Error("Échec de récupération des workspaces");
+          }
+
+          const workspacesData = await workspacesResponse.json();
+          console.log("Workspaces disponibles:", workspacesData);
+
+          if (
+            workspacesData.workspaces &&
+            workspacesData.workspaces.length > 0
+          ) {
+            const workspace = workspacesData.workspaces[0];
+            const workspaceId = workspace._id;
+
+            console.log("Test de modification du workspace:", workspace);
+
+            // Tester la mise à jour
+            const updateData = {
+              name: workspace.name,
+              description: workspace.description || "Description mise à jour",
+              isPublic: !workspace.isPublic, // Basculer la visibilité
+            };
+
+            console.log("Données à envoyer:", updateData);
+
+            const updateResponse = await fetch(
+              `http://localhost:3000/api/workspaces/${workspaceId}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify(updateData),
+              }
+            );
+
+            if (!updateResponse.ok) {
+              const errorData = await updateResponse.text();
+              throw new Error(`Échec de mise à jour: ${errorData}`);
+            }
+
+            const updateResult = await updateResponse.json();
+            console.log("Résultat de la mise à jour:", updateResult);
+
+            resultDiv.innerHTML = `
+                        <h3>✅ Test réussi!</h3>
+                        <p><strong>Workspace ID:</strong> ${workspaceId}</p>
+                        <p><strong>Nom:</strong> ${
+                          updateResult.workspace.name
+                        }</p>
+                        <p><strong>Visibilité avant:</strong> ${
+                          workspace.isPublic ? "Public" : "Privé"
+                        }</p>
+                        <p><strong>Visibilité après:</strong> ${
+                          updateResult.workspace.isPublic ? "Public" : "Privé"
+                        }</p>
+                        <p><strong>Description:</strong> ${
+                          updateResult.workspace.description
+                        }</p>
+                    `;
+          } else {
+            resultDiv.innerHTML =
+              "<p>❌ Aucun workspace trouvé pour tester</p>";
+          }
+        } catch (error) {
+          console.error("Erreur:", error);
+          resultDiv.innerHTML = `<p>❌ Erreur: ${error.message}</p>`;
+        }
+      }
+
+      // Lancer le test au chargement de la page
+      testWorkspaceUpdate();
+    </script>
+  </body>
+</html>

@@ -101,8 +101,13 @@ const workspacesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchWorkspaces.fulfilled, (state, action) => {
-        state.items = action.payload;
+        console.log(
+          '🔍 DEBUG: fetchWorkspaces.fulfilled called with:',
+          action.payload
+        );
+        state.items = Array.isArray(action.payload) ? action.payload : [];
         state.loading = false;
+        console.log('🔍 DEBUG: Updated state.items:', state.items);
       })
       .addCase(fetchWorkspaces.rejected, (state, action) => {
         state.loading = false;
@@ -113,7 +118,7 @@ const workspacesSlice = createSlice({
         state.error = null;
       })
       .addCase(addWorkspace.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.items = Array.isArray(action.payload) ? action.payload : [];
         state.loading = false;
       })
       .addCase(addWorkspace.rejected, (state, action) => {
@@ -125,7 +130,7 @@ const workspacesSlice = createSlice({
         state.error = null;
       })
       .addCase(requestJoinWorkspace.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.items = Array.isArray(action.payload) ? action.payload : [];
         state.loading = false;
       })
       .addCase(requestJoinWorkspace.rejected, (state, action) => {

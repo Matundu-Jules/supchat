@@ -29,9 +29,16 @@ const WorkspaceSchema = new mongoose.Schema({
 // Middleware pour synchroniser isPublic et type
 WorkspaceSchema.pre('save', function (next) {
     if (this.isModified('isPublic') || this.isModified('type')) {
-        if (this.type) {
+        // Si isPublic est modifié, il a la priorité et on met à jour type
+        if (this.isModified('isPublic') && this.isPublic !== undefined) {
+            this.type = this.isPublic ? 'public' : 'private'
+        }
+        // Sinon si seul type est modifié, on met à jour isPublic
+        else if (this.isModified('type') && this.type) {
             this.isPublic = this.type === 'public'
-        } else if (this.isPublic !== undefined) {
+        }
+        // Fallback pour les cas où ni l'un ni l'autre n'est défini
+        else if (this.isPublic !== undefined) {
             this.type = this.isPublic ? 'public' : 'private'
         }
     }

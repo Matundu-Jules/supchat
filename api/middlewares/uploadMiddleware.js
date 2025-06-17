@@ -106,21 +106,18 @@ const createAvatarUploadConfig = (uploadDir) => {
     const storage = multer.diskStorage({
         destination: uploadDir,
         filename: (req, file, cb) => {
-            // Générer un nom de fichier unique et sécurisé
+            // Générer un nom de fichier avec format {username}-{timestamp}.{ext}
             const timestamp = Date.now()
-            const random = Math.round(Math.random() * 1e9)
-            const userId = req.user?.id || 'unknown'
+            const username = req.user?.name || 'user'
             const extension = path.extname(file.originalname).toLowerCase()
 
-            // Nettoyer le nom original pour éviter les caractères dangereux
-            const safeName = file.originalname
-                .replace(/[^a-zA-Z0-9.-]/g, '_')
-                .substring(0, 50) // Limiter la longueur
+            // Nettoyer le nom d'utilisateur pour éviter les caractères problématiques
+            const cleanUsername = username
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '_')
+                .substring(0, 20) // Limiter la longueur
 
-            cb(
-                null,
-                `avatar-${userId}-${timestamp}-${random}-${safeName}${extension}`
-            )
+            cb(null, `${cleanUsername}-${timestamp}${extension}`)
         },
     })
 

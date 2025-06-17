@@ -48,13 +48,14 @@ const WorkspacesPage: React.FC = () => {
   const [acceptInviteSuccess, setAcceptInviteSuccess] = useState<string | null>(
     null
   );
-
   // Organiser les workspaces en catégories
   const filteredWorkspaces = workspaces.filter(
     (workspace) =>
       workspace.name.toLowerCase().includes(search.toLowerCase()) ||
       (workspace.description || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const isAdmin = user?.role === "admin";
 
   // Mes workspaces (que j'ai créés)
   const ownedWorkspaces = filteredWorkspaces.filter(
@@ -65,10 +66,18 @@ const WorkspacesPage: React.FC = () => {
   const memberWorkspaces = filteredWorkspaces.filter(
     (ws) => ws.userStatus?.isMember && !ws.userStatus?.isOwner
   );
+
   // Workspaces publics disponibles (que je n'ai pas encore rejoints)
   const availableWorkspaces = filteredWorkspaces.filter(
     (ws) => ws.isPublic && !ws.userStatus?.isMember && !ws.userStatus?.isOwner
   );
+
+  // Pour les admins : tous les autres workspaces (privés non rejoints)
+  const adminWorkspaces = isAdmin
+    ? filteredWorkspaces.filter(
+        (ws) => !ws.userStatus?.isOwner && !ws.userStatus?.isMember
+      )
+    : [];
 
   // Handler pour accepter une invitation à un workspace
   const handleAcceptInvite = async (workspace: any) => {
@@ -240,7 +249,6 @@ const WorkspacesPage: React.FC = () => {
               />
             </section>
           )}
-
           {/* Workspaces où je suis membre */}
           {memberWorkspaces.length > 0 && (
             <section className={styles["workspaceCategory"]}>
@@ -267,9 +275,34 @@ const WorkspacesPage: React.FC = () => {
               />
             </section>
           )}
-
-          {/* Workspaces publics disponibles */}
-          {availableWorkspaces.length > 0 && (
+          {/* Section Administration - Tous les workspaces pour les admins */}
+          {isAdmin && adminWorkspaces.length > 0 && (
+            <section className={styles["workspaceCategory"]}>
+              <h2 className={styles["categoryTitle"]}>
+                <i className="fa-solid fa-shield-halved"></i> Administration (
+                {adminWorkspaces.length})
+              </h2>
+              <p className={styles["categoryDescription"]}>
+                Tous les espaces de travail - Accès administrateur
+              </p>
+              <WorkspaceList
+                workspaces={adminWorkspaces}
+                filter=""
+                user={user ?? undefined}
+                onAccess={handleAccess}
+                onInvite={handleInviteClick}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onRequestJoin={handleRequestJoin}
+                onAcceptInvite={handleAcceptInvite}
+                showOnlyJoinActions={false}
+                requestJoinLoading={requestJoinLoading}
+                acceptInviteLoading={acceptInviteLoading}
+              />
+            </section>
+          )}{" "}
+          {/* Workspaces publics disponibles - Masqué pour les admins qui ont déjà accès à tout */}
+          {!isAdmin && availableWorkspaces.length > 0 && (
             <section className={styles["workspaceCategory"]}>
               <h2 className={styles["categoryTitle"]}>
                 <i className="fa-solid fa-globe"></i> Espaces publics
@@ -293,13 +326,13 @@ const WorkspacesPage: React.FC = () => {
                 acceptInviteLoading={acceptInviteLoading}
               />
             </section>
-          )}
-
+          )}{" "}
           {/* Message si aucun workspace dans la recherche */}
           {search &&
             ownedWorkspaces.length === 0 &&
             memberWorkspaces.length === 0 &&
-            availableWorkspaces.length === 0 && (
+            adminWorkspaces.length === 0 &&
+            (!isAdmin ? availableWorkspaces.length === 0 : true) && (
               <div className={styles["emptyState"]}>
                 <i className="fa-solid fa-search"></i>
                 <h3>Aucun résultat trouvé</h3>
@@ -309,12 +342,12 @@ const WorkspacesPage: React.FC = () => {
                 </p>
               </div>
             )}
-
           {/* Message si aucun workspace du tout */}
           {!search &&
             ownedWorkspaces.length === 0 &&
             memberWorkspaces.length === 0 &&
-            availableWorkspaces.length === 0 && (
+            adminWorkspaces.length === 0 &&
+            (!isAdmin ? availableWorkspaces.length === 0 : true) && (
               <div className={styles["emptyState"]}>
                 <i className="fa-solid fa-folder-open"></i>
                 <h3>Aucun espace de travail trouvé</h3>

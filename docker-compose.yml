@@ -8,6 +8,7 @@ services:
       - "0.0.0.0:3000:3000" # bind API port to all interfaces for mobile access
     volumes:
       - ./api:/usr/src/app
+      - /usr/src/app/node_modules # Preserve node_modules in container
     networks:
       - supchat-network
     environment:
@@ -152,6 +153,31 @@ services:
       - supchat-network
     restart: unless-stopped
     platform: linux/amd64
+
+  # Service d'initialisation des données de test
+  test-data-init:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    networks:
+      - supchat-network
+    environment:
+      # Database configuration
+      - MONGO_HOST=db
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_AUTH_SOURCE=${MONGO_AUTH_SOURCE}
+    env_file:
+      - .env
+    depends_on:
+      api:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: ["sh", "/usr/src/app/init-test-data.sh"]
+    restart: "no" # Ne redémarre pas après la fin du script
 
 # Define network for app services
 networks:

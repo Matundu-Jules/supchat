@@ -7,7 +7,8 @@ export async function getUserWorkspaces() {
   try {
     await fetchCsrfToken();
     const { data } = await api.get('/workspaces');
-    return data;
+    // Le backend retourne { workspaces: [...] }
+    return data.workspaces || [];
   } catch (err: any) {
     throw new Error(
       err?.response?.data?.message ||
@@ -28,7 +29,8 @@ export async function createWorkspace(formData: {
   try {
     await fetchCsrfToken();
     const { data } = await api.post('/workspaces', formData);
-    return data;
+    // Le backend retourne { message: '...', workspace: {...} }
+    return data.workspace || data;
   } catch (err: any) {
     throw new Error(
       err?.response?.data?.message ||

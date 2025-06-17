@@ -6,11 +6,27 @@ const getById = (id) => {
     )
 }
 
-const updateProfile = async (id, { name, avatar }) => {
+const updateProfile = async (id, updateData) => {
     const user = await User.findById(id)
     if (!user) return null
-    if (name !== undefined) user.name = name
-    if (avatar !== undefined) user.avatar = avatar
+
+    // Champs autorisés pour la mise à jour du profil
+    const allowedFields = ['name', 'avatar', 'bio', 'status', 'theme']
+
+    allowedFields.forEach((field) => {
+        if (updateData[field] !== undefined) {
+            user[field] = updateData[field]
+        }
+    })
+
+    // Gérer les préférences si elles sont fournies
+    if (updateData.preferences) {
+        if (updateData.preferences.theme !== undefined) {
+            user.theme = updateData.preferences.theme
+        }
+        // On peut étendre ici pour d'autres préférences
+    }
+
     await user.save()
     return user
 }
@@ -35,11 +51,13 @@ const updateAvatar = async (id, newAvatarPath) => {
     }
 }
 
-const updatePreferences = async (id, { theme, status }) => {
+const updatePreferences = async (id, updateData) => {
     const user = await User.findById(id)
     if (!user) return null
-    if (theme !== undefined) user.theme = theme
-    if (status !== undefined) user.status = status
+
+    if (updateData.theme !== undefined) user.theme = updateData.theme
+    if (updateData.status !== undefined) user.status = updateData.status
+
     await user.save()
     return user
 }

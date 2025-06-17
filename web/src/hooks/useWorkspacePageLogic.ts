@@ -152,13 +152,16 @@ export function useWorkspacePageLogic() {
     fetchWorkspaces();
   };
 
-  // Version simplifiée pour les données de formulaire direct
+  // Version simplifiée pour les données de formulaire direct avec debugging amélioré
   const handleEditWorkspace = async (formData: {
     name: string;
     description?: string;
     isPublic: boolean;
   }) => {
     if (!editModal) return;
+
+    console.log('🔍 DEBUG: handleEditWorkspace called with:', formData);
+    console.log('🔍 DEBUG: editModal:', editModal);
 
     const errors: { name?: string; description?: string } = {};
     if (!formData.name) {
@@ -177,13 +180,39 @@ export function useWorkspacePageLogic() {
 
     setEditErrors(errors);
     if (Object.keys(errors).length > 0) {
+      console.log('🔍 DEBUG: Validation errors:', errors);
       throw new Error('Données invalides');
     }
 
-    await updateWorkspaceApi(editModal.id, formData);
-    setEditModal(null);
-    setEditErrors({});
-    fetchWorkspaces();
+    console.log(
+      '🔍 DEBUG: Calling updateWorkspaceApi with:',
+      editModal.id,
+      formData
+    );
+    try {
+      const result = await updateWorkspaceApi(editModal.id, formData);
+      console.log('🔍 DEBUG: updateWorkspaceApi result:', result);
+
+      setEditModal(null);
+      setEditErrors({});
+
+      console.log('🔍 DEBUG: Calling fetchWorkspaces to refresh data');
+
+      // Ajouter un petit délai pour s'assurer que le backend a traité la mise à jour
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      await fetchWorkspaces();
+      console.log('🔍 DEBUG: fetchWorkspaces completed');
+
+      // Force un re-render en mettant à jour l'état local
+      // Cela pourrait être nécessaire si Redux ne trigger pas le re-render
+      setTimeout(() => {
+        console.log('🔍 DEBUG: Forced re-render timeout completed');
+      }, 50);
+    } catch (error) {
+      console.error('🔍 DEBUG: Error in updateWorkspaceApi:', error);
+      throw error;
+    }
   };
 
   const handleDelete = async (workspace: any) => {

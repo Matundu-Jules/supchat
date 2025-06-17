@@ -18,11 +18,6 @@ NC='\033[0m' # No Color
 PROJECT_NAME="supchat"
 SERVICES=("web" "api" "mobile" "db" "cadvisor")
 
-# Fonction pause
-pause() {
-    read -p "Appuyez sur Entrée pour continuer..."
-}
-
 # Fonction pour afficher le header
 show_header() {
     clear
@@ -69,18 +64,19 @@ show_menu() {
     echo -e "${YELLOW}  8)${NC} 📝 Voir les logs d'un service"
     echo -e "${YELLOW}  9)${NC} 📈 Suivre les logs en temps réel"
     echo -e "${YELLOW} 10)${NC} 🖥️  Ouvrir un shell dans un container"
+    echo -e "${YELLOW} 11)${NC} 🖥️  Ouvrir terminaux de logs VS Code"
     echo ""
     echo -e "${WHITE}MAINTENANCE:${NC}"
-    echo -e "${RED} 11)${NC} 🛑 Arrêter TOUS les services"
-    echo -e "${RED} 12)${NC} 🧹 Options de nettoyage (soft/complet)"
-    echo -e "${RED} 13)${NC} 🔄 Restart complet (stop + build + start)"
+    echo -e "${RED} 12)${NC} 🛑 Arrêter TOUS les services"
+    echo -e "${RED} 13)${NC} 🧹 Options de nettoyage (soft/complet)"
+    echo -e "${RED} 14)${NC} 🔄 Restart complet (stop + build + start)"
     echo ""
     echo -e "${WHITE}UTILITAIRES:${NC}"
-    echo -e "${BLUE} 14)${NC} 💾 Backup de la base de données"
-    echo -e "${BLUE} 15)${NC} 📦 Voir l'utilisation des ressources"
-    echo -e "${BLUE} 16)${NC} 🌐 Ouvrir les URLs de l'application"
-    echo -e "${BLUE} 17)${NC} 🔍 Diagnostic des services (debug)"
-    echo -e "${GREEN} 18)${NC} 🧪 Lancer les tests automatisés"
+    echo -e "${BLUE} 15)${NC} 💾 Backup de la base de données"
+    echo -e "${BLUE} 16)${NC} 📦 Voir l'utilisation des ressources"
+    echo -e "${BLUE} 17)${NC} 🌐 Ouvrir les URLs de l'application"
+    echo -e "${BLUE} 18)${NC} 🔍 Diagnostic des services (debug)"
+    echo -e "${GREEN} 19)${NC} 🧪 Lancer les tests automatisés"
     echo ""
     echo -e "${WHITE} 0)${NC} ❌ Quitter"
     echo ""
@@ -90,12 +86,12 @@ show_menu() {
 # Fonction pour sélectionner un service
 select_service() {
     local prompt="$1"
-    echo -e "\n${CYAN}$prompt${NC}"
-    echo "Services disponibles:"
+    echo -e "\n${CYAN}$prompt${NC}" >&2
+    echo "Services disponibles:" >&2
     for i in "${!SERVICES[@]}"; do
-        echo "  $((i+1))) ${SERVICES[$i]}"
+        echo "  $((i+1))) ${SERVICES[$i]}" >&2
     done
-    echo ""
+    echo "" >&2
     read -p "Sélectionnez un service (numéro): " service_choice
     
     # Vérifier si l'entrée est un nombre valide
@@ -108,9 +104,158 @@ select_service() {
 
 
 
+# Fonction pour lancer automatiquement les tâches VS Code de logs
+launch_vscode_logs_task() {
+    local environment="$1"
+    local task_name=""
+    
+    if [[ "$environment" == "développement" ]]; then
+        task_name="🚀 Ouvrir TOUS les Logs (Développement)"
+    else
+        task_name="🏭 Ouvrir TOUS les Logs (Production)"
+    fi
+    
+    echo -e "\n${CYAN}🚀 Tentative de lancement automatique de la tâche VS Code...${NC}"
+    
+    # Vérifier si la commande 'code' est disponible
+    if command -v code &> /dev/null; then
+        echo -e "${GREEN}✅ VS Code CLI détecté !${NC}"
+        
+        # Vérifier si VS Code est déjà ouvert dans ce workspace
+        local workspace_path="$(pwd)"
+        
+        # Méthode 1: Essayer de lancer la tâche directement
+        echo -e "${YELLOW}🎯 Tentative de lancement direct de la tâche...${NC}"
+        
+        # Utiliser une approche JSON pour déclencher la tâche
+        local temp_script="/tmp/launch_vscode_task.sh"
+        cat > "$temp_script" << EOF
+#!/bin/bash
+# Script temporaire pour lancer la tâche VS Code
+echo "Lancement de la tâche VS Code: $task_name"
+cd "$workspace_path"
+code --command "workbench.action.tasks.runTask" --args "$task_name" . 2>/dev/null &
+sleep 2
+exit 0
+EOF
+        
+        chmod +x "$temp_script"
+        
+        if "$temp_script" 2>/dev/null; then
+            echo -e "${GREEN}✅ Commande lancée !${NC}"
+            echo -e "${CYAN}➡️  Si VS Code est ouvert, la tâche '${task_name}' devrait se lancer automatiquement${NC}"
+            echo -e "${YELLOW}📝 Sinon, utilisez Ctrl+Shift+P dans VS Code et tapez le nom de la tâche${NC}"
+            rm -f "$temp_script" 2>/dev/null
+            return 0
+        else
+            echo -e "${YELLOW}⚠️  Lancement direct échoué, ouverture de VS Code...${NC}"
+            rm -f "$temp_script" 2>/dev/null
+        fi
+        
+        # Méthode 2: Ouvrir VS Code dans le workspace
+        echo -e "${YELLOW}📂 Ouverture de VS Code dans le workspace...${NC}"
+        
+        if code "$workspace_path" 2>/dev/null; then
+            echo -e "${GREEN}✅ VS Code ouvert avec succès !${NC}"
+            echo -e "${CYAN}➡️  Dans VS Code:${NC}"
+            echo -e "   1. Appuyez sur ${WHITE}Ctrl+Shift+P${NC}"
+            echo -e "   2. Tapez: ${YELLOW}${task_name}${NC}"
+            echo -e "   3. Appuyez sur ${WHITE}Entrée${NC}"
+            echo -e "${GREEN}🎉 Tous les logs s'ouvriront automatiquement !${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ Erreur lors de l'ouverture de VS Code${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ VS Code CLI ('code') non trouvé dans le PATH${NC}"
+        echo -e "${YELLOW}💡 Pour installer VS Code CLI:${NC}"
+        echo -e "   1. Ouvrez VS Code"
+        echo -e "   2. ${WHITE}Ctrl+Shift+P${NC} → tapez: ${CYAN}Shell Command: Install 'code' command in PATH${NC}"
+        echo -e "   3. Redémarrez votre terminal"
+        echo -e "   4. Relancez ce script"
+        return 1
+    fi
+}
 
+# Fonction pour afficher les instructions manuelles de logs
+show_manual_logs_instructions() {
+    local environment="$1"
+    
+    echo -e "\n${CYAN}🖥️ Instructions manuelles pour logs en temps réel (${environment}):${NC}"
+    echo -e "${GREEN}📋 OPTION RECOMMANDÉE - Tâches VS Code manuelles:${NC}"
+    echo ""
+    echo -e "${WHITE}Dans VS Code:${NC}"
+    echo -e "1. Appuyez sur ${GREEN}Ctrl+Shift+P${NC}"
+    echo -e "2. Tapez: ${CYAN}Tasks: Run Task${NC}"
+    
+    if [[ "$environment" == "développement" ]]; then
+        echo -e "3. Sélectionnez: ${YELLOW}🚀 Ouvrir TOUS les Logs (Développement)${NC}"
+        echo -e "4. ${GREEN}✅ TERMINÉ !${NC} Tous les logs s'ouvrent automatiquement dans des terminaux séparés"
+        echo ""
+        echo -e "${BLUE}📋 OU commandes manuelles à copier-coller:${NC}"
+        echo -e "${WHITE}# API Backend (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose logs -f api${NC}"
+        echo ""
+        echo -e "${WHITE}# Web Frontend (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose logs -f web${NC}"
+        echo ""
+        echo -e "${WHITE}# MongoDB Database (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose logs -f db${NC}"
+        echo ""
+        echo -e "${WHITE}# cAdvisor Monitoring (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose logs -f cadvisor${NC}"
+        
+        # Si c'est l'environnement de développement et que mobile existe
+        if docker-compose ps mobile 2>/dev/null | grep -q "Up"; then
+            echo ""
+            echo -e "${WHITE}# Mobile App (${environment}):${NC}"
+            echo -e "${CYAN}docker-compose logs -f mobile${NC}"
+        fi
+    else
+        echo -e "3. Sélectionnez: ${YELLOW}🏭 Ouvrir TOUS les Logs (Production)${NC}"
+        echo -e "4. ${GREEN}✅ TERMINÉ !${NC} Tous les logs s'ouvrent automatiquement dans des terminaux séparés"
+        echo ""
+        echo -e "${BLUE}📋 OU commandes manuelles à copier-coller:${NC}"
+        echo -e "${WHITE}# API Backend (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose -f docker-compose.prod.yml logs -f api${NC}"
+        echo ""
+        echo -e "${WHITE}# Web Frontend (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose -f docker-compose.prod.yml logs -f web${NC}"
+        echo ""
+        echo -e "${WHITE}# MongoDB Database (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose -f docker-compose.prod.yml logs -f db${NC}"
+        echo ""
+        echo -e "${WHITE}# cAdvisor Monitoring (${environment}):${NC}"
+        echo -e "${CYAN}docker-compose -f docker-compose.prod.yml logs -f cadvisor${NC}"
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}🔧 Instructions pour ouvrir des terminaux VS Code:${NC}"
+    echo -e "${WHITE}Si Ctrl+Shift+\` ne fonctionne pas, essayez ces alternatives:${NC}"
+    echo -e "1. ${GREEN}Menu Terminal${NC} → Nouveau Terminal"
+    echo -e "2. ${GREEN}Ctrl+Shift+P${NC} → tapez 'terminal new' → Entrée"
+    echo -e "3. ${GREEN}Bouton +${NC} dans le panneau terminal (en bas)"
+    echo -e "4. ${GREEN}Ctrl+Shift+ù${NC} (sur clavier français)"
+    echo ""
+    echo -e "${CYAN}🎯 Pour chaque service:${NC}"
+    echo -e "• Ouvrez un nouveau terminal (méthode au choix ci-dessus)"
+    echo -e "• Copiez-collez la commande du service"
+    echo -e "• Répétez pour le service suivant"
+    echo -e "• Utilisez ${WHITE}Ctrl+C${NC} pour arrêter les logs"
+    echo ""
+    echo -e "${GREEN}💡 Astuce: Renommez vos terminaux (clic droit → Rename) avec le nom du service${NC}"
+}
 
 # Fonction pour afficher les instructions pour consulter les logs
+show_logs_info() {
+    local environment="$1"
+    echo -e "\n${CYAN}� Pour consulter les logs en ${environment}:${NC}"
+    echo -e "${WHITE}• Utilisez les tâches VS Code dans VS Code > Terminal > Run Task${NC}"
+    echo -e "${GREEN}  - 'Open All Logs (Dev)' pour développement${NC}"
+    echo -e "${GREEN}  - 'Open All Logs (Prod)' pour production${NC}"
+    echo -e "${WHITE}• Ou utilisez le menu option 11 du script Docker Manager${NC}"
+}
 
 # Fonction pour lancer l'environnement de développement
 start_development() {
@@ -131,15 +276,19 @@ start_development() {
     echo "   • MongoDB: localhost:27017"
     echo "   • cAdvisor (Monitoring): http://localhost:8080"
     
+    # Afficher les informations sur les logs
+    show_logs_info "développement"
+    
     # Menu post-démarrage
     while true; do
         echo ""
         echo -e "${WHITE}🎯 Services de développement démarrés - Que voulez-vous faire ?${NC}"
         echo -e "${GREEN}  1)${NC} 📊 Voir l'état des services"
         echo -e "${GREEN}  2)${NC} 📝 Voir les logs d'un service"
-        echo -e "${GREEN}  3)${NC} 🌐 Ouvrir les URLs de l'application"
-        echo -e "${YELLOW}  4)${NC} 🔄 Redémarrer un service"
-        echo -e "${RED}  5)${NC} 🛑 Arrêter TOUS les services de développement"
+        echo -e "${GREEN}  3)${NC} 🖥️  Ouvrir les terminaux de logs VS Code"
+        echo -e "${GREEN}  4)${NC} 🌐 Ouvrir les URLs de l'application"
+        echo -e "${YELLOW}  5)${NC} 🔄 Redémarrer un service"
+        echo -e "${RED}  6)${NC} 🛑 Arrêter TOUS les services de développement"
         echo -e "${BLUE}  0)${NC} ⬅️  Retour au menu principal"
         echo ""
         read -p "Votre choix: " post_choice
@@ -154,12 +303,16 @@ start_development() {
                 view_logs
                 ;;
             3)
-                open_urls
+                # Rediriger vers le menu des logs VS Code (option 11)
+                open_logs_terminals_menu
                 ;;
             4)
-                restart_service
+                open_urls
                 ;;
             5)
+                restart_service
+                ;;
+            6)
                 echo -e "\n${RED}🛑 Arrêt des services de développement...${NC}"
                 docker-compose down
                 echo -e "${GREEN}✅ Services de développement arrêtés !${NC}"
@@ -196,17 +349,21 @@ start_production() {
     echo "   • MongoDB: localhost:27017"
     echo "   • cAdvisor (Monitoring): http://localhost:8080"
     
+    # Afficher les informations sur les logs
+    show_logs_info "production"
+    
     # Menu post-démarrage
     while true; do
         echo ""
         echo -e "${WHITE}🎯 Services de production démarrés - Que voulez-vous faire ?${NC}"
         echo -e "${GREEN}  1)${NC} 📊 Voir l'état des services"
         echo -e "${GREEN}  2)${NC} 📝 Voir les logs d'un service"
-        echo -e "${GREEN}  3)${NC} 🌐 Ouvrir les URLs de l'application"
-        echo -e "${GREEN}  4)${NC} 📦 Voir l'utilisation des ressources"
-        echo -e "${YELLOW}  5)${NC} 🔄 Redémarrer un service"
-        echo -e "${YELLOW}  6)${NC} 💾 Backup de la base de données"
-        echo -e "${RED}  7)${NC} 🛑 Arrêter TOUS les services de production"
+        echo -e "${GREEN}  3)${NC} 🖥️  Ouvrir les terminaux de logs VS Code"
+        echo -e "${GREEN}  4)${NC} 🌐 Ouvrir les URLs de l'application"
+        echo -e "${GREEN}  5)${NC} 📦 Voir l'utilisation des ressources"
+        echo -e "${YELLOW}  6)${NC} 🔄 Redémarrer un service"
+        echo -e "${YELLOW}  7)${NC} 💾 Backup de la base de données"
+        echo -e "${RED}  8)${NC} 🛑 Arrêter TOUS les services de production"
         echo -e "${BLUE}  0)${NC} ⬅️  Retour au menu principal"
         echo ""
         read -p "Votre choix: " post_choice
@@ -235,12 +392,16 @@ start_production() {
                 pause
                 ;;
             3)
-                open_urls
+                # Rediriger vers le menu des logs VS Code (option 11)
+                open_logs_terminals_menu
                 ;;
             4)
-                show_resources
+                open_urls
                 ;;
             5)
+                show_resources
+                ;;
+            6)
                 # Adapter restart_service pour la production
                 service=$(select_service "Quel service voulez-vous redémarrer (production) ?")
                 if [[ -n "$service" ]]; then
@@ -255,7 +416,7 @@ start_production() {
                 fi
                 pause
                 ;;
-            6)
+            7)
                 # Adapter backup pour la production
                 echo -e "\n${BLUE}💾 Backup de la base de données MongoDB (production)...${NC}"
                 if docker-compose -f docker-compose.prod.yml ps db | grep -q "Up"; then
@@ -276,7 +437,7 @@ start_production() {
                 fi
                 pause
                 ;;
-            7)
+            8)
                 echo -e "\n${RED}🛑 Arrêt des services de production...${NC}"
                 docker-compose -f docker-compose.prod.yml down
                 echo -e "${GREEN}✅ Services de production arrêtés !${NC}"
@@ -303,9 +464,10 @@ post_start_menu() {
         echo -e "${WHITE}🎯 Services de ${env_name} démarrés - Que voulez-vous faire ?${NC}"
         echo -e "${GREEN}  1)${NC} 📊 Voir l'état des services"
         echo -e "${GREEN}  2)${NC} 📝 Voir les logs d'un service"
-        echo -e "${GREEN}  3)${NC} 🌐 Ouvrir les URLs de l'application"
-        echo -e "${YELLOW}  4)${NC} 🔄 Redémarrer un service"
-        echo -e "${RED}  5)${NC} 🛑 Arrêter TOUS les services de ${env_name}"
+        echo -e "${GREEN}  3)${NC} 🖥️  Ouvrir les terminaux de logs VS Code"
+        echo -e "${GREEN}  4)${NC} 🌐 Ouvrir les URLs de l'application"
+        echo -e "${YELLOW}  5)${NC} 🔄 Redémarrer un service"
+        echo -e "${RED}  6)${NC} 🛑 Arrêter TOUS les services de ${env_name}"
         echo -e "${BLUE}  0)${NC} ⬅️  Retour au menu principal"
         echo ""
         read -p "Votre choix: " post_choice
@@ -320,12 +482,16 @@ post_start_menu() {
                 view_logs
                 ;;
             3)
-                open_urls
+                # Rediriger vers le menu des logs VS Code (option 11)
+                open_logs_terminals_menu
                 ;;
             4)
-                restart_service
+                open_urls
                 ;;
             5)
+                restart_service
+                ;;
+            6)
                 echo -e "\n${RED}🛑 Arrêt des services de ${env_name}...${NC}"
                 docker-compose down
                 echo -e "${GREEN}✅ Services de ${env_name} arrêtés !${NC}"
@@ -352,11 +518,12 @@ post_start_menu_prod() {
         echo -e "${WHITE}🏭 Services de ${env_name} démarrés - Que voulez-vous faire ?${NC}"
         echo -e "${GREEN}  1)${NC} 📊 Voir l'état des services"
         echo -e "${GREEN}  2)${NC} 📝 Voir les logs d'un service"
-        echo -e "${GREEN}  3)${NC} 🌐 Ouvrir les URLs de l'application"
-        echo -e "${GREEN}  4)${NC} 📊 Monitorer les ressources"
-        echo -e "${YELLOW}  5)${NC} 🔄 Redémarrer un service"
-        echo -e "${YELLOW}  6)${NC} 💾 Backup base de données"
-        echo -e "${RED}  7)${NC} 🛑 Arrêter TOUS les services de ${env_name}"
+        echo -e "${GREEN}  3)${NC} 🖥️  Ouvrir les terminaux de logs VS Code"
+        echo -e "${GREEN}  4)${NC} 🌐 Ouvrir les URLs de l'application"
+        echo -e "${GREEN}  5)${NC} 📊 Monitorer les ressources"
+        echo -e "${YELLOW}  6)${NC} 🔄 Redémarrer un service"
+        echo -e "${YELLOW}  7)${NC} 💾 Backup base de données"
+        echo -e "${RED}  8)${NC} 🛑 Arrêter TOUS les services de ${env_name}"
         echo -e "${BLUE}  0)${NC} ⬅️  Retour au menu principal"
         echo ""
         read -p "Votre choix: " post_choice
@@ -384,12 +551,16 @@ post_start_menu_prod() {
                 pause
                 ;;
             3)
-                open_urls
+                # Rediriger vers le menu des logs VS Code (option 11)
+                open_logs_terminals_menu
                 ;;
             4)
-                show_resources
+                open_urls
                 ;;
             5)
+                show_resources
+                ;;
+            6)
                 # Adapter restart_service pour la production
                 service=$(select_service "Quel service voulez-vous redémarrer (production) ?")
                 if [[ -n "$service" ]]; then
@@ -404,7 +575,7 @@ post_start_menu_prod() {
                 fi
                 pause
                 ;;
-            6)
+            7)
                 # Adapter backup pour la production
                 echo -e "\n${BLUE}💾 Backup de la base de données MongoDB (production)...${NC}"
                 if docker-compose -f docker-compose.prod.yml ps db | grep -q "Up"; then
@@ -425,7 +596,7 @@ post_start_menu_prod() {
                 fi
                 pause
                 ;;
-            7)
+            8)
                 echo -e "\n${RED}🛑 Arrêt des services de ${env_name}...${NC}"
                 docker-compose -f docker-compose.prod.yml down
                 echo -e "${GREEN}✅ Services de ${env_name} arrêtés !${NC}"
@@ -600,17 +771,8 @@ build_service() {
 
 # Fonction pour voir les logs d'un service
 view_logs() {
-    echo -e "\n${CYAN}De quel service voulez-vous voir les logs ?${NC}"
-    echo "Services disponibles:"
-    for i in "${!SERVICES[@]}"; do
-        echo "  $((i+1))) ${SERVICES[$i]}"
-    done
-    echo ""
-    read -p "Sélectionnez un service (numéro): " service_choice
-    
-    # Vérifier si l'entrée est un nombre valide
-    if [[ "$service_choice" =~ ^[0-9]+$ ]] && [[ $service_choice -ge 1 && $service_choice -le ${#SERVICES[@]} ]]; then
-        service="${SERVICES[$((service_choice-1))]}"
+    service=$(select_service "De quel service voulez-vous voir les logs ?")
+    if [[ -n "$service" ]]; then
         echo -e "\n${YELLOW}📝 Logs du service: $service${NC}"
         echo "════════════════════════════════════════════════════════"
         echo -e "${CYAN}Affichage des 50 dernières lignes de logs...${NC}"
@@ -627,17 +789,8 @@ view_logs() {
 
 # Fonction pour suivre les logs en temps réel
 follow_logs() {
-    echo -e "\n${CYAN}De quel service voulez-vous suivre les logs ?${NC}"
-    echo "Services disponibles:"
-    for i in "${!SERVICES[@]}"; do
-        echo "  $((i+1))) ${SERVICES[$i]}"
-    done
-    echo ""
-    read -p "Sélectionnez un service (numéro): " service_choice
-    
-    # Vérifier si l'entrée est un nombre valide
-    if [[ "$service_choice" =~ ^[0-9]+$ ]] && [[ $service_choice -ge 1 && $service_choice -le ${#SERVICES[@]} ]]; then
-        service="${SERVICES[$((service_choice-1))]}"
+    service=$(select_service "De quel service voulez-vous suivre les logs ?")
+    if [[ -n "$service" ]]; then
         echo -e "\n${YELLOW}📈 Logs en temps réel du service: $service${NC}"
         echo -e "${CYAN}Appuyez sur Ctrl+C pour arrêter${NC}"
         echo "════════════════════════════════════════════════════════"
@@ -653,6 +806,53 @@ follow_logs() {
 }
 
 # Fonction pour ouvrir les terminaux de logs depuis le menu
+open_logs_terminals_menu() {
+    echo -e "\n${CYAN}🖥️ Ouverture des terminaux de logs...${NC}"
+    echo "Quel environnement utilisez-vous ?"
+    echo "  1) Développement (docker-compose.yml)"
+    echo "  2) Production (docker-compose.prod.yml)"
+    echo "  3) Test (docker-compose.test.yml)"
+    read -p "Environnement (1-3): " env_choice
+    
+    case $env_choice in
+        1)
+            # Vérifier que les services de développement sont actifs
+            if docker-compose ps | grep -q "Up"; then
+                open_logs_terminals "développement"
+            else
+                echo -e "${RED}❌ Aucun service de développement en cours d'exécution${NC}"
+                echo -e "${YELLOW}💡 Lancez d'abord l'environnement de développement (option 1)${NC}"
+            fi
+            ;;
+        2)
+            # Vérifier que les services de production sont actifs
+            if docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+                open_logs_terminals_prod "production"
+            else
+                echo -e "${RED}❌ Aucun service de production en cours d'exécution${NC}"
+                echo -e "${YELLOW}💡 Lancez d'abord l'environnement de production (option 2)${NC}"
+            fi
+            ;;
+        3)
+            # Vérifier que les services de test sont actifs
+            if docker-compose -f docker-compose.test.yml ps | grep -q "Up"; then
+                echo -e "\n${CYAN}🖥️ Commandes pour logs des tests:${NC}"
+                echo -e "${WHITE}# API Backend (test):${NC}"
+                echo -e "${CYAN}docker-compose -f docker-compose.test.yml logs -f api${NC}"
+                echo ""
+                echo -e "${WHITE}# MongoDB Test Database:${NC}"
+                echo -e "${CYAN}docker-compose -f docker-compose.test.yml logs -f db-test${NC}"
+            else
+                echo -e "${RED}❌ Aucun service de test en cours d'exécution${NC}"
+                echo -e "${YELLOW}💡 Lancez d'abord les tests (option 19)${NC}"
+            fi
+            ;;
+        *)
+            echo -e "${RED}❌ Choix invalide${NC}"
+            ;;
+    esac
+    pause
+}
 
 # Fonction pour ouvrir un shell dans un container
 open_shell() {
@@ -1030,6 +1230,79 @@ run_tests() {
     pause
 }
 
+# Fonction pour lancer automatiquement les tâches VS Code de logs
+launch_vscode_logs_task() {
+    local environment="$1"
+    local task_name=""
+    
+    if [[ "$environment" == "développement" ]]; then
+        task_name="🚀 Ouvrir TOUS les Logs (Développement)"
+    else
+        task_name="🏭 Ouvrir TOUS les Logs (Production)"
+    fi
+    
+    echo -e "\n${CYAN}🚀 Tentative de lancement automatique de la tâche VS Code...${NC}"
+    
+    # Vérifier si la commande 'code' est disponible
+    if command -v code &> /dev/null; then
+        echo -e "${GREEN}✅ VS Code CLI détecté !${NC}"
+        
+        # Vérifier si VS Code est déjà ouvert dans ce workspace
+        local workspace_path="$(pwd)"
+        
+        # Méthode 1: Essayer de lancer la tâche directement
+        echo -e "${YELLOW}🎯 Tentative de lancement direct de la tâche...${NC}"
+        
+        # Utiliser une approche JSON pour déclencher la tâche
+        local temp_script="/tmp/launch_vscode_task.sh"
+        cat > "$temp_script" << EOF
+#!/bin/bash
+# Script temporaire pour lancer la tâche VS Code
+echo "Lancement de la tâche VS Code: $task_name"
+cd "$workspace_path"
+code --command "workbench.action.tasks.runTask" --args "$task_name" . 2>/dev/null &
+sleep 2
+exit 0
+EOF
+        
+        chmod +x "$temp_script"
+        
+        if "$temp_script" 2>/dev/null; then
+            echo -e "${GREEN}✅ Commande lancée !${NC}"
+            echo -e "${CYAN}➡️  Si VS Code est ouvert, la tâche '${task_name}' devrait se lancer automatiquement${NC}"
+            echo -e "${YELLOW}📝 Sinon, utilisez Ctrl+Shift+P dans VS Code et tapez le nom de la tâche${NC}"
+            rm -f "$temp_script" 2>/dev/null
+            return 0
+        else
+            echo -e "${YELLOW}⚠️  Lancement direct échoué, ouverture de VS Code...${NC}"
+            rm -f "$temp_script" 2>/dev/null
+        fi
+        
+        # Méthode 2: Ouvrir VS Code dans le workspace
+        echo -e "${YELLOW}📂 Ouverture de VS Code dans le workspace...${NC}"
+        
+        if code "$workspace_path" 2>/dev/null; then
+            echo -e "${GREEN}✅ VS Code ouvert avec succès !${NC}"
+            echo -e "${CYAN}➡️  Dans VS Code:${NC}"
+            echo -e "   1. Appuyez sur ${WHITE}Ctrl+Shift+P${NC}"
+            echo -e "   2. Tapez: ${YELLOW}${task_name}${NC}"
+            echo -e "   3. Appuyez sur ${WHITE}Entrée${NC}"
+            echo -e "${GREEN}🎉 Tous les logs s'ouvriront automatiquement !${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ Erreur lors de l'ouverture de VS Code${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ VS Code CLI ('code') non trouvé dans le PATH${NC}"
+        echo -e "${YELLOW}💡 Pour installer VS Code CLI:${NC}"
+        echo -e "   1. Ouvrez VS Code"
+        echo -e "   2. ${WHITE}Ctrl+Shift+P${NC} → tapez: ${CYAN}Shell Command: Install 'code' command in PATH${NC}"
+        echo -e "   3. Redémarrez votre terminal"
+        echo -e "   4. Relancez ce script"
+        return 1
+    fi
+}
 
 # Fonction principale
 main() {
@@ -1051,14 +1324,15 @@ main() {
             8) view_logs ;;
             9) follow_logs ;;
             10) open_shell ;;
-            11) stop_all ;;
-            12) cleanup ;;
-            13) full_restart ;;
-            14) backup_database ;;
-            15) show_resources ;;
-            16) open_urls ;;
-            17) diagnostic_services ;;
-            18) run_tests ;;
+            11) open_logs_terminals_menu ;;
+            12) stop_all ;;
+            13) cleanup ;;
+            14) full_restart ;;
+            15) backup_database ;;
+            16) show_resources ;;
+            17) open_urls ;;
+            18) diagnostic_services ;;
+            19) run_tests ;;
             20) quick_start_development ;;
             21) quick_start_production ;;
             22) quick_start_tests ;;

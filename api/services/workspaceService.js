@@ -138,16 +138,47 @@ const create = async ({ name, description, isPublic, type, owner }) => {
 }
 
 const update = async (id, { name, description, isPublic }) => {
+    console.log('🔍 DEBUG: workspaceService.update called with:', {
+        id,
+        name,
+        description,
+        isPublic,
+    })
+
     const workspace = await Workspace.findById(id)
     if (!workspace) {
+        console.log('🔍 DEBUG: Workspace not found for id:', id)
         return null
     }
+
+    console.log('🔍 DEBUG: Original workspace data:', {
+        name: workspace.name,
+        description: workspace.description,
+        isPublic: workspace.isPublic,
+        type: workspace.type,
+    })
+
     workspace.name = name || workspace.name
     workspace.description = description || workspace.description
     if (typeof isPublic === 'boolean') {
+        console.log(
+            '🔍 DEBUG: Updating isPublic from',
+            workspace.isPublic,
+            'to',
+            isPublic
+        )
         workspace.isPublic = isPublic
     }
+
     await workspace.save()
+
+    console.log('🔍 DEBUG: Updated workspace data:', {
+        name: workspace.name,
+        description: workspace.description,
+        isPublic: workspace.isPublic,
+        type: workspace.type,
+    })
+
     return workspace
 }
 

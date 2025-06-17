@@ -44,11 +44,9 @@ exports.createWorkspace = async (req, res) => {
 
         // Vérifier que l'utilisateur n'est pas un invité
         if (req.user.role === 'invité') {
-            return res
-                .status(403)
-                .json({
-                    message: 'Les invités ne peuvent pas créer de workspaces',
-                })
+            return res.status(403).json({
+                message: 'Les invités ne peuvent pas créer de workspaces',
+            })
         }
 
         const { name, description, isPublic, type } = req.body
@@ -62,7 +60,6 @@ exports.createWorkspace = async (req, res) => {
         } else if (isPublic !== undefined) {
             workspaceType = isPublic ? 'public' : 'private'
         }
-
         const workspace = await workspaceService.create({
             name,
             description,

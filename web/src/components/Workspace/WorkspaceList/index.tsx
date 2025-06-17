@@ -76,17 +76,16 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               (m) => (m._id || m) === user._id || (m.email || m) === user.email
             ));
         const hasRequestedJoin = ws.userStatus?.hasRequestedJoin || false;
-        const isInvited = ws.userStatus?.isInvited || false;
-
-        // Invitation : seuls owner ou admin peuvent inviter
+        const isInvited = ws.userStatus?.isInvited || false; // Invitation : seuls owner ou admin peuvent inviter
         const canInvite = isOwner || isAdmin;
 
-        // Peut demander à rejoindre : workspace public, utilisateur connecté, pas déjà membre, pas propriétaire, pas déjà demandé
+        // Peut demander à rejoindre : workspace public, utilisateur connecté, pas déjà membre, pas propriétaire, pas déjà demandé, et pas admin
         const canRequestJoin =
           user &&
           ws.isPublic &&
           !isMember &&
           !isOwner &&
+          !isAdmin &&
           !hasRequestedJoin &&
           !isInvited;
 
@@ -115,10 +114,10 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
               <div className={styles["workspace-description"]}>
                 {ws.description}
               </div>
-            )}
+            )}{" "}
             <div className={styles["workspace-actions"]}>
-              {/* Action principale : Accéder (seulement si on est membre/propriétaire et pas en mode joinActions) */}
-              {!showOnlyJoinActions && (isMember || isOwner) && (
+              {/* Action principale : Accéder (membre/propriétaire/admin et pas en mode joinActions) */}
+              {!showOnlyJoinActions && (isMember || isOwner || isAdmin) && (
                 <button className={`btn`} onClick={() => onAccess?.(ws)}>
                   Accéder
                 </button>

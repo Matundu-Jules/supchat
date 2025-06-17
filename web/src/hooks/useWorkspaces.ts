@@ -57,9 +57,8 @@ export function useWorkspaces() {
     fetchAll();
     // eslint-disable-next-line
   }, []);
-
   return {
-    workspaces,
+    workspaces: Array.isArray(workspaces) ? workspaces : [],
     loading,
     error,
     fetchWorkspaces: fetchAll,
