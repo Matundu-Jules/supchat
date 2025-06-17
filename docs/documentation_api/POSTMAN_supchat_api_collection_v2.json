@@ -116,7 +116,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Jules Matundu\",\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPassword123!\"\n}"
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPassword123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
@@ -257,7 +257,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"currentPassword\": \"TestPassword123!\",\n  \"newPassword\": \"NewSuperPassword456!\"\n}"
+              "raw": "{\n  \"currentPassword\": \"TestPassword123!\",\n  \"newPassword\": \"NewTestPassword456!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/me/password",
@@ -294,7 +294,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"password\": \"MyNewPassword123!\"\n}"
+              "raw": "{\n  \"password\": \"MyNewTestPassword123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/set-password",
