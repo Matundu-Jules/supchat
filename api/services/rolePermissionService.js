@@ -3,6 +3,19 @@
  * Basé sur le tableau des rôles fourni par l'utilisateur
  */
 
+const PERMISSION_MAP = {
+    canPost: 'post',
+    canDeleteMessages: 'delete_messages',
+    canManageMembers: 'manage_members',
+    canManageChannels: 'manage_channels',
+    canCreateChannels: 'manage_channels', // création = gestion
+    canViewAllMembers: 'view',
+    canViewPublicChannels: 'view',
+    canUploadFiles: 'upload_files',
+    canReact: 'react',
+    canInviteMembers: 'invite_members',
+}
+
 const getDefaultPermissions = (role) => {
     const permissions = {
         admin: {
@@ -15,6 +28,7 @@ const getDefaultPermissions = (role) => {
             canViewPublicChannels: true,
             canUploadFiles: true,
             canReact: true,
+            canInviteMembers: true,
         },
         membre: {
             canPost: true,
@@ -26,6 +40,7 @@ const getDefaultPermissions = (role) => {
             canViewPublicChannels: true,
             canUploadFiles: true,
             canReact: true,
+            canInviteMembers: false,
         },
         invité: {
             canPost: true,
@@ -37,10 +52,19 @@ const getDefaultPermissions = (role) => {
             canViewPublicChannels: false, // Les invités ne voient que les channels où ils sont invités
             canUploadFiles: true,
             canReact: true,
+            canInviteMembers: false,
         },
     }
-
-    return permissions[role] || permissions.membre
+    const obj = permissions[role] || permissions.membre
+    // Retourner uniquement les permissions activées, format [string], sans doublons
+    return Array.from(
+        new Set(
+            Object.entries(obj)
+                .filter(([_, v]) => v)
+                .map(([k, _]) => PERMISSION_MAP[k])
+                .filter(Boolean)
+        )
+    )
 }
 
 /**

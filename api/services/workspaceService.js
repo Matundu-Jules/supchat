@@ -97,7 +97,7 @@ const findAllPublic = async () => {
 const findById = (id) => {
     return Workspace.findById(id)
         .populate('owner', 'username email')
-        .populate('members', 'username email')
+        .populate('members', 'username email status theme')
 }
 
 const create = async ({ name, description, isPublic, type, owner }) => {
@@ -534,7 +534,7 @@ const removeMember = async (workspaceId, targetUserId, requestingUser) => {
     return {
         message: 'Membre supprimé avec succès',
         workspace: await Workspace.findById(workspaceId)
-            .populate('members', 'username email')
+            .populate('members', 'username email status theme')
             .populate('owner', 'username email'),
     }
 }

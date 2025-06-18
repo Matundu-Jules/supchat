@@ -101,13 +101,8 @@ const workspacesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchWorkspaces.fulfilled, (state, action) => {
-        console.log(
-          '🔍 DEBUG: fetchWorkspaces.fulfilled called with:',
-          action.payload
-        );
         state.items = Array.isArray(action.payload) ? action.payload : [];
         state.loading = false;
-        console.log('🔍 DEBUG: Updated state.items:', state.items);
       })
       .addCase(fetchWorkspaces.rejected, (state, action) => {
         state.loading = false;

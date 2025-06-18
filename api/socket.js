@@ -72,7 +72,23 @@ function initSocket(
             })
         } catch (error) {
             console.error('Error joining channels:', error)
-        } // Gérer les événements de frappe
+        }
+
+        // 🔧 CORRECTION: Mettre à jour le statut utilisateur à "online" en base lors de la connexion socket
+        try {
+            const User = require('./models/User')
+            await User.findByIdAndUpdate(socket.userId, { status: 'online' })
+            console.log(
+                `[Socket] Statut utilisateur ${socket.userId} mis à jour à "online"`
+            )
+        } catch (statusError) {
+            console.error(
+                '[Socket] Erreur lors de la mise à jour du statut à online:',
+                statusError
+            )
+        }
+
+        // Gérer les événements de frappe
         const typingTimeouts = new Map()
         socket.on('typing', (data) => {
             try {
@@ -571,7 +587,27 @@ function initSocket(
                     clearTimeout(timeout)
                     typingTimeouts.delete(key)
                 }
-            } // Notifier la déconnexion
+            }
+
+            // 🔧 CORRECTION: Mettre à jour le statut utilisateur à "offline" en base lors de la déconnexion
+            ;(async () => {
+                try {
+                    const User = require('./models/User')
+                    await User.findByIdAndUpdate(socket.userId, {
+                        status: 'offline',
+                    })
+                    console.log(
+                        `[Socket] Statut utilisateur ${socket.userId} mis à jour à "offline"`
+                    )
+                } catch (statusError) {
+                    console.error(
+                        '[Socket] Erreur lors de la mise à jour du statut à offline:',
+                        statusError
+                    )
+                }
+            })()
+
+            // Notifier la déconnexion
             socket.broadcast.emit('user-offline', {
                 userId: socket.userId,
                 username: socket.user ? socket.user.username : 'Unknown',

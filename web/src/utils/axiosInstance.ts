@@ -3,12 +3,7 @@
 import axios from 'axios';
 import { store } from '@store/store';
 import { logout, setAuth } from '@store/authSlice';
-import { API_BASE_URL, getApiInfo } from '../config/api';
-
-// Afficher les infos de configuration en développement
-if (import.meta.env.DEV) {
-  getApiInfo();
-}
+import { API_BASE_URL } from '../config/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -96,8 +91,20 @@ api.interceptors.response.use(
         // Pas si c'est juste "token manquant" (utilisateur pas connecté)
         const isTokenMissing =
           refreshError.response?.data?.message?.includes('manquant');
-
         if (!isTokenMissing) {
+          // 🔧 CORRECTION: Mettre à jour le statut à "offline" lors de déconnexion automatique
+          // Uniquement si l'utilisateur était connecté (on a un token qui a expiré)
+          try {
+            const { updatePreferences } = await import('@services/userApi');
+            await updatePreferences({ status: 'offline' });
+          } catch (statusError) {
+            console.warn(
+              '[axiosInstance] Impossible de mettre à jour le statut lors de la déconnexion automatique:',
+              statusError
+            );
+            // Ne pas bloquer la déconnexion
+          }
+
           store.dispatch(logout());
 
           // Rediriger vers login uniquement si on n'y est pas déjà

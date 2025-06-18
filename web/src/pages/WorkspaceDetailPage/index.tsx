@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import JoinRequestsManager from "@components/Workspace/JoinRequestsManager";
 import WorkspaceRolesManager from "@components/Workspace/WorkspaceRolesManager";
 import EditWorkspaceModal from "@components/Workspace/EditWorkspaceModal";
+import UserStatusBadge from "@components/UserStatusBadge";
+import UserRoleBadge from "@components/UserRoleBadge";
+import { WorkspaceMember } from "../../types/workspace";
 
 type MenuItem = "members" | "roles" | "join-requests" | "settings";
 
@@ -109,36 +112,60 @@ const WorkspaceDetailPage: React.FC = () => {
             <div className={styles["membersSection"]}>
               <h3>Liste des membres</h3>
               <ul className={styles["membersList"]}>
-                {" "}
                 {workspace.members && workspace.members.length > 0 ? (
-                  workspace.members.map((member: any) => (
-                    <li key={member._id} className={styles["memberItem"]}>
-                      <div className={styles["memberInfo"]}>
-                        <div className={styles["memberDetails"]}>
-                          <span className={styles["memberName"]}>
-                            {member.username || member.email}
-                          </span>
-                          {member.email === workspace.owner?.email && (
-                            <span className={styles["ownerBadge"]}>
-                              Propriétaire
-                            </span>
-                          )}
-                        </div>
+                  workspace.members.map((member: WorkspaceMember) => {
+                    // Correction : fallback strict pour le rôle et le statut
+                    let safeRole: WorkspaceMember["role"] = "membre";
+                    if (
+                      ["propriétaire", "admin", "membre", "invité"].includes(
+                        member.role
+                      )
+                    ) {
+                      safeRole = member.role;
+                    }
+                    let safeStatus: WorkspaceMember["status"] = "offline";
+                    if (
+                      ["online", "away", "busy", "offline"].includes(
+                        member.status
+                      )
+                    ) {
+                      safeStatus = member.status;
+                    }
+                    return (
+                      <li key={member._id} className={styles["memberItem"]}>
+                        <div className={styles["memberInfo"]}>
+                          <div className={styles["memberDetails"]}>
+                            <div className={styles["memberNameContainer"]}>
+                              <span className={styles["memberName"]}>
+                                {member.username || member.email}
+                              </span>
+                              <div className={styles["memberBadges"]}>
+                                <UserStatusBadge
+                                  status={safeStatus}
+                                  size="small"
+                                  showText={true}
+                                />
+                                <UserRoleBadge role={safeRole} size="small" />
+                              </div>
+                            </div>
+                          </div>
 
-                        {/* Bouton de suppression - Visible seulement pour admin/owner et pas pour le propriétaire */}
-                        {isAdminOrOwner &&
-                          member.email !== workspace.owner?.email && (
-                            <button
-                              className={styles["removeMemberButton"]}
-                              onClick={() => handleRemoveMember(member._id)}
-                              title="Supprimer ce membre"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                      </div>
-                    </li>
-                  ))
+                          {/* Bouton de suppression - Visible seulement pour admin/owner et pas pour le propriétaire */}
+                          {isAdminOrOwner &&
+                            safeRole !== "propriétaire" &&
+                            member.email !== workspace.owner?.email && (
+                              <button
+                                className={styles["removeMemberButton"]}
+                                onClick={() => handleRemoveMember(member._id)}
+                                title="Supprimer ce membre"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                        </div>
+                      </li>
+                    );
+                  })
                 ) : (
                   <li className={styles["empty"]}>Aucun membre</li>
                 )}

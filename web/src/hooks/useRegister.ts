@@ -67,7 +67,8 @@ export function useRegister() {
       else if (fieldErrors.password && passwordRef.current)
         passwordRef.current.focus();
       return;
-    }    setLoading(true);
+    }
+    setLoading(true);
     try {
       const result = await register(form);
       reset();
@@ -82,7 +83,8 @@ export function useRegister() {
         navigate('/login', { state: { redirect } });
       } else {
         navigate('/login');
-      }    } catch (err: any) {
+      }
+    } catch (err: any) {
       const errorMessage = err.message || "Erreur lors de l'inscription.";
 
       if (errorMessage.toLowerCase().includes('email')) {
@@ -96,7 +98,8 @@ export function useRegister() {
         errorMessage.toLowerCase().includes('name')
       ) {
         setErrors({ name: errorMessage });
-        if (nameRef.current) nameRef.current.focus();      } else {
+        if (nameRef.current) nameRef.current.focus();
+      } else {
         setErrors({});
         alert(`Erreur inscription: ${errorMessage}`);
       }

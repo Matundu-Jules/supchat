@@ -143,7 +143,8 @@ const App: React.FC = () => {
               forceServerValues: true, // FORCER les valeurs par défaut
             })
           );
-        }      } catch (authError) {
+        }
+      } catch (authError) {
         dispatch(logout());
         // Réinitialiser les préférences pour un utilisateur non authentifié
         dispatch(resetPreferences());

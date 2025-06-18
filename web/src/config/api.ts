@@ -58,17 +58,4 @@ export const API_CONFIG = {
   },
 };
 
-/**
- * Informations de debug pour le développement
- */
-export const getApiInfo = () => {
-  if (import.meta.env.DEV) {
-    console.log('🔗 SupChat API Configuration:');
-    console.log('  Backend URL:', BACKEND_URL);
-    console.log('  API Base URL:', API_BASE_URL);
-    console.log('  Socket URL:', SOCKET_URL);
-    console.log('  Host IP:', HOST_IP);
-  }
-};
-
 export default API_CONFIG;

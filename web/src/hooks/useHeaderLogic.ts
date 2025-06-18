@@ -12,6 +12,7 @@ import {
 } from '@store/preferencesSlice';
 import { logoutApi } from '@services/authApi';
 import { updatePreferences } from '@services/userApi';
+import { logoutWithStatusUpdate } from '@utils/logoutUtils';
 
 export function useHeaderLogic() {
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -53,12 +54,15 @@ export function useHeaderLogic() {
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [isMenuOpen, isStatusDropdownOpen]);  const handleLogout = async () => {
+  }, [isMenuOpen, isStatusDropdownOpen]);
+  const handleLogout = async () => {
     try {
+      // 🔧 CORRECTION: Mettre à jour le statut à "offline" avant la déconnexion
+      await logoutWithStatusUpdate();
       await logoutApi();
     } catch (e) {
       console.error('[useHeaderLogic] Erreur lors de la déconnexion :', e);
-      // Tu pourrais aussi afficher une notification d'erreur ici
+      // Continuer la déconnexion même en cas d'erreur API
     }
     dispatch(logout());
     dispatch(resetPreferences()); // Réinitialiser les préférences à la déconnexion

@@ -14,7 +14,7 @@ const PublicRoute: React.FC = () => {
 
   if (authLoading) {
     return <Loader />;
-  }  // Si l'utilisateur est connecté via Google/Facebook mais n'a pas de mot de passe,
+  } // Si l'utilisateur est connecté via Google/Facebook mais n'a pas de mot de passe,
   // le rediriger vers /set-password
   if (
     user &&

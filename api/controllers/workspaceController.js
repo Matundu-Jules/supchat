@@ -178,16 +178,49 @@ exports.getWorkspaceMembers = async (req, res) => {
                 message:
                     "Accès refusé. Vous n'avez pas les permissions pour voir tous les membres.",
             })
-        }
-
-        // Récupérer tous les membres (avec populate des infos utilisateur)
+        } // Récupérer tous les membres avec leurs statuts et rôles
         const User = require('../models/User')
         const populatedWorkspace = await workspace.populate(
             'members',
-            'username email _id'
+            'username email _id status theme' // Ajouter status et theme
         )
 
-        return res.status(200).json(populatedWorkspace.members)
+        const permissions = await Permission.find({
+            workspaceId: workspace._id,
+        }).populate('userId', '_id')
+
+        // Enrichir les membres avec leurs rôles
+        const membersWithRoles = populatedWorkspace.members.map((member) => {
+            const memberPermission = permissions.find(
+                (perm) => String(perm.userId._id) === String(member._id)
+            )
+
+            // Déterminer le rôle
+            let role = 'membre' // Rôle par défaut
+            if (String(workspace.owner) === String(member._id)) {
+                role = 'propriétaire'
+            } else if (memberPermission) {
+                role = memberPermission.role || 'membre'
+            }
+            // Correction : si le membre est l'utilisateur courant ET qu'il est admin global, afficher admin
+            if (
+                String(member._id) === String(req.user.id) &&
+                req.user.role === 'admin'
+            ) {
+                role = 'admin'
+            }
+
+            return {
+                _id: member._id,
+                username: member.username,
+                email: member.email,
+                status: member.status || 'offline',
+                theme: member.theme || 'light',
+                role: role,
+            }
+        })
+
+        return res.status(200).json(membersWithRoles)
     } catch (error) {
         console.error('Erreur lors de la récupération des membres:', error)
         res.status(500).json({ message: 'Erreur serveur', error })
@@ -384,12 +417,28 @@ exports.inviteToWorkspace = async (req, res) => {
 
 // ✅ Rejoindre un workspace via un code d'invitation
 exports.joinWorkspace = async (req, res) => {
+    // Vérification explicite de l'authentification
+    if (!req.user) {
+        return res.status(401).json({
+            message: 'Authentification requise pour rejoindre un workspace.',
+        })
+    }
+
     try {
         const { inviteCode } = req.body
+        // Ajout d'un log pour debug
+        console.log(
+            '[joinWorkspace] inviteCode:',
+            inviteCode,
+            'user:',
+            req.user?.id || req.user?._id,
+            req.user?.email
+        )
         let workspace
         try {
             workspace = await workspaceService.join(inviteCode, req.user)
         } catch (err) {
+            console.error('[joinWorkspace] Erreur service.join:', err)
             if (err.message === 'INVALID_INVITE') {
                 return res
                     .status(404)
@@ -408,7 +457,12 @@ exports.joinWorkspace = async (req, res) => {
             workspace,
         })
     } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la jointure', error })
+        console.error('[joinWorkspace] Erreur finale:', error)
+        res.status(500).json({
+            message: 'Erreur lors de la jointure',
+            error: error.message,
+            stack: error.stack,
+        })
     }
 }
 

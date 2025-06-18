@@ -146,6 +146,10 @@ exports.login = async (req, res) => {
         if (!isMatch)
             return res.status(401).json({ message: 'Mot de passe incorrect' })
 
+        // 🔧 CORRECTION: Mettre à jour le statut à "online" lors de la connexion
+        user.status = 'online'
+        await user.save()
+
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user)
 
@@ -172,7 +176,21 @@ exports.login = async (req, res) => {
 }
 
 // ================== LOGOUT ==================
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
+    try {
+        // 🔧 CORRECTION: Mettre à jour le statut à "offline" lors de la déconnexion
+        if (req.user && req.user.id) {
+            const User = require('../models/User')
+            await User.findByIdAndUpdate(req.user.id, { status: 'offline' })
+        }
+    } catch (statusError) {
+        console.error(
+            '[authController] Erreur lors de la mise à jour du statut à offline:',
+            statusError
+        )
+        // Ne pas bloquer la déconnexion
+    }
+
     // On retire maxAge des options pour clearCookie
     const clearCookieOptions = { ...accessCookieOptions }
     delete clearCookieOptions.maxAge
@@ -198,6 +216,9 @@ exports.logoutAll = async (req, res) => {
         const user = await User.findById(req.user.id)
         if (!user)
             return res.status(404).json({ message: 'Utilisateur non trouvé.' })
+
+        // 🔧 CORRECTION: Mettre à jour le statut à "offline" lors de la déconnexion de toutes les sessions
+        user.status = 'offline'
         user.tokenVersion += 1
         await user.save()
 
@@ -364,6 +385,10 @@ exports.googleLogin = async (req, res) => {
             await user.save()
         }
 
+        // 🔧 CORRECTION: Mettre à jour le statut à "online" lors de la connexion Google
+        user.status = 'online'
+        await user.save()
+
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user)
 
@@ -434,6 +459,10 @@ exports.facebookLogin = async (req, res) => {
             user.hasPassword = !!user.password
             await user.save()
         }
+
+        // 🔧 CORRECTION: Mettre à jour le statut à "online" lors de la connexion Facebook
+        user.status = 'online'
+        await user.save()
 
         const jwtAccess = generateAccessToken(user)
         const jwtRefresh = generateRefreshToken(user)

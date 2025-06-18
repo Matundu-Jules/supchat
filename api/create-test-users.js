@@ -64,9 +64,17 @@ async function createTestUsers() {
             // Vérifier si l'utilisateur existe déjà
             const existingUser = await User.findOne({ email: userData.email })
             if (existingUser) {
-                console.log(`Utilisateur ${userData.email} existe déjà`)
+                // Correction : forcer le status à offline si déjà existant
+                if (existingUser.status !== 'offline') {
+                    existingUser.status = 'offline'
+                    await existingUser.save()
+                    console.log(`Utilisateur ${userData.email} mis hors ligne`)
+                } else {
+                    console.log(`Utilisateur ${userData.email} existe déjà`)
+                }
             } else {
-                const newUser = new User(userData)
+                // Création avec status offline par défaut
+                const newUser = new User({ ...userData, status: 'offline' })
                 await newUser.save()
                 console.log(`Utilisateur créé: ${userData.email}`)
             }
@@ -134,9 +142,9 @@ async function createTestUsers() {
                 createdWorkspaces.push(newWorkspace)
                 console.log(`Workspace créé: "${workspaceData.name}"`)
             }
-        }        // ===== CRÉATION DES CHANNELS DE TEST =====
+        } // ===== CRÉATION DES CHANNELS DE TEST =====
         console.log('\n📺 Création des channels de test...')
-        
+
         for (const workspace of createdWorkspaces) {
             const testChannels = [
                 {
