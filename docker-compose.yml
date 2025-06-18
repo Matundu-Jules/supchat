@@ -74,8 +74,8 @@ services:
       - VITE_WEBSOCKET_URL=${VITE_WEBSOCKET_URL:-/socket.io}
       - VITE_APP_NAME=SupChat
       - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://api:3000}
-      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
-      - VITE_FACEBOOK_APP_ID=${VITE_FACEBOOK_APP_ID}
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - VITE_FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
 
       # Development configuration
       - NODE_ENV=development # Development mode for hot reload

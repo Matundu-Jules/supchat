@@ -4,17 +4,16 @@ const isProd = process.env.NODE_ENV === 'production'
 
 const csrfCookieOptions = {
     httpOnly: false,
-    sameSite: isProd ? 'strict' : 'lax', // Plus permissif en développement
-    secure: isProd, // Pas de HTTPS requis en développement
+    sameSite: isProd ? 'strict' : 'none', // None pour cross-origin en dev
+    secure: isProd, // Pas de HTTPS requis en développement mais necessary for SameSite=none
     maxAge: 7 * 24 * 60 * 60 * 1000,
 }
 
-// En production, utiliser sameSite strict avec secure
-if (isProd) {
-    csrfCookieOptions.sameSite = 'strict'
-    csrfCookieOptions.secure = true
+// En développement, permettre SameSite=none pour cross-origin
+if (!isProd) {
+    csrfCookieOptions.secure = false // Pas de HTTPS en développement
+    csrfCookieOptions.sameSite = 'lax' // Lax au lieu de none pour éviter les problèmes HTTPS
 }
-// En développement, ne pas définir sameSite pour plus de flexibilité
 
 const doubleCsrfResult = doubleCsrf({
     getSecret: () => process.env.CSRF_SECRET || 'unsecure-default',

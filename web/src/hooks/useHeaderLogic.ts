@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@store/store';
 import { logout } from '@store/authSlice';
-import { setStatus, setTheme, Status, Theme } from '@store/preferencesSlice';
+import {
+  setStatus,
+  setTheme,
+  resetPreferences,
+  Status,
+  Theme,
+} from '@store/preferencesSlice';
 import { logoutApi } from '@services/authApi';
 import { updatePreferences } from '@services/userApi';
 
@@ -48,7 +54,6 @@ export function useHeaderLogic() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isMenuOpen, isStatusDropdownOpen]);
-
   const handleLogout = async () => {
     try {
       await logoutApi();
@@ -57,20 +62,40 @@ export function useHeaderLogic() {
       // Tu pourrais aussi afficher une notification d'erreur ici
     }
     dispatch(logout());
+    dispatch(resetPreferences()); // Réinitialiser les préférences à la déconnexion
     navigate('/login');
   };
   const handleStatusChange = async (newStatus: Status) => {
-    dispatch(setStatus(newStatus));
-    await updatePreferences({ status: newStatus });
-    setStatusDropdownOpen(false);
+    try {
+      // Mettre à jour Redux immédiatement pour la réactivité de l'UI
+      dispatch(setStatus(newStatus));
+
+      // Synchroniser avec l'API
+      await updatePreferences({ status: newStatus });
+
+      setStatusDropdownOpen(false);
+    } catch (error) {
+      console.error('Erreur lors du changement de statut:', error);
+      // En cas d'erreur, revenir au statut précédent
+      dispatch(setStatus(status));
+    }
   };
 
   const handleThemeToggle = async () => {
-    const newTheme: Theme = theme === 'light' ? 'dark' : 'light';
-    dispatch(setTheme(newTheme));
-    await updatePreferences({ theme: newTheme });
-    document.body.setAttribute('data-theme', newTheme);
-    setStatusDropdownOpen(false);
+    try {
+      const newTheme: Theme = theme === 'light' ? 'dark' : 'light';
+
+      // Mettre à jour Redux et localStorage immédiatement
+      dispatch(setTheme(newTheme));
+
+      // Synchroniser avec l'API
+      await updatePreferences({ theme: newTheme });
+
+      setStatusDropdownOpen(false);
+    } catch (error) {
+      console.error('Erreur lors du changement de thème:', error);
+      // En cas d'erreur API, garder le changement local
+    }
   };
   return {
     isMenuOpen,

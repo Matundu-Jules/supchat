@@ -4,9 +4,7 @@ const updateProfileSchema = Joi.object({
     name: Joi.string().min(1).max(50).optional(),
     avatar: Joi.string().uri().optional(),
     bio: Joi.string().max(500).allow('').optional(),
-    status: Joi.string()
-        .valid('Disponible', 'Occupé', 'Absent', 'Ne pas déranger')
-        .optional(),
+    status: Joi.string().valid('online', 'busy', 'away', 'offline').optional(),
     theme: Joi.string().valid('light', 'dark').optional(),
     preferences: Joi.object({
         notifications: Joi.boolean().optional(),
@@ -16,9 +14,7 @@ const updateProfileSchema = Joi.object({
 
 const updatePreferencesSchema = Joi.object({
     theme: Joi.string().valid('light', 'dark').optional(),
-    status: Joi.string()
-        .valid('Disponible', 'Occupé', 'Absent', 'Ne pas déranger')
-        .optional(),
+    status: Joi.string().valid('online', 'busy', 'away', 'offline').optional(),
 }).min(1)
 
 const updateEmailSchema = Joi.object({

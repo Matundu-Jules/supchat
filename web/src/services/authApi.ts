@@ -108,8 +108,19 @@ export async function setPassword(newPassword: string) {
 }
 
 export async function getCurrentUser() {
-  const { data } = await api.get('/auth/me');
-  return data;
+  try {
+    const { data } = await api.get('/auth/me');
+    return data;
+  } catch (error: any) {
+    // Si l'utilisateur n'est pas authentifié, on rejette silencieusement
+    if (error.response?.status === 401) {
+      throw new Error('Not authenticated');
+    }
+    // Pour les autres erreurs, on lance une erreur avec le message approprié
+    const msg =
+      error?.response?.data?.message || error.message || 'Unknown error';
+    throw new Error(msg);
+  }
 }
 
 export async function deleteAccount() {

@@ -29,3 +29,8 @@ run-project.sh
 start-db.sh
 
 api/uploads/
+
+# Fichiers de test privés (comptes avec mots de passe)
+test-accounts.json
+
+my_room.md

@@ -33,6 +33,22 @@ router.post('/logout-all', authMiddleware, logoutAll)
 // Récupération des informations de l'utilisateur connecté
 router.get('/me', authMiddleware, getUser)
 
+// Debug endpoint pour vérifier les cookies (développement uniquement)
+if (process.env.NODE_ENV === 'development') {
+    router.get('/debug-cookies', (req, res) => {
+        res.json({
+            cookies: req.cookies,
+            headers: {
+                authorization: req.headers.authorization,
+                'user-agent': req.headers['user-agent'],
+                origin: req.headers.origin,
+                referer: req.headers.referer,
+            },
+            timestamp: new Date().toISOString(),
+        })
+    })
+}
+
 // Changement des informations de l'utilisateur connecté
 
 // Changement du mot de passe de l'utilisateur connecté

@@ -19,8 +19,8 @@ const UserSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['Disponible', 'Occupé', 'Absent', 'Ne pas déranger'],
-            default: 'Disponible',
+            enum: ['online', 'busy', 'away', 'offline'],
+            default: 'online',
         },
         googleId: String,
         facebookId: String,

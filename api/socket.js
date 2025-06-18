@@ -417,14 +417,19 @@ function initSocket(
             } catch (error) {
                 socket.emit('error', { message: 'Failed to remove reaction' })
             }
-        }) // Gérer les notifications
+        }) // Gérer les notifications de statut utilisateur
         socket.on('user-status', (data) => {
-            // Diffuser le statut aux autres utilisateurs
-            socket.broadcast.emit('user-status-updated', {
-                userId: socket.userId,
-                status: data.status,
-                customMessage: data.customMessage,
-            })
+            // CORRECTION: Ne pas diffuser le statut à tous les utilisateurs
+            // Le statut utilisateur doit rester individuel et privé
+            // Chaque utilisateur gère son propre statut via son profil
+
+            // Optional: Log pour debug si nécessaire
+            console.log(
+                `User ${socket.userId} changed status to ${data.status}`
+            )
+
+            // On peut éventuellement stocker le statut en base de données ici
+            // mais pas le diffuser à tous les autres utilisateurs
         })
 
         // Gérer les mentions et notifications push

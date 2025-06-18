@@ -12,7 +12,7 @@ describe('PUT /api/user/profile', () => {
             .set('Authorization', `Bearer ${global.tokens.admin}`)
             .send({
                 name: 'Updated Name',
-                status: 'Disponible',
+                status: 'online',
                 bio: 'Updated bio',
                 preferences: {
                     notifications: true,
@@ -23,7 +23,7 @@ describe('PUT /api/user/profile', () => {
         expect(res.status).toBe(200)
         expect(res.body.success).toBe(true)
         expect(res.body.data.name).toBe('Updated Name')
-        expect(res.body.data.status).toBe('Disponible')
+        expect(res.body.data.status).toBe('online')
         expect(res.body.data.bio).toBe('Updated bio')
         expect(res.body.data.preferences.theme).toBe('dark')
     })
@@ -54,12 +54,7 @@ describe('PUT /api/user/profile', () => {
     })
 
     it('should allow valid status values', async () => {
-        const validStatuses = [
-            'Disponible',
-            'Occupé',
-            'Absent',
-            'Ne pas déranger',
-        ]
+        const validStatuses = ['online', 'busy', 'away', 'offline']
 
         for (const status of validStatuses) {
             const res = await request(app)

@@ -20,12 +20,12 @@ const isProd = process.env.NODE_ENV === 'production'
 const cookieOptions = {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: isProd ? 'strict' : 'lax', // Plus permissif en développement
     path: '/',
+    domain: isProd ? undefined : undefined, // Pas de restriction de domaine en dev
 }
 const refreshCookieOptions = {
     ...cookieOptions,
-    path: '/api/auth/refresh',
     maxAge: REFRESH_EXPIRE * 1000,
 }
 const accessCookieOptions = {
@@ -316,20 +316,39 @@ exports.googleLogin = async (req, res) => {
     try {
         const { tokenId } = req.body
 
+        if (!tokenId) {
+            return res.status(400).json({
+                message: 'Token Google manquant',
+            })
+        }
+
+        console.log('🔍 Tentative de vérification du token Google...')
+
         const ticket = await client.verifyIdToken({
             idToken: tokenId,
             audience: process.env.GOOGLE_CLIENT_ID,
         })
 
-        const { email, name, sub } = ticket.getPayload()
+        const payload = ticket.getPayload()
+        if (!payload || !payload.email) {
+            return res.status(400).json({
+                message: 'Token Google invalide - payload manquant',
+            })
+        }
+
+        const { email, name, sub } = payload
+        console.log(`✅ Token Google valide pour: ${email}`)
+
         let user = await User.findOne({ email })
 
         if (!user) {
             // Création si aucun utilisateur avec cet email
+            console.log(`👤 Création d'un nouvel utilisateur: ${email}`)
             user = new User({ name, email, googleId: sub, hasPassword: false })
             await user.save()
         } else if (!user.googleId) {
             // Si l'utilisateur existe mais n'a pas encore de googleId, on le lie
+            console.log(`🔗 Liaison du compte existant avec Google: ${email}`)
             user.googleId = sub
             // Si l'utilisateur a un mot de passe existant, on garde hasPassword = true
             if (!user.password) {
@@ -340,6 +359,7 @@ exports.googleLogin = async (req, res) => {
             await user.save()
         } else {
             // L'utilisateur existe déjà avec googleId - vérifier hasPassword
+            console.log(`👋 Connexion utilisateur existant: ${email}`)
             user.hasPassword = !!user.password
             await user.save()
         }
@@ -364,9 +384,19 @@ exports.googleLogin = async (req, res) => {
             },
         })
     } catch (error) {
+        console.error('❌ Erreur Google Login:', error)
+        console.error('Details:', {
+            message: error.message,
+            stack: error.stack,
+            tokenId: req.body?.tokenId ? 'présent' : 'manquant',
+        })
+
         res.status(500).json({
             message: "Erreur d'authentification Google",
-            error,
+            error:
+                process.env.NODE_ENV === 'development'
+                    ? error.message
+                    : 'Internal server error',
         })
     }
 }
@@ -436,18 +466,39 @@ exports.facebookLogin = async (req, res) => {
 exports.refreshToken = async (req, res) => {
     try {
         const { refresh } = req.cookies
-        if (!refresh) return res.sendStatus(401)
+
+        if (!refresh) {
+            console.log('🚫 Refresh token manquant dans les cookies')
+            return res
+                .status(401)
+                .json({ message: 'Token de refresh manquant' })
+        }
+
         let payload
         try {
             payload = jwt.verify(refresh, process.env.JWT_REFRESH)
-        } catch {
-            return res.sendStatus(403)
+        } catch (jwtError) {
+            console.log('🚫 Token de refresh invalide:', jwtError.message)
+            return res
+                .status(403)
+                .json({ message: 'Token de refresh invalide' })
         }
 
         const user = await User.findById(payload.id)
-        if (!user) return res.sendStatus(404)
-        if (payload.tokenVersion !== user.tokenVersion)
-            return res.sendStatus(401)
+        if (!user) {
+            console.log('🚫 Utilisateur non trouvé pour le refresh token')
+            return res.status(404).json({ message: 'Utilisateur non trouvé' })
+        }
+
+        if (payload.tokenVersion !== user.tokenVersion) {
+            console.log(
+                '🚫 Version de token différente:',
+                payload.tokenVersion,
+                'vs',
+                user.tokenVersion
+            )
+            return res.status(401).json({ message: 'Token obsolète' })
+        }
 
         const newAccess = generateAccessToken(user)
         res.cookie('access', newAccess, accessCookieOptions)
@@ -455,10 +506,11 @@ exports.refreshToken = async (req, res) => {
         // Génère un nouveau token CSRF à chaque refresh
         generateCsrfToken(req, res, { overwrite: true })
 
+        console.log('✅ Token refreshed pour:', user.email)
         return res.sendStatus(204)
     } catch (error) {
-        console.error('Error in refreshToken:', error)
-        return res.sendStatus(500)
+        console.error('❌ Error in refreshToken:', error)
+        return res.status(500).json({ message: 'Erreur lors du refresh' })
     }
 }
 

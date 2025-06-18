@@ -21,7 +21,7 @@ describe('User API Integration Tests - Real DB', () => {
             userFactory({
                 email: `admin-${timestamp}@test-integration.com`,
                 role: 'admin',
-                status: 'Disponible',
+                status: 'online',
             })
         )
 
@@ -29,7 +29,7 @@ describe('User API Integration Tests - Real DB', () => {
             userFactory({
                 email: `member-${timestamp}@test-integration.com`,
                 role: 'membre',
-                status: 'Disponible',
+                status: 'online',
             })
         )
 
@@ -69,14 +69,14 @@ describe('User API Integration Tests - Real DB', () => {
                 .set('Authorization', `Bearer ${authTokens.admin}`)
                 .send({
                     name: 'Updated Admin Name',
-                    status: 'Occupé',
+                    status: 'busy',
                     bio: 'Updated bio for admin',
                 })
 
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
             expect(res.body.data.name).toBe('Updated Admin Name')
-            expect(res.body.data.status).toBe('Occupé')
+            expect(res.body.data.status).toBe('busy')
             expect(res.body.data.bio).toBe('Updated bio for admin')
         })
 
@@ -111,12 +111,7 @@ describe('User API Integration Tests - Real DB', () => {
         })
 
         it('should allow valid status values', async () => {
-            const validStatuses = [
-                'Disponible',
-                'Occupé',
-                'Absent',
-                'Ne pas déranger',
-            ]
+            const validStatuses = ['online', 'busy', 'away', 'offline']
 
             for (const status of validStatuses) {
                 const res = await request(app)

@@ -21,10 +21,12 @@ export async function updatePreferences(data: {
   status?: string;
 }) {
   await fetchCsrfToken();
+
   // Filtrer les valeurs null/undefined pour éviter les erreurs de validation
   const filteredData = Object.fromEntries(
     Object.entries(data).filter(([_, value]) => value != null)
   );
+
   const res = await api.put('/user/preferences', filteredData);
   return res.data;
 }
