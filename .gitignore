@@ -33,4 +33,8 @@ api/uploads/
 # Fichiers de test privés (comptes avec mots de passe)
 test-accounts.json
 
+# Fichiers cookies sensibles (contiennent des tokens JWT/CSRF)
+cookies.txt
+**/cookies.txt
+
 my_room.md

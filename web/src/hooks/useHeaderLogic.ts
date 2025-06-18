@@ -53,20 +53,15 @@ export function useHeaderLogic() {
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [isMenuOpen, isStatusDropdownOpen]);
-  const handleLogout = async () => {
-    console.log('[useHeaderLogic] Début du logout...');
+  }, [isMenuOpen, isStatusDropdownOpen]);  const handleLogout = async () => {
     try {
       await logoutApi();
-      console.log('[useHeaderLogic] API logout réussie');
     } catch (e) {
       console.error('[useHeaderLogic] Erreur lors de la déconnexion :', e);
       // Tu pourrais aussi afficher une notification d'erreur ici
     }
-    console.log('[useHeaderLogic] Dispatch logout et resetPreferences...');
     dispatch(logout());
     dispatch(resetPreferences()); // Réinitialiser les préférences à la déconnexion
-    console.log('[useHeaderLogic] Navigation vers /login...');
     navigate('/login');
   };
   const handleStatusChange = async (newStatus: Status) => {

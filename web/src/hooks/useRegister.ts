@@ -67,12 +67,9 @@ export function useRegister() {
       else if (fieldErrors.password && passwordRef.current)
         passwordRef.current.focus();
       return;
-    }
-
-    setLoading(true);
+    }    setLoading(true);
     try {
       const result = await register(form);
-      console.log('✅ Inscription réussie:', result);
       reset();
 
       // Automatic redirection to login page after successful registration
@@ -85,9 +82,7 @@ export function useRegister() {
         navigate('/login', { state: { redirect } });
       } else {
         navigate('/login');
-      }
-    } catch (err: any) {
-      console.error('❌ Erreur inscription:', err);
+      }    } catch (err: any) {
       const errorMessage = err.message || "Erreur lors de l'inscription.";
 
       if (errorMessage.toLowerCase().includes('email')) {
@@ -101,10 +96,8 @@ export function useRegister() {
         errorMessage.toLowerCase().includes('name')
       ) {
         setErrors({ name: errorMessage });
-        if (nameRef.current) nameRef.current.focus();
-      } else {
+        if (nameRef.current) nameRef.current.focus();      } else {
         setErrors({});
-        console.error('Erreur inscription détaillée:', errorMessage);
         alert(`Erreur inscription: ${errorMessage}`);
       }
     } finally {

@@ -97,24 +97,16 @@ const App: React.FC = () => {
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
-
   // Vérifier l'authentification au chargement de l'app
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log("[App] Initialisation de l'authentification...");
       dispatch(setAuthLoading(true));
 
       try {
         // 🔧 CORRECTION: Récupérer d'abord un token CSRF valide
-        console.log("[App] Récupération du token CSRF...");
         await fetchCsrfToken();
-        console.log("[App] Token CSRF récupéré avec succès");
 
         const user = await getCurrentUser();
-        console.log("[App] Utilisateur récupéré:", {
-          name: user.name,
-          email: user.email,
-        });
         dispatch(setAuth(user));
 
         // Récupérer le profil complet et les préférences
@@ -151,16 +143,11 @@ const App: React.FC = () => {
               forceServerValues: true, // FORCER les valeurs par défaut
             })
           );
-        }
-      } catch (authError) {
-        console.log("[App] Utilisateur non authentifié:", authError);
+        }      } catch (authError) {
         dispatch(logout());
         // Réinitialiser les préférences pour un utilisateur non authentifié
         dispatch(resetPreferences());
       } finally {
-        console.log(
-          "[App] Fin de l'initialisation auth, setAuthLoading(false)"
-        );
         dispatch(setAuthLoading(false));
       }
     };
