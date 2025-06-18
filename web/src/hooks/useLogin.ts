@@ -7,10 +7,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 // Alias projet
 import { login as reduxLogin } from '@store/authSlice';
+import { initializePreferences } from '@store/preferencesSlice';
 import { loginApi } from '@services/authApi';
 import { loginSchema } from '@utils/validation';
 import { googleLogin } from '@services/authApi';
 import { facebookLogin } from '@services/authApi';
+import { getPreferences } from '@services/userApi';
 
 type LoginFormFields = {
   email: string;
@@ -63,7 +65,31 @@ export function useLogin() {
     try {
       const data = await loginApi(form);
       dispatch(reduxLogin(data.user));
-      // localStorage.setItem("token", data.token);
+
+      // ✅ IMPORTANT: Initialiser les préférences immédiatement après la connexion
+      try {
+        const preferences = await getPreferences();
+        dispatch(
+          initializePreferences({
+            userId: data.user.email,
+            theme: preferences.theme || 'light',
+            status: preferences.status || 'online',
+            forceServerValues: true, // Forcer les valeurs du serveur
+          })
+        );
+      } catch (prefError) {
+        console.warn('Erreur lors du chargement des préférences:', prefError);
+        // Utiliser les valeurs par défaut en cas d'erreur
+        dispatch(
+          initializePreferences({
+            userId: data.user.email,
+            theme: 'light',
+            status: 'online',
+            forceServerValues: true,
+          })
+        );
+      }
+
       const redirect =
         location.state?.redirect ||
         sessionStorage.getItem('redirectAfterAuth') ||
@@ -102,6 +128,29 @@ export function useLogin() {
       if (res && res.user) {
         dispatch(reduxLogin(res.user));
 
+        // ✅ Initialiser les préférences immédiatement après la connexion Google
+        try {
+          const preferences = await getPreferences();
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: preferences.theme || 'light',
+              status: preferences.status || 'online',
+              forceServerValues: true,
+            })
+          );
+        } catch (prefError) {
+          console.warn('Erreur lors du chargement des préférences:', prefError);
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: 'light',
+              status: 'online',
+              forceServerValues: true,
+            })
+          );
+        }
+
         // Rediriger les utilisateurs Google vers set-password SEULEMENT s'ils n'ont pas de mot de passe
         if (res.user.googleId && res.user.hasPassword === false) {
           navigate('/set-password', { replace: true });
@@ -126,6 +175,29 @@ export function useLogin() {
       const res = await facebookLogin(response.accessToken);
       if (res && res.user) {
         dispatch(reduxLogin(res.user));
+
+        // ✅ Initialiser les préférences immédiatement après la connexion Facebook
+        try {
+          const preferences = await getPreferences();
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: preferences.theme || 'light',
+              status: preferences.status || 'online',
+              forceServerValues: true,
+            })
+          );
+        } catch (prefError) {
+          console.warn('Erreur lors du chargement des préférences:', prefError);
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: 'light',
+              status: 'online',
+              forceServerValues: true,
+            })
+          );
+        }
 
         // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
         if (res.user.facebookId && res.user.hasPassword === false) {

@@ -115,14 +115,6 @@ const LoginPage: React.FC = () => {
             )}
           />
         </div>
-        <div className={styles["help-section"]}>
-          <a href="/forgot-password">Mot de passe oublié ?</a>
-          <p className={styles["social-help"]}>
-            💡 Connecté via Google/Facebook ? Utilisez les boutons ci-dessus ou{" "}
-            <a href="/settings">définissez un mot de passe</a> dans vos
-            paramètres.
-          </p>
-        </div>
         <p className={styles["link-register"]}>
           Vous n'avez pas de compte ?
           <a href="/register" className={styles["link-create-account"]}>

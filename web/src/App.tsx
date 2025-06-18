@@ -18,6 +18,7 @@ import {
 } from "@store/preferencesSlice";
 import { getCurrentUser } from "@services/authApi";
 import { getProfile, getPreferences } from "@services/userApi";
+import { fetchCsrfToken } from "@utils/axiosInstance";
 
 import styles from "./App.module.scss";
 
@@ -92,17 +93,28 @@ const App: React.FC = () => {
   const theme = useSelector((state: RootState) => state.preferences.theme);
   const status = useSelector((state: RootState) => state.preferences.status);
   const authLoading = useSelector((state: RootState) => state.auth.isLoading);
-
   // Initialise theme from store
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
-  }, [theme]); // Vérifier l'authentification au chargement de l'app
+  }, [theme]);
+
+  // Vérifier l'authentification au chargement de l'app
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("[App] Initialisation de l'authentification...");
       dispatch(setAuthLoading(true));
 
       try {
+        // 🔧 CORRECTION: Récupérer d'abord un token CSRF valide
+        console.log("[App] Récupération du token CSRF...");
+        await fetchCsrfToken();
+        console.log("[App] Token CSRF récupéré avec succès");
+
         const user = await getCurrentUser();
+        console.log("[App] Utilisateur récupéré:", {
+          name: user.name,
+          email: user.email,
+        });
         dispatch(setAuth(user));
 
         // Récupérer le profil complet et les préférences
@@ -141,11 +153,14 @@ const App: React.FC = () => {
           );
         }
       } catch (authError) {
-        console.warn("Utilisateur non authentifié:", authError);
+        console.log("[App] Utilisateur non authentifié:", authError);
         dispatch(logout());
         // Réinitialiser les préférences pour un utilisateur non authentifié
         dispatch(resetPreferences());
       } finally {
+        console.log(
+          "[App] Fin de l'initialisation auth, setAuthLoading(false)"
+        );
         dispatch(setAuthLoading(false));
       }
     };

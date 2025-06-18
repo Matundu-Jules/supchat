@@ -5,7 +5,9 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { login as reduxLogin } from '@store/authSlice';
+import { initializePreferences } from '@store/preferencesSlice';
 import { register, googleLogin, facebookLogin } from '@services/authApi';
+import { getPreferences } from '@services/userApi';
 import { registerSchema } from '@utils/validation';
 
 type RegisterFormFields = {
@@ -68,10 +70,11 @@ export function useRegister() {
     }
 
     setLoading(true);
-
     try {
-      await register(form);
+      const result = await register(form);
+      console.log('✅ Inscription réussie:', result);
       reset();
+
       // Automatic redirection to login page after successful registration
       const redirect =
         location.state?.redirect ||
@@ -84,7 +87,9 @@ export function useRegister() {
         navigate('/login');
       }
     } catch (err: any) {
+      console.error('❌ Erreur inscription:', err);
       const errorMessage = err.message || "Erreur lors de l'inscription.";
+
       if (errorMessage.toLowerCase().includes('email')) {
         setErrors({ email: errorMessage });
         if (emailRef.current) emailRef.current.focus();
@@ -99,7 +104,8 @@ export function useRegister() {
         if (nameRef.current) nameRef.current.focus();
       } else {
         setErrors({});
-        alert(errorMessage);
+        console.error('Erreur inscription détaillée:', errorMessage);
+        alert(`Erreur inscription: ${errorMessage}`);
       }
     } finally {
       setLoading(false);
@@ -109,7 +115,32 @@ export function useRegister() {
     try {
       const res = await googleLogin(credentialResponse.credential);
       if (res && res.user) {
-        dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Google a un mot de passe
+        dispatch(reduxLogin(res.user));
+
+        // ✅ Initialiser les préférences immédiatement après la connexion Google
+        try {
+          const preferences = await getPreferences();
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: preferences.theme || 'light',
+              status: preferences.status || 'online',
+              forceServerValues: true,
+            })
+          );
+        } catch (prefError) {
+          console.warn('Erreur lors du chargement des préférences:', prefError);
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: 'light',
+              status: 'online',
+              forceServerValues: true,
+            })
+          );
+        }
+
+        // Vérifier si l'utilisateur connecté via Google a un mot de passe
         if (res.user.googleId && res.user.hasPassword === false) {
           // Rediriger vers la page de création de mot de passe
           navigate('/set-password', { replace: true });
@@ -133,7 +164,32 @@ export function useRegister() {
     try {
       const res = await facebookLogin(response.accessToken);
       if (res && res.user) {
-        dispatch(reduxLogin(res.user)); // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
+        dispatch(reduxLogin(res.user));
+
+        // ✅ Initialiser les préférences immédiatement après la connexion Facebook
+        try {
+          const preferences = await getPreferences();
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: preferences.theme || 'light',
+              status: preferences.status || 'online',
+              forceServerValues: true,
+            })
+          );
+        } catch (prefError) {
+          console.warn('Erreur lors du chargement des préférences:', prefError);
+          dispatch(
+            initializePreferences({
+              userId: res.user.email,
+              theme: 'light',
+              status: 'online',
+              forceServerValues: true,
+            })
+          );
+        }
+
+        // Vérifier si l'utilisateur connecté via Facebook a un mot de passe
         if (res.user.facebookId && res.user.hasPassword === false) {
           // Rediriger vers la page de création de mot de passe
           navigate('/set-password', { replace: true });

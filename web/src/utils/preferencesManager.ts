@@ -13,55 +13,73 @@ import {
   Status,
 } from '@store/preferencesSlice';
 import { updatePreferences, getPreferences } from '@services/userApi';
+import { RootState } from '@store/store';
 
 export class PreferencesManager {
   private dispatch: Dispatch;
+  private getState: () => RootState;
 
-  constructor(dispatch: Dispatch) {
+  constructor(dispatch: Dispatch, getState: () => RootState) {
     this.dispatch = dispatch;
+    this.getState = getState;
   }
-
   /**
    * Initialise les préférences au démarrage de l'application
+   * PRIORITÉ: Serveur (BDD) > localStorage utilisateur > défaut
    */
   async initializeUserPreferences(): Promise<void> {
     try {
-      // Charger les préférences depuis l'API
+      // Récupérer l'utilisateur actuel depuis le state Redux
+      const state = this.getState();
+      const currentUser = state.auth.user;
+
+      if (!currentUser) {
+        console.warn(
+          "Aucun utilisateur connecté, impossible d'initialiser les préférences"
+        );
+        return;
+      }
+
+      // Utiliser l'email comme identifiant utilisateur unique
+      const userId = currentUser.email;
+
+      // Charger les préférences depuis l'API (BDD = source de vérité)
       const serverPrefs = await getPreferences();
 
-      // Utiliser la logique d'initialisation qui gère localStorage vs serveur
+      // IMPORTANT: Toujours utiliser les valeurs du serveur (BDD)
+      // Le serveur contient les vraies préférences de l'utilisateur connecté
       this.dispatch(
         initializePreferences({
+          userId,
           theme: serverPrefs.theme || 'light',
           status: serverPrefs.status || 'online',
+          forceServerValues: true, // Forcer les valeurs du serveur
         })
       );
-
-      // Si le thème local est différent du serveur, synchroniser
-      const localTheme = localStorage.getItem('theme') as Theme;
-      if (localTheme && localTheme !== serverPrefs.theme) {
-        await this.updateTheme(localTheme, false); // false = pas de mise à jour localStorage
-      }
     } catch (error) {
       console.warn("Erreur lors de l'initialisation des préférences:", error);
-      // Utiliser les valeurs par défaut avec le thème local si disponible
-      const localTheme = (localStorage.getItem('theme') as Theme) || 'light';
-      this.dispatch(
-        initializePreferences({
-          theme: localTheme,
-          status: 'online',
-        })
-      );
+
+      // En cas d'erreur serveur, utiliser les valeurs par défaut uniquement
+      const state = this.getState();
+      const currentUser = state.auth.user;
+
+      if (currentUser) {
+        const userId = currentUser.email;
+        this.dispatch(
+          initializePreferences({
+            userId,
+            theme: 'light', // Valeur par défaut
+            status: 'online', // Valeur par défaut
+            forceServerValues: true,
+          })
+        );
+      }
     }
   }
-
   /**
    * Met à jour le thème utilisateur
    */
-  async updateTheme(
-    newTheme: Theme,
-    updateLocalStorage: boolean = true
-  ): Promise<boolean> {
+  async updateTheme(newTheme: Theme): Promise<boolean> {
     try {
       // Mettre à jour Redux (qui gère automatiquement localStorage et DOM)
       this.dispatch(setTheme(newTheme));
@@ -104,21 +122,27 @@ export class PreferencesManager {
   resetAllPreferences(): void {
     this.dispatch(resetPreferences());
   }
-
   /**
    * Synchronise les préférences avec le serveur
+   * Récupère UNIQUEMENT les préférences depuis le serveur (BDD)
    */
   async syncWithServer(): Promise<boolean> {
     try {
-      const serverPrefs = await getPreferences();
-      const localTheme = localStorage.getItem('theme') as Theme;
+      const state = this.getState();
+      const currentUser = state.auth.user;
 
-      // Si le thème local est différent, le synchroniser avec le serveur
-      if (localTheme && localTheme !== serverPrefs.theme) {
-        await updatePreferences({ theme: localTheme });
+      if (!currentUser) {
+        console.warn('Aucun utilisateur connecté pour la synchronisation');
+        return false;
       }
 
-      // Mettre à jour le statut depuis le serveur (toujours prioritaire)
+      const userId = currentUser.email;
+
+      // Récupérer les préférences depuis le serveur (source de vérité)
+      const serverPrefs = await getPreferences();
+
+      // Mettre à jour Redux avec les valeurs du serveur uniquement
+      this.dispatch(setTheme(serverPrefs.theme || 'light'));
       this.dispatch(setStatus(serverPrefs.status || 'online'));
 
       return true;
@@ -132,9 +156,8 @@ export class PreferencesManager {
    * Utilitaires pour obtenir les préférences actuelles
    */
   private getCurrentStatus(): Status {
-    // En cas d'erreur, cette méthode devrait être appelée avec le state Redux
-    // Pour l'instant, on retourne une valeur par défaut
-    return 'online';
+    const state = this.getState();
+    return state.preferences.status;
   }
 }
 
@@ -142,14 +165,18 @@ export class PreferencesManager {
  * Factory pour créer une instance du gestionnaire de préférences
  */
 export const createPreferencesManager = (
-  dispatch: Dispatch
+  dispatch: Dispatch,
+  getState: () => RootState
 ): PreferencesManager => {
-  return new PreferencesManager(dispatch);
+  return new PreferencesManager(dispatch, getState);
 };
 
 /**
  * Hook pour utiliser le gestionnaire de préférences dans les composants
  */
-export const usePreferencesManager = (dispatch: Dispatch) => {
-  return createPreferencesManager(dispatch);
+export const usePreferencesManager = (
+  dispatch: Dispatch,
+  getState: () => RootState
+) => {
+  return createPreferencesManager(dispatch, getState);
 };
