@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '@store/store';
-import { setTheme, setStatus, Theme, Status } from '@store/preferencesSlice';
+import {
+  setTheme,
+  setStatus,
+  initializePreferences,
+  Theme,
+  Status,
+} from '@store/preferencesSlice';
 import { updateUserProfile, logout } from '@store/authSlice';
 import {
   getProfile,
@@ -41,10 +47,13 @@ export const useSettingsLogic = () => {
   const [integrations, setIntegrations] = useState({
     googleDrive: false,
     github: false,
-  });
-
-  // Chargement initial des données
+  }); // Chargement initial des données
   useEffect(() => {
+    // Ne charger que si on a un utilisateur connecté
+    if (!user?.email) {
+      return;
+    }
+
     const loadData = async () => {
       try {
         // Charger le profil utilisateur
@@ -58,30 +67,35 @@ export const useSettingsLogic = () => {
             email: profile.email,
             avatar: profile.avatar,
           })
-        );
-
-        // Charger les préférences
+        ); // Charger les préférences depuis l'API
         try {
           const serverPrefs = await getPreferences();
-          const localTheme = localStorage.getItem('theme') as Theme;
-          const localStatus = localStorage.getItem('status') as Status;
 
-          if (localTheme && localTheme !== serverPrefs.theme) {
-            dispatch(setTheme(localTheme));
-            updatePreferences({ theme: localTheme, status: localStatus });
-          } else if (serverPrefs.theme && serverPrefs.theme !== theme) {
-            dispatch(setTheme(serverPrefs.theme));
-            document.body.setAttribute('data-theme', serverPrefs.theme);
-          }
+          // Utiliser la nouvelle action d'initialisation avec userId
+          if (profile.id || profile.email) {
+            dispatch(
+              initializePreferences({
+                userId: profile.id || profile.email,
+                theme: serverPrefs.theme || 'light',
+                status: serverPrefs.status || 'online',
+              })
+            );
 
-          if (localStatus && localStatus !== serverPrefs.status) {
-            dispatch(setStatus(localStatus));
-            updatePreferences({ theme: localTheme, status: localStatus });
-          } else if (serverPrefs.status && serverPrefs.status !== status) {
-            dispatch(setStatus(serverPrefs.status));
+            // Note: La synchronisation localStorage → API est maintenant gérée automatiquement
+            // par initializePreferences qui compare les préférences locales utilisateur vs serveur
           }
         } catch (error) {
-          // Utilisation des préférences locales en cas d'erreur
+          console.warn('Erreur lors du chargement des préférences:', error);
+          // En cas d'erreur, utiliser les valeurs par défaut avec l'userId
+          if (profile.id || profile.email) {
+            dispatch(
+              initializePreferences({
+                userId: profile.id || profile.email,
+                theme: 'light',
+                status: 'online',
+              })
+            );
+          }
         }
 
         // Charger les intégrations
@@ -89,11 +103,12 @@ export const useSettingsLogic = () => {
         setIntegrations(integrationsData);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
+        // En cas d'erreur complète, ne pas initialiser les préférences
+        // L'utilisateur devra se reconnecter pour charger ses préférences
       }
     };
-
     loadData();
-  }, [dispatch, theme, status]);
+  }, [dispatch, user?.email]); // Se recharger quand l'utilisateur change
 
   // Gestion du profil
   const handleSaveProfile = async () => {
@@ -133,18 +148,25 @@ export const useSettingsLogic = () => {
       return { success: false, error: "Erreur lors de l'upload de l'avatar" };
     }
   };
-
   // Gestion du thème
   const handleThemeToggle = async () => {
     try {
       const newTheme: Theme = theme === 'light' ? 'dark' : 'light';
+
+      // Mettre à jour Redux et localStorage immédiatement
       dispatch(setTheme(newTheme));
+
+      // Synchroniser avec l'API
       await updatePreferences({ theme: newTheme });
-      document.body.setAttribute('data-theme', newTheme);
+
       return { success: true };
     } catch (error) {
       console.error('Erreur lors du changement de thème:', error);
-      return { success: false, error: 'Erreur lors du changement de thème' };
+      // En cas d'erreur API, garder le changement local mais notifier l'utilisateur
+      return {
+        success: false,
+        error: 'Erreur lors de la synchronisation du thème avec le serveur',
+      };
     }
   };
 

@@ -20,17 +20,39 @@ export default function SettingsScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"online" | "busy" | "offline">("online");
+  const [userId, setUserId] = useState<string>("");
 
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setCurrentUser } = useTheme();
   const isDark = theme === "dark";
-
   const loadProfile = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/auth/me");
-      const data = res.data as { name: string; email: string };
-      setName(data.name);
-      setEmail(data.email);
+      const [profileRes, prefsRes] = await Promise.all([
+        axios.get("http://localhost:3000/api/auth/me"),
+        axios.get("http://localhost:3000/api/user/preferences"),
+      ]);
+
+      const profileData = profileRes.data as {
+        name: string;
+        email: string;
+        id?: string;
+        _id?: string;
+      };
+      setName(profileData.name);
+      setEmail(profileData.email);
+
+      // Définir l'utilisateur dans le contexte du thème
+      const userIdValue =
+        profileData.id || profileData._id || profileData.email;
+      setUserId(userIdValue);
+      await setCurrentUser(userIdValue);
+
+      // Charger les préférences depuis l'API
+      const prefsData = prefsRes.data as { status?: string; theme?: string };
+      if (prefsData.status) {
+        setStatus(prefsData.status as typeof status);
+      }
     } catch (err) {
+      console.error("Erreur chargement profil/préférences:", err);
       Alert.alert("Erreur", "Impossible de charger le profil.");
     }
   };
@@ -47,15 +69,19 @@ export default function SettingsScreen() {
       Alert.alert("❌ Erreur", "Échec de la mise à jour.");
     }
   };
-
   const updateStatus = async (newStatus: typeof status) => {
+    const oldStatus = status;
     setStatus(newStatus);
     try {
-      await axios.post("http://localhost:3000/api/user/status", {
+      await axios.put("http://localhost:3000/api/user/preferences", {
         status: newStatus,
       });
-    } catch {
-      Alert.alert("Erreur", "Impossible de changer le statut.");
+      Alert.alert("✅ Succès", `Statut changé en ${newStatus}`);
+    } catch (error) {
+      console.error("Erreur changement statut:", error);
+      // Revenir à l'ancien statut en cas d'erreur
+      setStatus(oldStatus);
+      Alert.alert("❌ Erreur", "Impossible de changer le statut.");
     }
   };
 

@@ -11,9 +11,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "@store/store.ts";
 import { useDispatch } from "react-redux";
 import { setAuth, logout, setAuthLoading } from "@store/authSlice";
-import { setTheme as setThemeAction } from "@store/preferencesSlice";
+import {
+  initializePreferences,
+  resetPreferences,
+  setTheme,
+} from "@store/preferencesSlice";
 import { getCurrentUser } from "@services/authApi";
-import { getProfile } from "@services/userApi";
+import { getProfile, getPreferences } from "@services/userApi";
 
 import styles from "./App.module.scss";
 
@@ -86,6 +90,7 @@ const AppContent = ({
 const App: React.FC = () => {
   const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => state.preferences.theme);
+  const status = useSelector((state: RootState) => state.preferences.status);
   const authLoading = useSelector((state: RootState) => state.auth.isLoading);
 
   // Initialise theme from store
@@ -93,25 +98,59 @@ const App: React.FC = () => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]); // Vérifier l'authentification au chargement de l'app
   useEffect(() => {
-    dispatch(setAuthLoading(true));
-    getCurrentUser()
-      .then(async (user) => {
+    const initializeAuth = async () => {
+      dispatch(setAuthLoading(true));
+
+      try {
+        const user = await getCurrentUser();
         dispatch(setAuth(user));
 
-        // Récupérer aussi le profil complet (avec avatar)
+        // Récupérer le profil complet et les préférences
         try {
-          const profile = await getProfile();
+          const [profile, preferences] = await Promise.all([
+            getProfile(),
+            getPreferences(),
+          ]); // Mettre à jour les données utilisateur complètes
           dispatch(setAuth({ ...user, avatar: profile.avatar }));
-        } catch (error) {
-          // Erreur lors de la récupération du profil, continuer sans avatar
+
+          // Initialiser les préférences avec la nouvelle logique (inclut userId)
+          // forceServerValues=true pour prioriser les valeurs serveur au login
+          dispatch(
+            initializePreferences({
+              userId: user.id || user._id || user.email, // Utiliser l'ID utilisateur
+              theme: preferences.theme || "light",
+              status: preferences.status || "online",
+              forceServerValues: true, // FORCER les valeurs serveur au login
+            })
+          );
+        } catch (profileError) {
+          console.warn(
+            "Impossible de récupérer le profil ou les préférences:",
+            profileError
+          );
+
+          // Utiliser les valeurs par défaut avec l'ID utilisateur
+          // forceServerValues=true pour être cohérent avec le cas de succès
+          dispatch(
+            initializePreferences({
+              userId: user.id || user._id || user.email,
+              theme: "light",
+              status: "online",
+              forceServerValues: true, // FORCER les valeurs par défaut
+            })
+          );
         }
-      })
-      .catch(() => {
+      } catch (authError) {
+        console.warn("Utilisateur non authentifié:", authError);
         dispatch(logout());
-      })
-      .finally(() => {
+        // Réinitialiser les préférences pour un utilisateur non authentifié
+        dispatch(resetPreferences());
+      } finally {
         dispatch(setAuthLoading(false));
-      });
+      }
+    };
+
+    initializeAuth();
   }, [dispatch]);
   // Fallback to prevent infinite loading if the API doesn't respond
   useEffect(() => {
@@ -125,11 +164,10 @@ const App: React.FC = () => {
   if (authLoading) {
     return <Loader />;
   }
-
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
-    dispatch(setThemeAction(newTheme));
-    document.body.setAttribute("data-theme", newTheme);
+    // Utiliser setTheme directement qui gère automatiquement le localStorage par utilisateur
+    dispatch(setTheme(newTheme));
   };
 
   return (
