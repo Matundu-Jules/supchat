@@ -228,3 +228,130 @@ cleanup() {
     esac
     pause
 }
+
+# Fonction pour créer des données de test
+create_test_data() {
+    echo -e "\n${BLUE}📝 Création des données de test...${NC}"
+    echo "════════════════════════════════════════════════════════"
+    echo -e "${YELLOW}Cette option va créer/mettre à jour des données de test dans la DB${NC}"
+    echo -e "${WHITE}• 8 utilisateurs de test (admin@admin.fr, john.doe@example.com, etc.)${NC}"
+    echo -e "${WHITE}• 4 workspaces de démonstration${NC}"
+    echo -e "${WHITE}• Channels et messages d'exemple${NC}"
+    echo ""
+    echo -e "${GREEN}✅ Les données existantes ne seront PAS supprimées${NC}"
+    echo ""
+    
+    # Vérifier si l'API est en cours d'exécution
+    if ! docker-compose ps api | grep -q "Up"; then
+        echo -e "${RED}❌ Le container API n'est pas en cours d'exécution${NC}"
+        echo -e "${YELLOW}💡 Démarrez d'abord l'environnement avec l'option 1 ou 3${NC}"
+        pause
+        return 1
+    fi
+    
+    read -p "Continuer avec la création des données de test ? (y/N): " confirm
+    
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "\n${BLUE}🚀 Exécution du script de création...${NC}"
+        
+        # Exécuter le script dans le container API
+        if docker-compose exec api node create-test-users.js; then
+            echo -e "\n${GREEN}✅ Données de test créées avec succès !${NC}"
+            echo ""
+            echo -e "${CYAN}📋 Comptes de connexion disponibles :${NC}"
+            echo "┌─────────────────────────┬──────────┬─────────┐"
+            echo "│ Email                   │ Password │ Role    │"
+            echo "├─────────────────────────┼──────────┼─────────┤"
+            echo "│ admin@admin.fr          │ admin    │ admin   │"
+            echo "│ john.doe@example.com    │ user     │ user    │"
+            echo "│ jane.smith@example.com  │ user     │ user    │"
+            echo "│ alice.martin@example.com│ user     │ user    │"
+            echo "│ bob.wilson@example.com  │ user     │ user    │"
+            echo "│ charlie.brown@example.com│ user    │ user    │"
+            echo "│ david.taylor@example.com│ user     │ user    │"
+            echo "│ emma.garcia@example.com │ user     │ user    │"
+            echo "└─────────────────────────┴──────────┴─────────┘"
+        else
+            echo -e "\n${RED}❌ Erreur lors de la création des données de test${NC}"
+            echo -e "${YELLOW}💡 Vérifiez que la base de données est accessible${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Création des données de test annulée${NC}"
+    fi
+    pause
+}
+
+# Fonction pour réinitialiser les données de test
+reset_test_data() {
+    echo -e "\n${BLUE}🔄 Reset des données de test...${NC}"
+    echo "════════════════════════════════════════════════════════"
+    echo -e "${WHITE}Options de reset :${NC}"
+    echo -e "${YELLOW}  1)${NC} 🔄 Ajouter des données de test (sans suppression)"
+    echo -e "${RED}  2)${NC} 💥 RESET COMPLET - Supprimer TOUTES les données et recréer"
+    echo -e "${WHITE}  0)${NC} ❌ Annuler"
+    echo ""
+    read -p "Votre choix (0-2): " reset_choice
+    
+    case $reset_choice in
+        1)
+            echo -e "\n${YELLOW}🔄 Ajout de données de test (préservation des données existantes)...${NC}"
+            echo -e "${GREEN}✅ Vos données actuelles seront PRÉSERVÉES${NC}"
+            read -p "Continuer ? (y/N): " confirm
+            
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                # Vérifier que l'API est en cours d'exécution
+                if docker-compose ps api | grep -q "Up"; then
+                    echo "🚀 Exécution du script d'ajout de données..."
+                    docker-compose exec api node create-test-users.js
+                    
+                    if [[ $? -eq 0 ]]; then
+                        echo -e "${GREEN}✅ Données de test ajoutées avec succès !${NC}"
+                    else
+                        echo -e "${RED}❌ Erreur lors de l'ajout des données de test${NC}"
+                    fi
+                else
+                    echo -e "${RED}❌ Le container API n'est pas en cours d'exécution${NC}"
+                    echo "💡 Démarrez d'abord l'environnement avec l'option 1 ou 3"
+                fi
+            else
+                echo -e "${YELLOW}Ajout de données annulé${NC}"
+            fi
+            ;;
+        2)
+            echo -e "\n${RED}💥 RESET COMPLET des données...${NC}"
+            echo -e "${RED}⚠️  ATTENTION: Cela va:${NC}"
+            echo "   • SUPPRIMER tous les utilisateurs existants"
+            echo "   • SUPPRIMER tous les workspaces existants"
+            echo "   • SUPPRIMER tous les channels existants"
+            echo -e "${RED}   • SUPPRIMER tous les messages existants${NC}"
+            echo ""
+            echo -e "${GREEN}✅ Puis recréer des données de test propres${NC}"
+            echo ""
+            read -p "Êtes-vous VRAIMENT sûr ? Tapez 'RESET' pour confirmer: " confirm
+            
+            if [[ "$confirm" == "RESET" ]]; then
+                # Vérifier que l'API est en cours d'exécution
+                if docker-compose ps api | grep -q "Up"; then
+                    echo "🗑️ Reset complet des données en cours..."
+                    docker-compose exec api node reset-test-data.js
+                    
+                    if [[ $? -eq 0 ]]; then
+                        echo -e "${GREEN}✅ Reset complet terminé ! Nouvelles données de test créées.${NC}"
+                        echo -e "${CYAN}💡 Connectez-vous avec: admin@admin.fr / admin${NC}"
+                    else
+                        echo -e "${RED}❌ Erreur lors du reset des données${NC}"
+                    fi
+                else
+                    echo -e "${RED}❌ Le container API n'est pas en cours d'exécution${NC}"
+                    echo "💡 Démarrez d'abord l'environnement avec l'option 1 ou 3"
+                fi
+            else
+                echo -e "${YELLOW}Reset complet annulé (bonne décision !)${NC}"
+            fi
+            ;;
+        0|*)
+            echo -e "${YELLOW}Reset annulé${NC}"
+            ;;
+    esac
+    pause
+}

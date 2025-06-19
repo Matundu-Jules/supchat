@@ -469,7 +469,21 @@ const getJoinRequests = async (workspaceId, user) => {
         throw new Error('PERMISSION_DENIED')
     }
 
-    return workspace.joinRequests
+    // Filtrer les demandes avec des utilisateurs supprimés (userId null)
+    const validJoinRequests = workspace.joinRequests.filter(
+        (request) => request.userId !== null
+    )
+
+    // Si des demandes ont été filtrées, mettre à jour le workspace
+    if (validJoinRequests.length !== workspace.joinRequests.length) {
+        workspace.joinRequests = validJoinRequests
+        await workspace.save()
+        console.log(
+            `🧹 Nettoyage automatique: ${workspace.joinRequests.length - validJoinRequests.length} demandes avec utilisateurs supprimés ont été retirées`
+        )
+    }
+
+    return validJoinRequests
 }
 
 const removeMember = async (workspaceId, targetUserId, requestingUser) => {

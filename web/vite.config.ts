@@ -10,13 +10,11 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
   // Charger les variables d'environnement
-  const env = loadEnv(mode, process.cwd(), '');
-  // URL du serveur backend - utilise le service Docker 'api' si disponible
+  const env = loadEnv(mode, process.cwd(), ''); // URL du serveur backend - utilise le service Docker 'api' si disponible
   const backendUrl =
-    env.VITE_BACKEND_URL ||
-    (process.env.NODE_ENV === 'development' && process.env.DOCKER_ENV
+    process.env.NODE_ENV === 'development' && process.env.DOCKER_ENV
       ? 'http://api:3000'
-      : 'http://127.0.0.1:3000');
+      : env.VITE_BACKEND_URL || 'http://127.0.0.1:3000';
 
   return {
     plugins: [react()],
@@ -43,9 +41,21 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
         ignored: ['!**/*.scss'],
       },
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+        'Cross-Origin-Embedder-Policy': 'credentialless',
+      },
       proxy: {
-        '/api': backendUrl,
-        '/uploads': backendUrl,
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+          secure: false,
+        },
+        '/uploads': {
+          target: backendUrl,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   };

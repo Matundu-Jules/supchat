@@ -269,15 +269,20 @@ async function createTestUsers() {
             console.log(
                 `- "${workspace.name}" (${workspace.type}) - Owner: ${workspace.owner.name}`
             )
-        })
-
-        // Lister tous les channels
+        }) // Lister tous les channels
         const allChannels = await Channel.find({}).populate('workspace', 'name')
         console.log('\n📺 Channels créés:')
         allChannels.forEach((channel) => {
-            console.log(
-                `- "${channel.name}" (${channel.type}) in "${channel.workspace.name}"`
-            )
+            // Vérifier que le workspace existe avant d'accéder à ses propriétés
+            if (channel.workspace && channel.workspace.name) {
+                console.log(
+                    `- "${channel.name}" (${channel.type}) in "${channel.workspace.name}"`
+                )
+            } else {
+                console.log(
+                    `- "${channel.name}" (${channel.type}) in [workspace supprimé]`
+                )
+            }
         })
 
         console.log('\n🎉 Données de test créées avec succès !')

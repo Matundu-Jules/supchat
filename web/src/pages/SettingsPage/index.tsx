@@ -52,10 +52,16 @@ const SettingsPage: React.FC = () => {
             <h2>👤 Profil utilisateur</h2>
             {/* Section Avatar - TOUJOURS visible */}
             <div className={styles["avatarSection"]}>
+              {" "}
               <div className={styles["avatarContainer"]}>
-                {avatar ? (
+                {avatar || user?.avatar ? (
                   <img
-                    src={getAvatarUrl(avatar) || ""}
+                    src={
+                      getAvatarUrl(
+                        avatar || user?.avatar,
+                        !!user?.avatarUpdatedAt
+                      ) || ""
+                    }
                     alt="Avatar"
                     className={styles["avatar"]}
                   />

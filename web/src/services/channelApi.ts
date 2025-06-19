@@ -11,7 +11,7 @@ export async function getChannels(workspaceId: string) {
   try {
     await fetchCsrfToken();
     const { data } = await api.get('/channels', { params: { workspaceId } });
-    return data;
+    return data.channels || [];
   } catch (err: any) {
     throw new Error(
       err?.response?.data?.message ||

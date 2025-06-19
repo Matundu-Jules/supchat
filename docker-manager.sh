@@ -62,6 +62,7 @@ main() {
             19) open_urls ;;
             20) diagnostic_services ;;
             21) run_tests ;;
+            22) reset_test_data ;;
             0) 
                 echo -e "\n${GREEN}👋 Au revoir !${NC}"
                 exit 0

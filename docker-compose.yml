@@ -69,14 +69,12 @@ services:
       - /app/node_modules # Preserve node_modules in container
     networks:
       - supchat-network
-    env_file:
-      - .env
     environment:
-      # Client configuration (URLs managed by update script)
-      - VITE_API_URL=${VITE_API_URL:-/api}
-      - VITE_WEBSOCKET_URL=${VITE_WEBSOCKET_URL:-/socket.io}
+      # Client configuration (URLs pour communication interne Docker - priorité sur .env)
+      - VITE_API_URL=/api
+      - VITE_WEBSOCKET_URL=/socket.io
       - VITE_APP_NAME=SupChat
-      - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://api:3000}
+      - VITE_BACKEND_URL=http://api:3000
       - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - VITE_FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
 

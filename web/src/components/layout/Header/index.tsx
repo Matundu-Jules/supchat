@@ -111,7 +111,10 @@ const Header: React.FC = () => {
             {/* Avatar simple (visible seulement sous 1300px) */}
             <div className={styles["simpleAvatar"]}>
               {user.avatar ? (
-                <img src={getAvatarUrl(user.avatar) || ""} alt="Avatar" />
+                <img
+                  src={getAvatarUrl(user.avatar, !!user.avatarUpdatedAt) || ""}
+                  alt="Avatar"
+                />
               ) : (
                 <div className={styles["simpleAvatarPlaceholder"]}>
                   {user.name?.charAt(0)?.toUpperCase() ||
@@ -130,7 +133,12 @@ const Header: React.FC = () => {
                 {/* Avatar */}
                 <div className={styles["userAvatar"]}>
                   {user.avatar ? (
-                    <img src={getAvatarUrl(user.avatar) || ""} alt="Avatar" />
+                    <img
+                      src={
+                        getAvatarUrl(user.avatar, !!user.avatarUpdatedAt) || ""
+                      }
+                      alt="Avatar"
+                    />
                   ) : (
                     <div className={styles["avatarPlaceholder"]}>
                       {user.name?.charAt(0)?.toUpperCase() ||

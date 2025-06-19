@@ -9,7 +9,8 @@ L'utilisateur ne pouvait pas utiliser le caractère `#` dans les mots de passe e
 Deux systèmes de validation différents étaient en place :
 
 ### 1. Validation pour changement/définition de mot de passe
-- **Fichiers concernés** : 
+
+- **Fichiers concernés** :
   - `api/validators/userValidators.js`
   - `web/src/hooks/usePasswordManagement.ts`
   - `web/src/hooks/useSetPasswordRequired.ts`
@@ -17,6 +18,7 @@ Deux systèmes de validation différents étaient en place :
 - **Caractères spéciaux autorisés** : `@$!%*?&#`
 
 ### 2. Validation pour inscription/réinitialisation
+
 - **Fichiers concernés** :
   - `web/src/utils/validation.ts`
   - `mobile/utils/validation.ts`
@@ -26,10 +28,12 @@ Deux systèmes de validation différents étaient en place :
 ## Incohérence identifiée
 
 Le caractère `#` était :
+
 - ✅ **Autorisé** dans les validations de changement de mot de passe
 - ❌ **Refusé** dans les validations d'inscription et de réinitialisation
 
 Cela créait une situation où :
+
 1. Un utilisateur pouvait s'inscrire avec un mot de passe contenant `^` ou `(`
 2. Mais ne pouvait pas changer son mot de passe pour inclure `#`
 
@@ -42,6 +46,7 @@ Tous les fichiers de validation utilisent maintenant la même liste de caractèr
 ### Fichiers modifiés
 
 1. **`web/src/utils/validation.ts`**
+
    - `registerSchema.password.matches()` : mis à jour
    - `resetPasswordSchema.password.matches()` : mis à jour
 
@@ -68,6 +73,7 @@ Tous les fichiers de validation utilisent maintenant la même liste de caractèr
 ## Caractères spéciaux désormais uniformes
 
 ### Caractères autorisés dans toute l'application
+
 - `@` - Arobase
 - `$` - Dollar
 - `!` - Point d'exclamation
@@ -78,6 +84,7 @@ Tous les fichiers de validation utilisent maintenant la même liste de caractèr
 - `#` - Dièse
 
 ### Caractères retirés pour simplification
+
 - `^` - Accent circonflexe
 - `(` `)` - Parenthèses
 - `-` `_` - Tirets et underscore

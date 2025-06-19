@@ -9,6 +9,7 @@ export interface User {
   email: string;
   role: Role;
   avatar?: string;
+  avatarUpdatedAt?: number; // Timestamp pour le cache busting
   googleId?: string;
   facebookId?: string;
   hasPassword?: boolean; // Indique si l'utilisateur a défini un mot de passe

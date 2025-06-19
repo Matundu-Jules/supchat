@@ -33,7 +33,8 @@ const changePasswordSchema = Joi.object({
         is: true,
         then: Joi.optional(),
         otherwise: Joi.optional(),
-    }),    newPassword: Joi.string()
+    }),
+    newPassword: Joi.string()
         .min(8)
         .max(128)
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])/)

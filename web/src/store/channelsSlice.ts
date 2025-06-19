@@ -1,21 +1,21 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   getChannels,
   createChannel,
   updateChannel,
   deleteChannel,
   ChannelFormData,
-} from "@services/channelApi";
+} from '@services/channelApi';
 
 export const fetchChannels = createAsyncThunk(
-  "channels/fetchAll",
+  'channels/fetchAll',
   async (workspaceId: string) => {
     return await getChannels(workspaceId);
   }
 );
 
 export const addChannel = createAsyncThunk(
-  "channels/add",
+  'channels/add',
   async (formData: ChannelFormData) => {
     await createChannel(formData);
     return await getChannels(formData.workspaceId);
@@ -23,21 +23,19 @@ export const addChannel = createAsyncThunk(
 );
 
 export const editChannel = createAsyncThunk(
-  "channels/edit",
-  async (
-    params: {
-      channelId: string;
-      workspaceId: string;
-      data: Partial<Omit<ChannelFormData, "workspaceId">>;
-    }
-  ) => {
+  'channels/edit',
+  async (params: {
+    channelId: string;
+    workspaceId: string;
+    data: Partial<Omit<ChannelFormData, 'workspaceId'>>;
+  }) => {
     await updateChannel(params.channelId, params.data);
     return await getChannels(params.workspaceId);
   }
 );
 
 export const removeChannel = createAsyncThunk(
-  "channels/remove",
+  'channels/remove',
   async (params: { channelId: string; workspaceId: string }) => {
     await deleteChannel(params.channelId);
     return await getChannels(params.workspaceId);
@@ -45,7 +43,7 @@ export const removeChannel = createAsyncThunk(
 );
 
 const channelsSlice = createSlice({
-  name: "channels",
+  name: 'channels',
   initialState: {
     items: [] as any[],
     loading: false,
@@ -64,7 +62,7 @@ const channelsSlice = createSlice({
       })
       .addCase(fetchChannels.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Erreur lors du chargement";
+        state.error = action.error.message || 'Erreur lors du chargement';
       })
       .addCase(addChannel.pending, (state) => {
         state.loading = true;
@@ -76,7 +74,7 @@ const channelsSlice = createSlice({
       })
       .addCase(addChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Erreur lors de la création";
+        state.error = action.error.message || 'Erreur lors de la création';
       })
       .addCase(editChannel.pending, (state) => {
         state.loading = true;
@@ -88,7 +86,7 @@ const channelsSlice = createSlice({
       })
       .addCase(editChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Erreur lors de la mise à jour";
+        state.error = action.error.message || 'Erreur lors de la mise à jour';
       })
       .addCase(removeChannel.pending, (state) => {
         state.loading = true;
@@ -100,7 +98,7 @@ const channelsSlice = createSlice({
       })
       .addCase(removeChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Erreur lors de la suppression";
+        state.error = action.error.message || 'Erreur lors de la suppression';
       });
   },
 });

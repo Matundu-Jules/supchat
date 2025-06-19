@@ -500,7 +500,7 @@ const ChannelsPage: React.FC<ChannelsPageProps> = ({ workspaceId }) => {
                 </button>
               )}
             </div>
-          ) : (
+          ) : Array.isArray(channels) && channels.length > 0 ? (
             channels
               .filter((channel) =>
                 channel.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -517,7 +517,7 @@ const ChannelsPage: React.FC<ChannelsPageProps> = ({ workspaceId }) => {
                 >
                   <span className={styles["channelIcon"]}>
                     {channel.type === "private" ? "🔒" : "#"}
-                  </span>
+                  </span>{" "}
                   <span className={styles["channelName"]}>{channel.name}</span>
                   {channel.unreadCount && (
                     <span className={styles["unreadBadge"]}>
@@ -526,6 +526,10 @@ const ChannelsPage: React.FC<ChannelsPageProps> = ({ workspaceId }) => {
                   )}
                 </button>
               ))
+          ) : (
+            <div className={styles["noChannelsMessage"]}>
+              Aucun canal disponible
+            </div>
           )}
         </div>
         {/* Menu du sidebar */}

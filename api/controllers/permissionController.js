@@ -226,56 +226,121 @@ exports.setPermission = async (req, res) => {
     }
 }
 
-// ✅ Récupérer toutes les permissions (accessible aux admins seulement)
+// ✅ Récupérer toutes les permissions (accessible aux membres du workspace)
 exports.getPermissions = async (req, res) => {
     try {
         const { workspaceId } = req.query
-        let isAdmin = false
-        let isOwner = false
 
-        // Vérifier si l'utilisateur est admin d'au moins un workspace
+        if (!workspaceId) {
+            return res.status(400).json({
+                message:
+                    'ID du workspace requis pour récupérer les permissions.',
+            })
+        }
+
+        let isAuthorized = false
+
+        // Vérifier si l'utilisateur est admin global
         if (req.user && req.user.role === 'admin') {
-            isAdmin = true
+            isAuthorized = true
         } else {
-            // Vérifie la permission admin dans ce workspace
-            if (workspaceId) {
-                const perm = await Permission.findOne({
-                    userId: req.user.id,
-                    workspaceId,
-                    role: 'admin',
-                })
-                if (perm) isAdmin = true
-
-                // Vérifie si owner du workspace
-                const workspace = await Workspace.findById(workspaceId)
-                if (
-                    workspace &&
-                    String(workspace.owner) === String(req.user.id)
-                ) {
-                    isOwner = true
-                }
+            // Vérifier si l'utilisateur est propriétaire du workspace
+            const workspace = await Workspace.findById(workspaceId)
+            if (workspace && String(workspace.owner) === String(req.user.id)) {
+                isAuthorized = true
             } else {
-                // Admin global si admin sur n'importe quel workspace
-                const perm = await Permission.findOne({
-                    userId: req.user.id,
-                    role: 'admin',
-                })
-                if (perm) isAdmin = true
+                // Essayer de s'assurer que l'utilisateur a une permission (si membre)
+                const userPermission = await ensureUserPermission(
+                    req.user.id,
+                    workspaceId
+                )
+                if (userPermission) {
+                    isAuthorized = true
+                }
             }
         }
 
-        if (!isAdmin && !isOwner) {
-            return res.status(403).json({ message: 'Accès refusé.' })
+        if (!isAuthorized) {
+            return res.status(403).json({
+                message:
+                    'Accès refusé. Vous devez être membre du workspace pour voir les permissions.',
+            })
         }
 
-        const query = workspaceId ? { workspaceId } : {}
-        const permissions = await Permission.find(query)
-            .populate('userId', 'username email')
-            .populate('workspaceId', 'name')
+        // Récupérer les permissions du workspace
+        const permissions = await Permission.find({ workspaceId })
+            .populate('userId', 'username email avatar')
+            .populate('workspaceId', 'name description')
+            .sort({ createdAt: -1 })
+
         res.status(200).json(permissions)
     } catch (error) {
         console.error('Erreur dans getPermissions:', error)
-        res.status(500).json({ message: 'Erreur serveur.', error })
+        res.status(500).json({
+            message: 'Erreur serveur lors de la récupération des permissions.',
+            error: error.message,
+        })
+    }
+}
+
+// ✅ Fonction utilitaire pour s'assurer qu'un utilisateur a une permission dans un workspace
+const ensureUserPermission = async (userId, workspaceId) => {
+    try {
+        // Vérifier si l'utilisateur a déjà une permission
+        let permission = await Permission.findOne({ userId, workspaceId })
+        if (permission) {
+            return permission
+        }
+
+        // Vérifier si l'utilisateur est membre du workspace
+        const workspace = await Workspace.findById(workspaceId)
+        if (!workspace) {
+            throw new Error('Workspace non trouvé')
+        }
+
+        // Si l'utilisateur est propriétaire, créer permission admin
+        if (String(workspace.owner) === String(userId)) {
+            permission = new Permission({
+                userId,
+                workspaceId,
+                role: 'admin',
+                permissions: [
+                    'post',
+                    'view',
+                    'moderate',
+                    'manage_members',
+                    'manage_channels',
+                    'delete_messages',
+                    'upload_files',
+                    'react',
+                    'invite_members',
+                ],
+            })
+            await permission.save()
+            return permission
+        }
+
+        // Si l'utilisateur est dans les membres, créer permission membre
+        const isMember =
+            workspace.members &&
+            workspace.members.some(
+                (memberId) => String(memberId) === String(userId)
+            )
+        if (isMember) {
+            permission = new Permission({
+                userId,
+                workspaceId,
+                role: 'membre',
+                permissions: ['post', 'view', 'upload_files', 'react'],
+            })
+            await permission.save()
+            return permission
+        }
+
+        return null
+    } catch (error) {
+        console.error('Erreur dans ensureUserPermission:', error)
+        return null
     }
 }
 

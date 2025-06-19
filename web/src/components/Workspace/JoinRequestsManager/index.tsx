@@ -12,6 +12,17 @@ interface JoinRequest {
     name?: string;
     email: string;
     avatar?: string;
+  } | null; // userId peut être null si l'utilisateur a été supprimé
+  requestedAt: string;
+  message: string;
+}
+
+interface ValidJoinRequest {
+  userId: {
+    _id: string;
+    name?: string;
+    email: string;
+    avatar?: string;
   };
   requestedAt: string;
   message: string;
@@ -28,21 +39,30 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   isOwnerOrAdmin,
   onRequestsChange,
 }) => {
-  const [requests, setRequests] = useState<JoinRequest[]>([]);
+  console.log(
+    "🏗️ JoinRequestsManager: Rendu du composant avec workspaceId:",
+    workspaceId
+  );
+
+  const [requests, setRequests] = useState<ValidJoinRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const fetchRequests = async () => {
     if (!isOwnerOrAdmin) return;
 
     setLoading(true);
-    setError(null);
+    // Ne pas réinitialiser error ici pour ne pas effacer les messages de succès
     try {
       const data = await getJoinRequests(workspaceId);
-      setRequests(data);
+      // Filtrer les demandes avec des utilisateurs supprimés (userId null)
+      const validRequests = data.filter(
+        (request: JoinRequest): request is ValidJoinRequest =>
+          request.userId !== null && request.userId._id !== undefined
+      );
+      setRequests(validRequests);
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des demandes");
     } finally {
@@ -52,12 +72,18 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   const handleApprove = async (requestUserId: string) => {
     setApproving(requestUserId);
     setError(null);
-    setSuccessMessage(null);
     try {
+      console.log("🚀 Début de l'approbation pour:", requestUserId);
       await approveJoinRequest(workspaceId, requestUserId);
-      await fetchRequests(); // Rafraîchir la liste locale
-      onRequestsChange?.(); // Notifier le parent des changements
+      console.log("✅ Approbation réussie, affichage du message de succès");
       setSuccessMessage("Demande approuvée avec succès !");
+      console.log("🔄 Mise à jour de la liste...");
+      await fetchRequests(); // Rafraîchir la liste locale
+
+      // Retarder l'appel du callback parent pour ne pas réinitialiser l'état
+      setTimeout(() => {
+        onRequestsChange?.(); // Notifier le parent des changements
+      }, 100);
     } catch (err: any) {
       console.error("Erreur lors de l'approbation:", err);
       setError(err.message || "Erreur lors de l'approbation");
@@ -68,12 +94,15 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   const handleReject = async (requestUserId: string) => {
     setRejecting(requestUserId);
     setError(null);
-    setSuccessMessage(null);
     try {
       await rejectJoinRequest(workspaceId, requestUserId);
-      await fetchRequests(); // Rafraîchir la liste locale
-      onRequestsChange?.(); // Notifier le parent des changements
       setSuccessMessage("Demande rejetée avec succès.");
+      await fetchRequests(); // Rafraîchir la liste locale
+
+      // Retarder l'appel du callback parent pour ne pas réinitialiser l'état
+      setTimeout(() => {
+        onRequestsChange?.(); // Notifier le parent des changements
+      }, 100);
     } catch (err: any) {
       console.error("Erreur lors du rejet:", err);
       setError(err.message || "Erreur lors du rejet");
@@ -85,34 +114,77 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   useEffect(() => {
     fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, isOwnerOrAdmin]);
-
-  // Effacer les messages de succès après 5 secondes
+  }, [workspaceId, isOwnerOrAdmin]); // Effacer les messages de succès après 5 secondes
   useEffect(() => {
     if (successMessage) {
+      console.log("📝 Message de succès défini:", successMessage);
       const timer = setTimeout(() => {
+        console.log("⏰ Effacement du message de succès après 5 secondes");
         setSuccessMessage(null);
       }, 5000);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
+  // Log pour traquer les changements d'état
+  useEffect(() => {
+    console.log("🔍 État successMessage changé:", successMessage);
+  }, [successMessage]);
+
   if (!isOwnerOrAdmin) {
     return null;
   }
-
   if (loading) {
-    return <div>Chargement des demandes...</div>;
-  }
-
-  if (error) {
-    return <div className={styles["error"]}>Erreur: {error}</div>;
-  }
-
-  if (requests.length === 0) {
     return (
       <div className={styles["container"]}>
         <h3>Demandes de rejoindre</h3>
+        {/* Messages de succès/erreur */}
+        {successMessage && (
+          <div className={styles["success"]}>
+            <i className="fa-solid fa-check-circle"></i>
+            {successMessage}
+          </div>
+        )}
+        {error && (
+          <div className={styles["error"]}>
+            <i className="fa-solid fa-exclamation-circle"></i>
+            {error}
+          </div>
+        )}
+        <div>Chargement des demandes...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles["container"]}>
+        <h3>Demandes de rejoindre</h3>
+        <div className={styles["error"]}>Erreur: {error}</div>
+      </div>
+    );
+  }
+  if (requests.length === 0) {
+    console.log(
+      "🎯 RENDU: Cas requests.length === 0, successMessage:",
+      successMessage
+    );
+    return (
+      <div className={styles["container"]}>
+        <h3>Demandes de rejoindre</h3>
+        {/* Messages de succès/erreur */}
+        {successMessage && (
+          <div className={styles["success"]}>
+            <i className="fa-solid fa-check-circle"></i>
+            {successMessage}
+          </div>
+        )}
+        {error && (
+          <div className={styles["error"]}>
+            <i className="fa-solid fa-exclamation-circle"></i>
+            {error}
+          </div>
+        )}
         <p className={styles["empty"]}>Aucune demande en attente.</p>
       </div>
     );

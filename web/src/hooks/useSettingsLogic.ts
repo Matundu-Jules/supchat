@@ -128,13 +128,18 @@ export const useSettingsLogic = () => {
       };
     }
   };
-
   const handleAvatarChange = async (file: File) => {
     setAvatarFile(file);
     try {
       const { avatar: newUrl } = await uploadAvatar(file);
       setAvatar(newUrl);
-      dispatch(updateUserProfile({ avatar: newUrl }));
+      // Mettre à jour l'avatar avec un timestamp pour forcer le rechargement
+      dispatch(
+        updateUserProfile({
+          avatar: newUrl,
+          avatarUpdatedAt: Date.now(),
+        })
+      );
       setAvatarFile(null);
       return { success: true };
     } catch (error) {

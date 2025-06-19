@@ -37,6 +37,7 @@ show_menu() {
     echo -e "${BLUE} 19)${NC} 🌐 Ouvrir les URLs de l'application"
     echo -e "${BLUE} 20)${NC} 🔍 Diagnostic des services (debug)"
     echo -e "${GREEN} 21)${NC} 🧪 Lancer les tests automatisés"
+    echo -e "${MAGENTA} 22)${NC} 📝 Créer des données de test (reset rapide DB)"
     echo ""
     echo -e "${WHITE}  0)${NC} ❌ Quitter"
     echo ""

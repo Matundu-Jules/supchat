@@ -27,10 +27,7 @@ export const registerSchema = yup.object().shape({
     .matches(/[a-z]/, 'Au moins une minuscule')
     .matches(/[A-Z]/, 'Au moins une majuscule')
     .matches(/[0-9]/, 'Au moins un chiffre')
-    .matches(
-      /[@$!%*?&#]/,
-      'Au moins un caractère spécial (@$!%*?&#)'
-    )
+    .matches(/[@$!%*?&#]/, 'Au moins un caractère spécial (@$!%*?&#)')
     .matches(/^\S*$/, "Le mot de passe ne doit pas contenir d'espaces"),
 });
 
@@ -52,10 +49,7 @@ export const resetPasswordSchema = yup.object().shape({
     .matches(/[a-z]/, 'Au moins une minuscule')
     .matches(/[A-Z]/, 'Au moins une majuscule')
     .matches(/[0-9]/, 'Au moins un chiffre')
-    .matches(
-      /[@$!%*?&#]/,
-      'Au moins un caractère spécial (@$!%*?&#)'
-    )
+    .matches(/[@$!%*?&#]/, 'Au moins un caractère spécial (@$!%*?&#)')
     .matches(/^\S*$/, "Le mot de passe ne doit pas contenir d'espaces"),
   confirm: yup
     .string()

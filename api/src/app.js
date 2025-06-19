@@ -80,6 +80,7 @@ if (isDevelopment) {
 app.use(
     helmet({
         crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
         // Note: x-xss-protection est désactivé par défaut dans les nouvelles versions d'Helmet
         // car il est considéré comme obsolète et potentiellement dangereux
     })
