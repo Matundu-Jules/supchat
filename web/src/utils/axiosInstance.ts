@@ -65,13 +65,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log('🔄 Tentative de refresh du token...');
-
         // Essayer de rafraîchir le token
         const refreshResponse = await api.post('/auth/refresh');
 
         if (refreshResponse.status === 204) {
-          console.log('✅ Token refreshed avec succès');
           // Récupérer un nouveau CSRF token
           await fetchCsrfToken();
           onRefreshed();

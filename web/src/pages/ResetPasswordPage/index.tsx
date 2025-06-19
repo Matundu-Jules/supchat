@@ -2,11 +2,16 @@
 
 import React from "react";
 import { useSearchParams } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@store/store";
+import { setTheme } from "@store/preferencesSlice";
 import { useResetPassword } from "@hooks/useResetPassword";
 import { usePasswordToggle } from "@hooks/usePasswordToggle";
 import styles from "./ResetPasswordPage.module.scss";
 
 const ResetPasswordPage: React.FC = () => {
+  const dispatch = useDispatch();
+  const theme = useSelector((state: RootState) => state.preferences.theme);
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
 
@@ -25,10 +30,28 @@ const ResetPasswordPage: React.FC = () => {
   const passwordToggle = usePasswordToggle();
   const confirmToggle = usePasswordToggle();
 
+  // Fonction de changement de thème
+  const handleThemeToggle = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    dispatch(setTheme(newTheme));
+  };
+
   if (!token) return <p>Token manquant ou invalide.</p>;
 
   return (
     <section className={styles["reset-password-page"]}>
+      {/* Bouton de changement de thème */}
+      <button
+        className={styles["themeToggle"]}
+        onClick={handleThemeToggle}
+        title={
+          theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"
+        }
+        aria-label="Changer de thème"
+      >
+        {theme === "dark" ? "☀️" : "🌙"}
+      </button>
+
       <h1>Réinitialiser mon mot de passe</h1>
       <form onSubmit={handleSubmit} autoComplete="off">
         <label htmlFor="password">Nouveau mot de passe</label>

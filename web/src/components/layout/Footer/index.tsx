@@ -27,22 +27,9 @@ const Footer: React.FC<FooterProps> = ({ theme, toggleTheme }) => {
         <a href="https://www.supinfo.com" className={styles["supinfo"]}>
           <i className={styles["supinfo-logo"]}></i>
         </a>
-      </div>
-
-      {/* Affiche le bouton uniquement si l'utilisateur n'est PAS connecté */}
-      {!user && (
-        <button
-          className={styles["themeToggleBtn"]}
-          onClick={toggleTheme}
-          title={
-            theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"
-          }
-          aria-label="Changer de thème"
-        >
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
-      )}
-
+      </div>{" "}
+      {/* Le bouton de thème est maintenant directement dans les pages login/register 
+          pour une meilleure visibilité et accessibilité */}
       <p>© 2025 Tous droits réservés.</p>
     </footer>
   );

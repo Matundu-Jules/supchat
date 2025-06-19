@@ -3,6 +3,9 @@
 import React from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import FacebookLogin from "@greatsumini/react-facebook-login";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@store/store";
+import { setTheme } from "@store/preferencesSlice";
 
 import { usePasswordToggle } from "@hooks/usePasswordToggle";
 import { useRegister } from "@hooks/useRegister";
@@ -10,6 +13,9 @@ import { useRegister } from "@hooks/useRegister";
 import styles from "./RegisterPage.module.scss";
 
 const RegisterPage: React.FC = () => {
+  const dispatch = useDispatch();
+  const theme = useSelector((state: RootState) => state.preferences.theme);
+
   const {
     form,
     handleChange,
@@ -25,8 +31,26 @@ const RegisterPage: React.FC = () => {
 
   const { type: passwordType, show, setShow } = usePasswordToggle();
 
+  // Fonction de changement de thème
+  const handleThemeToggle = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    dispatch(setTheme(newTheme));
+  };
+
   return (
     <section className={styles["register-page"]}>
+      {/* Bouton de changement de thème */}
+      <button
+        className={styles["themeToggle"]}
+        onClick={handleThemeToggle}
+        title={
+          theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"
+        }
+        aria-label="Changer de thème"
+      >
+        {theme === "dark" ? "☀️" : "🌙"}
+      </button>
+
       <div className={styles["logo-title"]}>
         <img
           src="/assets/images/logo-supchat-complete-transparent-light-01.png"
