@@ -253,6 +253,16 @@ exports.updateWorkspace = async (req, res) => {
             isAllowed = true
         } else if (String(ownerId) === String(req.user.id)) {
             isAllowed = true
+        } else {
+            // Vérifier si l'utilisateur a le rôle admin dans ce workspace
+            const userPermission = await Permission.findOne({
+                userId: req.user.id,
+                workspaceId: id,
+                role: 'admin',
+            })
+            if (userPermission) {
+                isAllowed = true
+            }
         }
 
         if (!isAllowed) {
@@ -286,7 +296,6 @@ exports.deleteWorkspace = async (req, res) => {
         if (!workspace) {
             return res.status(404).json({ message: 'Espace non trouvé' })
         }
-
         const ownerId =
             workspace.owner && workspace.owner._id
                 ? workspace.owner._id
@@ -297,6 +306,16 @@ exports.deleteWorkspace = async (req, res) => {
             isAllowed = true
         } else if (String(ownerId) === String(req.user.id)) {
             isAllowed = true
+        } else {
+            // Vérifier si l'utilisateur a le rôle admin dans ce workspace
+            const userPermission = await Permission.findOne({
+                userId: req.user.id,
+                workspaceId: id,
+                role: 'admin',
+            })
+            if (userPermission) {
+                isAllowed = true
+            }
         }
 
         if (!isAllowed) {

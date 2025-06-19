@@ -349,10 +349,197 @@ exports.getPermissionById = async (req, res) => {
     res.status(501).json({ message: 'Not implemented' })
 }
 exports.updatePermission = async (req, res) => {
-    res.status(501).json({ message: 'Not implemented' })
+    try {
+        const { id } = req.params
+        const { role, permissions, channelRoles } = req.body
+
+        // Vérifier que la permission existe
+        const permission = await Permission.findById(id).populate(
+            'workspaceId',
+            'owner'
+        )
+        if (!permission) {
+            return res.status(404).json({ message: 'Permission non trouvée.' })
+        }
+
+        // Vérifier que l'utilisateur actuel a le droit de modifier cette permission
+        const workspace = permission.workspaceId
+        const isOwner =
+            workspace && String(workspace.owner) === String(req.user.id)
+
+        // Vérifier si l'utilisateur est admin du workspace
+        const userPermission = await Permission.findOne({
+            userId: req.user.id,
+            workspaceId: workspace._id,
+            role: { $in: ['admin', 'owner'] },
+        })
+
+        // Seuls les propriétaires, admins du workspace ou admins globaux peuvent modifier les permissions
+        if (!isOwner && !userPermission && req.user.role !== 'admin') {
+            return res.status(403).json({
+                message:
+                    'Seuls les propriétaires et admins peuvent modifier les permissions.',
+            })
+        }
+
+        // Empêcher l'utilisateur de modifier ses propres permissions (sécurité)
+        if (String(permission.userId) === String(req.user.id)) {
+            return res.status(403).json({
+                message: 'Vous ne pouvez pas modifier vos propres permissions.',
+            })
+        }
+
+        // Préparer les mises à jour
+        const updates = {}
+
+        if (role !== undefined) {
+            // Valider le rôle
+            if (!['admin', 'membre', 'invité'].includes(role)) {
+                return res.status(400).json({
+                    message:
+                        'Rôle invalide. Valeurs autorisées: admin, membre, invité',
+                })
+            }
+            updates.role = role
+
+            // Mettre à jour les permissions par défaut selon le rôle
+            const {
+                getDefaultPermissions,
+            } = require('../services/rolePermissionService')
+            updates.legacyPermissions = getDefaultPermissions(role)
+
+            // Mettre à jour les permissions modernes selon le rôle
+            switch (role) {
+                case 'admin':
+                    updates.permissions = [
+                        'post',
+                        'view',
+                        'moderate',
+                        'manage_members',
+                        'manage_channels',
+                        'delete_messages',
+                        'upload_files',
+                        'react',
+                        'invite_members',
+                    ]
+                    break
+                case 'membre':
+                    updates.permissions = [
+                        'post',
+                        'view',
+                        'upload_files',
+                        'react',
+                    ]
+                    break
+                case 'invité':
+                    updates.permissions = ['view']
+                    break
+            }
+        }
+
+        if (permissions !== undefined) {
+            updates.permissions = permissions
+        }
+
+        if (channelRoles !== undefined) {
+            updates.channelRoles = channelRoles
+        }
+
+        // Mettre à jour la permission
+        const updatedPermission = await Permission.findByIdAndUpdate(
+            id,
+            updates,
+            { new: true, runValidators: true }
+        )
+            .populate('userId', 'username email avatar')
+            .populate('workspaceId', 'name description')
+
+        res.status(200).json({
+            message: 'Permission mise à jour avec succès.',
+            permission: updatedPermission,
+        })
+    } catch (error) {
+        console.error('Erreur dans updatePermission:', error)
+        res.status(500).json({
+            message: 'Erreur serveur lors de la mise à jour de la permission.',
+            error: error.message,
+        })
+    }
 }
 exports.deletePermission = async (req, res) => {
-    res.status(501).json({ message: 'Not implemented' })
+    try {
+        const { id } = req.params
+
+        // Vérifier que la permission existe
+        const permission = await Permission.findById(id).populate(
+            'workspaceId',
+            'owner'
+        )
+        if (!permission) {
+            return res.status(404).json({ message: 'Permission non trouvée.' })
+        }
+
+        // Vérifier que l'utilisateur actuel a le droit de supprimer cette permission
+        const workspace = permission.workspaceId
+        const isOwner =
+            workspace && String(workspace.owner) === String(req.user.id)
+
+        // Vérifier si l'utilisateur est admin du workspace
+        const userPermission = await Permission.findOne({
+            userId: req.user.id,
+            workspaceId: workspace._id,
+            role: { $in: ['admin', 'owner'] },
+        })
+
+        // Seuls les propriétaires, admins du workspace ou admins globaux peuvent supprimer les permissions
+        if (!isOwner && !userPermission && req.user.role !== 'admin') {
+            return res.status(403).json({
+                message:
+                    'Seuls les propriétaires et admins peuvent supprimer les permissions.',
+            })
+        }
+
+        // Empêcher l'utilisateur de supprimer ses propres permissions (sécurité)
+        if (String(permission.userId) === String(req.user.id)) {
+            return res.status(403).json({
+                message:
+                    'Vous ne pouvez pas supprimer vos propres permissions.',
+            })
+        }
+
+        // Empêcher la suppression de la permission du propriétaire du workspace
+        if (String(permission.userId) === String(workspace.owner)) {
+            return res.status(403).json({
+                message:
+                    'Impossible de supprimer les permissions du propriétaire du workspace.',
+            })
+        }
+
+        // Supprimer la permission
+        await Permission.findByIdAndDelete(id)
+
+        // Retirer l'utilisateur des membres du workspace s'il n'a plus de permissions
+        const remainingPermissions = await Permission.find({
+            userId: permission.userId,
+            workspaceId: workspace._id,
+        })
+
+        if (remainingPermissions.length === 0) {
+            await Workspace.findByIdAndUpdate(workspace._id, {
+                $pull: { members: permission.userId },
+            })
+        }
+
+        res.status(200).json({
+            message: 'Permission supprimée avec succès.',
+        })
+    } catch (error) {
+        console.error('Erreur dans deletePermission:', error)
+        res.status(500).json({
+            message: 'Erreur serveur lors de la suppression de la permission.',
+            error: error.message,
+        })
+    }
 }
 
 module.exports = exports

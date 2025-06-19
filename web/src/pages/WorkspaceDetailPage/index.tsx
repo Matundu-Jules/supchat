@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useWorkspaceDetails } from "@hooks/useWorkspaceDetails";
+import { useWorkspacePermissions } from "@hooks/useWorkspacePermissions";
 import styles from "./WorkspaceDetailPage.module.scss";
 import Loader from "@components/Loader";
 import { useSelector } from "react-redux";
@@ -47,6 +48,16 @@ const WorkspaceDetailPage: React.FC = () => {
   } = useWorkspaceDetails(id || "");
   const navigate = useNavigate();
 
+  // Utiliser le hook pour vérifier les permissions
+  const permissions = useWorkspacePermissions(workspace);
+  const {
+    isOwnerOrAdmin,
+    canManageWorkspace,
+    canManageMembers,
+    canManageRoles,
+    userRole,
+  } = permissions;
+
   if (loading) {
     return (
       <div className={styles["container"]}>
@@ -66,15 +77,10 @@ const WorkspaceDetailPage: React.FC = () => {
   if (!workspace) {
     return (
       <div className={styles["container"]}>
-        <p className={styles["error"]}>Workspace introuvable.</p>
+        <p className={styles["error"]}>Workspace introuvable.</p>{" "}
       </div>
     );
   }
-  // Vérifie si l'utilisateur est admin ou owner du workspace
-  const isAdminOrOwner =
-    user &&
-    workspace.owner &&
-    (user.role === "admin" || user.email === workspace.owner.email);
 
   const handleEditWorkspace = () => {
     setShowEditModal(true);
@@ -97,7 +103,7 @@ const WorkspaceDetailPage: React.FC = () => {
   };
   const menuItems = [
     { id: "members" as MenuItem, label: "Membres", icon: "👥" },
-    ...(isAdminOrOwner
+    ...(isOwnerOrAdmin
       ? [
           { id: "invitations" as MenuItem, label: "Invitations", icon: "✉️" },
           { id: "roles" as MenuItem, label: "Rôles", icon: "👑" },
@@ -236,7 +242,7 @@ const WorkspaceDetailPage: React.FC = () => {
                             </div>
 
                             {/* Bouton de suppression - Visible seulement pour admin/owner et pas pour le propriétaire */}
-                            {isAdminOrOwner &&
+                            {isOwnerOrAdmin &&
                               safeRole !== "propriétaire" &&
                               member.email !== workspace.owner?.email && (
                                 <button
@@ -326,10 +332,10 @@ const WorkspaceDetailPage: React.FC = () => {
         return (
           <div className={styles["content"]}>
             <h2>Gestion des Rôles</h2>
-            {/* Rôles du Workspace */}
+            {/* Rôles du Workspace */}{" "}
             <WorkspaceRolesManager
               workspaceId={id || ""}
-              isOwnerOrAdmin={isAdminOrOwner}
+              isOwnerOrAdmin={isOwnerOrAdmin}
             />{" "}
           </div>
         );
@@ -340,7 +346,7 @@ const WorkspaceDetailPage: React.FC = () => {
             <h2>Demandes d'accès au workspace</h2>{" "}
             <JoinRequestsManager
               workspaceId={id || ""}
-              isOwnerOrAdmin={isAdminOrOwner}
+              isOwnerOrAdmin={isOwnerOrAdmin}
               onRequestsChange={fetchDetails}
             />
           </div>
@@ -396,7 +402,7 @@ const WorkspaceDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {isAdminOrOwner && (
+              {isOwnerOrAdmin && (
                 <div className={styles["settingGroup"]}>
                   <h3>Actions administrateur</h3>
                   <div className={styles["actionButtons"]}>

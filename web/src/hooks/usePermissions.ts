@@ -1,9 +1,17 @@
-import { useEffect, useState } from "react";
-import { getWorkspacePermissions, updatePermission } from "@services/permissionApi";
+import { useEffect, useState } from 'react';
+import {
+  getWorkspacePermissions,
+  updatePermission,
+} from '@services/permissionApi';
 
 export interface Permission {
   _id: string;
-  userId: { _id: string; email?: string; username?: string };
+  userId: {
+    _id: string;
+    email?: string;
+    username?: string;
+    avatar?: string;
+  };
   role: string;
   channelRoles: { channelId: string; role: string }[];
 }
@@ -21,7 +29,7 @@ export function usePermissions(workspaceId: string) {
       const data = await getWorkspacePermissions(workspaceId);
       setPermissions(data);
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement");
+      setError(err.message || 'Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
@@ -42,4 +50,3 @@ export function usePermissions(workspaceId: string) {
 
   return { permissions, loading, error, fetchPermissions: fetchAll, setRole };
 }
-
