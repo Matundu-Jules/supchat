@@ -40,12 +40,13 @@ services:
       - MONGO_DB=supchat_test
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=rootpassword
-      - MONGO_AUTH_SOURCE=admin
-
-      # Secrets pour les tests
+      - MONGO_AUTH_SOURCE=admin # Secrets pour les tests
       - JWT_SECRET=test_jwt_secret
       - JWT_REFRESH=test_jwt_refresh
-      - CSRF_SECRET=test_csrf_secret
+      - CSRF_SECRET=test_csrf_secret      # Configuration des emails pour les tests
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_PASS=${GMAIL_PASS}
+      - FRONTEND_URL=${FRONTEND_URL}
 
     depends_on:
       db-test:

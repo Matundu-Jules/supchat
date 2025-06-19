@@ -18,7 +18,7 @@ export const useForgotPassword = () => {
     try {
       await forgotPasswordSchema.validate({ email });
       await forgotPassword(email);
-      setMsg('Mail de réinitialisation envoyé ! Vérifie la console serveur.');
+      setMsg('Mail de réinitialisation envoyé ! Vérifiez votre boîte mail.');
       setIsError(false);
     } catch (err: any) {
       setMsg(err.response?.data?.message || 'Erreur serveur');

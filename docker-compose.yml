@@ -41,6 +41,9 @@ services:
       # Email configuration
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
+
+      # Frontend URL for email links (development)
+      - FRONTEND_URL=${FRONTEND_URL}
     env_file:
       - .env
     depends_on:

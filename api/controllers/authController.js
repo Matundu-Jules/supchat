@@ -557,13 +557,23 @@ exports.forgotPassword = async (req, res) => {
         const resetToken = crypto.randomBytes(32).toString('hex')
         user.resetPasswordToken = resetToken
         user.resetPasswordExpires = Date.now() + 3600 * 1000 // 1h
-        await user.save()
-
-        // Génération du HTML avec React Email
+        await user.save() // Génération du HTML avec React Email
         const ResetPasswordEmail = require('../emails/ResetPasswordEmail')
+
+        // URL frontend dynamique selon l'environnement
+        let frontendUrl
+        if (process.env.NODE_ENV === 'production') {
+            frontendUrl = process.env.FRONTEND_URL || 'https://supchat.com'
+        } else if (process.env.NODE_ENV === 'test') {
+            frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080'
+        } else {
+            // Développement
+            frontendUrl = process.env.FRONTEND_URL || 'http://localhost:80'
+        }
+
         const emailHtml = renderToStaticMarkup(
             React.createElement(ResetPasswordEmail, {
-                resetUrl: `http://localhost:5173/reset-password?token=${resetToken}`,
+                resetUrl: `${frontendUrl}/reset-password?token=${resetToken}`,
                 userName: user.name || user.email,
             })
         )
