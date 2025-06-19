@@ -106,7 +106,12 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1.2rem;
+}
+
+.channelRoleAvatar {
+  flex-shrink: 0;
+  margin-top: 0.2rem; /* Petit ajustement pour l'alignement avec le texte */
 }
 
 .userDetails {
@@ -114,6 +119,7 @@
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  min-width: 0;
 }
 
 .userName {

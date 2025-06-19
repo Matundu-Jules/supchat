@@ -34,12 +34,24 @@
 
 .userInfo {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.userInfo strong {
+.requestAvatar {
+  flex-shrink: 0;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.userDetails strong {
   font-size: 1.4rem;
   color: var(--color-text);
   font-weight: 600;

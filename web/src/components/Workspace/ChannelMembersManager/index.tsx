@@ -7,6 +7,7 @@ import {
 } from "@services/channelApi";
 import { getWorkspaceMembers } from "@services/workspaceApi";
 import { useChannelPermissions } from "@hooks/useChannelPermissions";
+import UserAvatar from "@components/UserAvatar";
 import Loader from "@components/Loader";
 import styles from "./ChannelMembersManager.module.scss";
 
@@ -228,11 +229,24 @@ const ChannelMembersManager: React.FC<ChannelMembersManagerProps> = ({
           members.map((member) => (
             <div key={member._id} className={styles["memberItem"]}>
               <div className={styles["memberInfo"]}>
+                {/* Avatar de l'utilisateur */}
+                <UserAvatar
+                  avatar={(member as any).avatar}
+                  username={member.username}
+                  email={member.email}
+                  height="2.8rem"
+                  size="custom"
+                  className={styles["channelMemberAvatar"]}
+                />
                 <div className={styles["memberDetails"]}>
-                  <span className={styles["memberName"]}>
-                    {member.username}
-                  </span>
-                  <span className={styles["memberEmail"]}>{member.email}</span>
+                  <div className={styles["memberTextInfo"]}>
+                    <span className={styles["memberName"]}>
+                      {member.username}
+                    </span>
+                    <span className={styles["memberEmail"]}>
+                      {member.email}
+                    </span>
+                  </div>
                 </div>
                 <div className={styles["memberActions"]}>
                   <div className={styles["roleSelector"]}>

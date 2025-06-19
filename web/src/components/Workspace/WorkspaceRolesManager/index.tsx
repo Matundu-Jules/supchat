@@ -1,6 +1,7 @@
 import React from "react";
 import { usePermissions } from "@hooks/usePermissions";
 import RoleSelector from "@components/Permissions/RoleSelector";
+import UserAvatar from "@components/UserAvatar";
 import Loader from "@components/Loader";
 import styles from "./WorkspaceRolesManager.module.scss";
 
@@ -46,6 +47,16 @@ const WorkspaceRolesManager: React.FC<WorkspaceRolesManagerProps> = ({
             permissions.map((permission) => (
               <div key={permission._id} className={styles["roleItem"]}>
                 <div className={styles["userInfo"]}>
+                  {" "}
+                  {/* Avatar de l'utilisateur */}
+                  <UserAvatar
+                    avatar={(permission.userId as any).avatar}
+                    username={permission.userId.username}
+                    email={permission.userId.email}
+                    height="3.2rem"
+                    size="custom"
+                    className={styles["roleAvatar"]}
+                  />
                   <div className={styles["userDetails"]}>
                     <span className={styles["userName"]}>
                       {permission.userId.username || permission.userId.email}

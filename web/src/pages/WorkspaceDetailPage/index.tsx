@@ -11,6 +11,7 @@ import WorkspaceRolesManager from "@components/Workspace/WorkspaceRolesManager";
 import EditWorkspaceModal from "@components/Workspace/EditWorkspaceModal";
 import UserStatusBadge from "@components/UserStatusBadge";
 import UserRoleBadge from "@components/UserRoleBadge";
+import UserAvatar from "@components/UserAvatar";
 import { WorkspaceMember } from "../../types/workspace";
 
 type MenuItem = "members" | "roles" | "join-requests" | "settings";
@@ -134,6 +135,16 @@ const WorkspaceDetailPage: React.FC = () => {
                     return (
                       <li key={member._id} className={styles["memberItem"]}>
                         <div className={styles["memberInfo"]}>
+                          {/* Avatar de l'utilisateur */}
+                          <UserAvatar
+                            avatar={member.avatar}
+                            username={member.username}
+                            email={member.email}
+                            height="3.6rem"
+                            size="custom"
+                            className={styles["memberAvatar"]}
+                          />
+
                           <div className={styles["memberDetails"]}>
                             <div className={styles["memberNameContainer"]}>
                               <span className={styles["memberName"]}>

@@ -4,6 +4,7 @@ import {
   approveJoinRequest,
   rejectJoinRequest,
 } from "@services/workspaceApi";
+import UserAvatar from "@components/UserAvatar";
 import styles from "./JoinRequestsManager.module.scss";
 
 interface JoinRequest {
@@ -39,11 +40,6 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   isOwnerOrAdmin,
   onRequestsChange,
 }) => {
-  console.log(
-    "🏗️ JoinRequestsManager: Rendu du composant avec workspaceId:",
-    workspaceId
-  );
-
   const [requests, setRequests] = useState<ValidJoinRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,11 +69,8 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
     setApproving(requestUserId);
     setError(null);
     try {
-      console.log("🚀 Début de l'approbation pour:", requestUserId);
       await approveJoinRequest(workspaceId, requestUserId);
-      console.log("✅ Approbation réussie, affichage du message de succès");
       setSuccessMessage("Demande approuvée avec succès !");
-      console.log("🔄 Mise à jour de la liste...");
       await fetchRequests(); // Rafraîchir la liste locale
 
       // Retarder l'appel du callback parent pour ne pas réinitialiser l'état
@@ -110,25 +103,18 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
       setRejecting(null);
     }
   };
-
   useEffect(() => {
     fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, isOwnerOrAdmin]); // Effacer les messages de succès après 5 secondes
+  }, [workspaceId, isOwnerOrAdmin]);
+  // Effacer les messages de succès après 5 secondes
   useEffect(() => {
     if (successMessage) {
-      console.log("📝 Message de succès défini:", successMessage);
       const timer = setTimeout(() => {
-        console.log("⏰ Effacement du message de succès après 5 secondes");
         setSuccessMessage(null);
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [successMessage]);
-
-  // Log pour traquer les changements d'état
-  useEffect(() => {
-    console.log("🔍 État successMessage changé:", successMessage);
   }, [successMessage]);
 
   if (!isOwnerOrAdmin) {
@@ -165,10 +151,6 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
     );
   }
   if (requests.length === 0) {
-    console.log(
-      "🎯 RENDU: Cas requests.length === 0, successMessage:",
-      successMessage
-    );
     return (
       <div className={styles["container"]}>
         <h3>Demandes de rejoindre</h3>
@@ -192,7 +174,6 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
   return (
     <div className={styles["container"]}>
       <h3>Demandes de rejoindre ({requests.length})</h3>
-
       {/* Messages de succès/erreur */}
       {successMessage && (
         <div className={styles["success"]}>
@@ -205,17 +186,28 @@ const JoinRequestsManager: React.FC<JoinRequestsManagerProps> = ({
           <i className="fa-solid fa-exclamation-circle"></i>
           {error}
         </div>
-      )}
-
+      )}{" "}
       <div className={styles["requestsList"]}>
         {requests.map((request) => (
           <div key={request.userId._id} className={styles["requestItem"]}>
             <div className={styles["userInfo"]}>
-              <strong>{request.userId.name || request.userId.email}</strong>
-              <span className={styles["email"]}>{request.userId.email}</span>
-              <span className={styles["date"]}>
-                {new Date(request.requestedAt).toLocaleDateString("fr-FR")}
-              </span>
+              {/* Avatar de l'utilisateur */}
+              <UserAvatar
+                avatar={request.userId.avatar}
+                username={request.userId.name}
+                email={request.userId.email}
+                height="3.2rem"
+                size="custom"
+                className={styles["requestAvatar"]}
+              />
+
+              <div className={styles["userDetails"]}>
+                <strong>{request.userId.name || request.userId.email}</strong>
+                <span className={styles["email"]}>{request.userId.email}</span>
+                <span className={styles["date"]}>
+                  {new Date(request.requestedAt).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
             </div>
             {request.message && (
               <div className={styles["message"]}>"{request.message}"</div>

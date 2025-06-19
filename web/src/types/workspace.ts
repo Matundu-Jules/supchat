@@ -4,6 +4,7 @@ export interface WorkspaceMember {
   _id: string;
   username: string;
   email: string;
+  avatar?: string;
   status: 'online' | 'away' | 'busy' | 'offline';
   theme: 'light' | 'dark';
   role: 'propriétaire' | 'admin' | 'membre' | 'invité';

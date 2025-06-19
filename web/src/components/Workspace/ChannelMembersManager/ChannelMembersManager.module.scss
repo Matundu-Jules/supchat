@@ -165,9 +165,15 @@
 
 .memberDetails {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  flex: 1;
+}
+
+.memberTextInfo {
+  display: flex;
   flex-direction: column;
   gap: var(--spacing-small);
-  flex: 1;
 }
 
 .memberName {
