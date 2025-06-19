@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   getWorkspaceDetails,
+  getWorkspaceMembers,
   inviteToWorkspace,
   joinWorkspace,
   removeMemberFromWorkspace,
@@ -20,13 +21,22 @@ export function useWorkspaceDetails(workspaceId: string) {
   const [joinLoading, setJoinLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
   const fetchDetails = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getWorkspaceDetails(workspaceId);
-      setWorkspace(data);
+      const [workspaceData, membersData] = await Promise.all([
+        getWorkspaceDetails(workspaceId),
+        getWorkspaceMembers(workspaceId),
+      ]);
+
+      // Remplacer les membres du workspace par ceux avec les rôles corrects
+      const workspaceWithRoles = {
+        ...workspaceData,
+        members: membersData,
+      };
+
+      setWorkspace(workspaceWithRoles);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
     } finally {

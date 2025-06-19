@@ -13,8 +13,6 @@ const Channel = require('../models/Channel')
 
 // Helper pour vérifier si l'utilisateur est admin global (à adapter selon votre logique)
 function isGlobalAdmin(user) {
-    // console.log('user', user)
-
     // Exemple : user.role === 'admin'
     return user && user.role === 'admin'
 }
@@ -195,9 +193,13 @@ exports.getWorkspaceMembers = async (req, res) => {
                 (perm) => String(perm.userId._id) === String(member._id)
             )
 
-            // Déterminer le rôle
+            // Correction: Extraire l'ID du propriétaire correctement
+            const ownerId = workspace.owner?._id || workspace.owner
+            const isOwner = String(ownerId) === String(member._id)
+
+            // Déterminer le rôle - Correction de la comparaison Owner
             let role = 'membre' // Rôle par défaut
-            if (String(workspace.owner) === String(member._id)) {
+            if (isOwner) {
                 role = 'propriétaire'
             } else if (memberPermission) {
                 role = memberPermission.role || 'membre'
@@ -283,7 +285,6 @@ exports.deleteWorkspace = async (req, res) => {
         if (!workspace) {
             return res.status(404).json({ message: 'Espace non trouvé' })
         }
-        // console.log('workspace', workspace)
 
         const ownerId =
             workspace.owner && workspace.owner._id
@@ -317,13 +318,6 @@ exports.inviteToWorkspace = async (req, res) => {
     try {
         const { id } = req.params // workspaceId
         const { email } = req.body
-
-        console.log('🔍 inviteToWorkspace - Paramètres reçus:', {
-            workspaceId: id,
-            email,
-            invitingUser: req.user?.id,
-            invitingUserEmail: req.user?.email,
-        })
 
         let workspace
         let invitedUser
@@ -426,14 +420,7 @@ exports.joinWorkspace = async (req, res) => {
 
     try {
         const { inviteCode } = req.body
-        // Ajout d'un log pour debug
-        console.log(
-            '[joinWorkspace] inviteCode:',
-            inviteCode,
-            'user:',
-            req.user?.id || req.user?._id,
-            req.user?.email
-        )
+
         let workspace
         try {
             workspace = await workspaceService.join(inviteCode, req.user)
@@ -574,15 +561,6 @@ exports.requestToJoinWorkspace = async (req, res) => {
 exports.approveJoinRequest = async (req, res) => {
     try {
         const { id, requestUserId } = req.params
-        console.log('🔍 approveJoinRequest - Paramètres reçus:', {
-            id,
-            requestUserId,
-        })
-        console.log(
-            '🔍 approveJoinRequest - Utilisateur qui approuve:',
-            req.user?.id,
-            req.user?.email
-        )
 
         const workspace = await workspaceService.approveJoinRequest(
             id,
@@ -695,12 +673,6 @@ exports.removeMember = async (req, res) => {
     try {
         const { id, userId } = req.params
 
-        console.log("🗑️ Demande de suppression d'un membre:", {
-            workspaceId: id,
-            targetUserId: userId,
-            requestingUser: req.user.id,
-        })
-
         const result = await workspaceService.removeMember(id, userId, req.user)
 
         res.status(200).json(result)
@@ -738,13 +710,6 @@ exports.inviteGuestToWorkspace = async (req, res) => {
     try {
         const { id } = req.params // workspaceId
         const { email, allowedChannels = [] } = req.body
-
-        console.log('🔍 inviteGuestToWorkspace - Paramètres reçus:', {
-            workspaceId: id,
-            email,
-            allowedChannels,
-            invitingUser: req.user?.id,
-        })
 
         const workspace = await workspaceService.findById(id)
         if (!workspace) {
@@ -874,15 +839,13 @@ exports.generateInviteLink = async (req, res) => {
 exports.joinWorkspaceByCode = async (req, res) => {
     try {
         const { inviteCode } = req.params
-        console.log('🔍 joinWorkspaceByCode - Code reçu:', inviteCode) // Pour ce test simple, on accepte seulement les codes qui commencent par "VALID"
+
         if (!inviteCode.startsWith('VALID')) {
-            console.log('❌ Code invalide, retour 404')
             return res
                 .status(404)
                 .json({ message: "Code d'invitation invalide" })
         }
 
-        console.log('✅ Code valide, retour 200')
         // Simuler l'ajout à un workspace
         res.status(200).json({
             message: 'Vous avez rejoint le workspace avec succès',
