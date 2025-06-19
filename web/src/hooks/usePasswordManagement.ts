@@ -46,13 +46,11 @@ export function usePasswordManagement() {
       newErrors.newPassword = 'Le nouveau mot de passe est requis';
     } else if (form.newPassword.length < 8) {
       newErrors.newPassword =
-        'Le mot de passe doit contenir au moins 8 caractères';
-    } else if (form.newPassword.length > 128) {
+        'Le mot de passe doit contenir au moins 8 caractères';    } else if (form.newPassword.length > 128) {
       newErrors.newPassword =
-        'Le mot de passe ne peut pas dépasser 128 caractères';
-    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.newPassword)) {
+        'Le mot de passe ne peut pas dépasser 128 caractères';    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])/.test(form.newPassword)) {
       newErrors.newPassword =
-        'Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre';
+        'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial (@$!%*?&#)';
     }
 
     // Vérifier la confirmation

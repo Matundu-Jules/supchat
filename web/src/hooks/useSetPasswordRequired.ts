@@ -35,17 +35,17 @@ export function useSetPasswordRequired() {
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<SetPasswordFormData> = {};
-
-    // Vérifier le nouveau mot de passe
+    const newErrors: Partial<SetPasswordFormData> = {};    // Vérifier le nouveau mot de passe
     if (!form.newPassword.trim()) {
       newErrors.newPassword = 'Le mot de passe est requis';
     } else if (form.newPassword.length < 8) {
       newErrors.newPassword =
         'Le mot de passe doit contenir au moins 8 caractères';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.newPassword)) {
+    } else if (form.newPassword.length > 128) {
       newErrors.newPassword =
-        'Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre';
+        'Le mot de passe ne peut pas dépasser 128 caractères';    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])/.test(form.newPassword)) {
+      newErrors.newPassword =
+        'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial (@$!%*?&#)';
     }
 
     // Vérifier la confirmation
