@@ -18,9 +18,9 @@ type MenuItem = "members" | "roles" | "join-requests" | "settings";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [activeMenu, setActiveMenu] = useState<MenuItem>("members");
+  const user = useSelector((state: RootState) => state.auth.user);  const [activeMenu, setActiveMenu] = useState<MenuItem>("members");
   const [showEditModal, setShowEditModal] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const {
     workspace,
     loading,
@@ -111,8 +111,7 @@ const WorkspaceDetailPage: React.FC = () => {
           <div className={styles["content"]}>
             <h2>Membres du workspace</h2>
             <div className={styles["membersSection"]}>
-              {" "}
-              <div className={styles["membersHeader"]}>
+              {" "}              <div className={styles["membersHeader"]}>
                 <h3>Liste des membres</h3>
                 {workspace.members && workspace.members.length > 5 && (
                   <span className={styles["scrollIndicator"]}>
@@ -120,6 +119,43 @@ const WorkspaceDetailPage: React.FC = () => {
                     voir plus
                   </span>
                 )}
+                {/* Barre de recherche pour les membres */}
+                <div className={styles["memberSearchContainer"]}>
+                  <div className={styles["searchInputWrapper"]}>
+                    <i className="fa-solid fa-search" aria-hidden="true"></i>
+                    <input
+                      type="text"
+                      placeholder="Rechercher un membre..."
+                      value={memberSearchQuery}
+                      onChange={(e) => setMemberSearchQuery(e.target.value)}
+                      className={styles["memberSearchInput"]}
+                    />
+                    {memberSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setMemberSearchQuery("")}
+                        className={styles["clearSearchButton"]}
+                        title="Effacer la recherche"
+                      >
+                        <i className="fa-solid fa-times" aria-hidden="true"></i>
+                      </button>
+                    )}
+                  </div>                  {memberSearchQuery && (
+                    <span className={styles["searchResultsCount"]}>
+                      {(() => {
+                        const filteredCount = workspace.members?.filter((member: WorkspaceMember) =>
+                          (member.username || member.email)
+                            .toLowerCase()
+                            .includes(memberSearchQuery.toLowerCase()) ||
+                          member.email
+                            .toLowerCase()
+                            .includes(memberSearchQuery.toLowerCase())
+                        ).length || 0;
+                        return `${filteredCount} résultat${filteredCount > 1 ? 's' : ''} trouvé${filteredCount > 1 ? 's' : ''}`;
+                      })()}
+                    </span>
+                  )}
+                </div>
               </div>
               {/* Invitation de nouveaux membres - Placée en haut pour être toujours accessible */}
               {isAdminOrOwner && (
@@ -163,77 +199,96 @@ const WorkspaceDetailPage: React.FC = () => {
                   )}
                   {inviteSuccess && !inviteError && (
                     <div className={styles["success"]}>{inviteSuccess}</div>
-                  )}
-                </div>
+                  )}                </div>
               )}
               <ul className={styles["membersList"]}>
-                {workspace.members && workspace.members.length > 0 ? (
-                  workspace.members.map((member: WorkspaceMember) => {
-                    // Correction : fallback strict pour le rôle et le statut
-                    let safeRole: WorkspaceMember["role"] = "membre";
-                    if (
-                      ["propriétaire", "admin", "membre", "invité"].includes(
-                        member.role
-                      )
-                    ) {
-                      safeRole = member.role;
-                    }
-                    let safeStatus: WorkspaceMember["status"] = "offline";
-                    if (
-                      ["online", "away", "busy", "offline"].includes(
-                        member.status
-                      )
-                    ) {
-                      safeStatus = member.status;
-                    }
-                    return (
-                      <li key={member._id} className={styles["memberItem"]}>
-                        <div className={styles["memberInfo"]}>
-                          {/* Avatar de l'utilisateur */}
-                          <UserAvatar
-                            avatar={member.avatar}
-                            username={member.username}
-                            email={member.email}
-                            height="3.6rem"
-                            size="custom"
-                            className={styles["memberAvatar"]}
-                          />
+                {(() => {
+                  // Filtrer les membres selon la recherche
+                  const filteredMembers = workspace.members?.filter((member: WorkspaceMember) => {
+                    if (!memberSearchQuery.trim()) return true;
+                    
+                    const searchTerm = memberSearchQuery.toLowerCase();
+                    const username = (member.username || "").toLowerCase();
+                    const email = member.email.toLowerCase();
+                    
+                    return username.includes(searchTerm) || email.includes(searchTerm);
+                  }) || [];
 
-                          <div className={styles["memberDetails"]}>
-                            <div className={styles["memberNameContainer"]}>
-                              <span className={styles["memberName"]}>
-                                {member.username || member.email}
-                              </span>
-                              <div className={styles["memberBadges"]}>
-                                <UserStatusBadge
-                                  status={safeStatus}
-                                  size="small"
-                                  showText={true}
-                                />
-                                <UserRoleBadge role={safeRole} size="small" />
+                  // Afficher les résultats
+                  if (filteredMembers.length > 0) {
+                    return filteredMembers.map((member: WorkspaceMember) => {
+                      // Correction : fallback strict pour le rôle et le statut
+                      let safeRole: WorkspaceMember["role"] = "membre";
+                      if (
+                        ["propriétaire", "admin", "membre", "invité"].includes(
+                          member.role
+                        )
+                      ) {
+                        safeRole = member.role;
+                      }
+                      let safeStatus: WorkspaceMember["status"] = "offline";
+                      if (
+                        ["online", "away", "busy", "offline"].includes(
+                          member.status
+                        )
+                      ) {
+                        safeStatus = member.status;
+                      }
+                      return (
+                        <li key={member._id} className={styles["memberItem"]}>
+                          <div className={styles["memberInfo"]}>
+                            {/* Avatar de l'utilisateur */}
+                            <UserAvatar
+                              avatar={member.avatar}
+                              username={member.username}
+                              email={member.email}
+                              height="3.6rem"
+                              size="custom"
+                              className={styles["memberAvatar"]}
+                            />
+
+                            <div className={styles["memberDetails"]}>
+                              <div className={styles["memberNameContainer"]}>
+                                <span className={styles["memberName"]}>
+                                  {member.username || member.email}
+                                </span>
+                                <div className={styles["memberBadges"]}>
+                                  <UserStatusBadge
+                                    status={safeStatus}
+                                    size="small"
+                                    showText={true}
+                                  />
+                                  <UserRoleBadge role={safeRole} size="small" />
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Bouton de suppression - Visible seulement pour admin/owner et pas pour le propriétaire */}
-                          {isAdminOrOwner &&
-                            safeRole !== "propriétaire" &&
-                            member.email !== workspace.owner?.email && (
-                              <button
-                                className={styles["removeMemberButton"]}
-                                onClick={() => handleRemoveMember(member._id)}
-                                title="Supprimer ce membre"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                        </div>
+                            {/* Bouton de suppression - Visible seulement pour admin/owner et pas pour le propriétaire */}
+                            {isAdminOrOwner &&
+                              safeRole !== "propriétaire" &&
+                              member.email !== workspace.owner?.email && (
+                                <button
+                                  className={styles["removeMemberButton"]}
+                                  onClick={() => handleRemoveMember(member._id)}
+                                  title="Supprimer ce membre"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                          </div>
+                        </li>
+                      );
+                    });
+                  } else if (memberSearchQuery) {
+                    return (
+                      <li className={styles["empty"]}>
+                        Aucun membre ne correspond à la recherche "{memberSearchQuery}"
                       </li>
                     );
-                  })
-                ) : (
-                  <li className={styles["empty"]}>Aucun membre</li>
-                )}{" "}
+                  } else {
+                    return <li className={styles["empty"]}>Aucun membre</li>;
+                  }
+                })()}
               </ul>
             </div>
           </div>
