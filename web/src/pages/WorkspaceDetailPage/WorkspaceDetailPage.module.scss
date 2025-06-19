@@ -957,6 +957,64 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Section invitations dédiée */
+.invitationsSection {
+  padding: 2rem;
+  background: var(--color-background);
+
+  .inviteSection {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light, #e3f2fd),
+      var(--color-surface)
+    );
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--color-primary-light, #e3f2fd);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(
+        90deg,
+        var(--color-primary),
+        var(--color-success)
+      );
+    }
+
+    .inviteHeader {
+      margin-bottom: 2rem;
+      text-align: center;
+
+      h3 {
+        margin: 0 0 0.8rem 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+      }
+    }
+
+    .inviteDescription {
+      color: var(--color-text-secondary);
+      font-size: 1.3rem;
+      margin: 0;
+      text-align: center;
+      font-style: italic;
+    }
+  }
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .channelsContent {

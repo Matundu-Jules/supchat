@@ -14,11 +14,17 @@ import UserRoleBadge from "@components/UserRoleBadge";
 import UserAvatar from "@components/UserAvatar";
 import { WorkspaceMember } from "../../types/workspace";
 
-type MenuItem = "members" | "roles" | "join-requests" | "settings";
+type MenuItem =
+  | "members"
+  | "invitations"
+  | "roles"
+  | "join-requests"
+  | "settings";
 
 const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const user = useSelector((state: RootState) => state.auth.user);  const [activeMenu, setActiveMenu] = useState<MenuItem>("members");
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [activeMenu, setActiveMenu] = useState<MenuItem>("members");
   const [showEditModal, setShowEditModal] = useState(false);
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const {
@@ -93,6 +99,7 @@ const WorkspaceDetailPage: React.FC = () => {
     { id: "members" as MenuItem, label: "Membres", icon: "👥" },
     ...(isAdminOrOwner
       ? [
+          { id: "invitations" as MenuItem, label: "Invitations", icon: "✉️" },
           { id: "roles" as MenuItem, label: "Rôles", icon: "👑" },
           {
             id: "join-requests" as MenuItem,
@@ -111,8 +118,8 @@ const WorkspaceDetailPage: React.FC = () => {
           <div className={styles["content"]}>
             <h2>Membres du workspace</h2>
             <div className={styles["membersSection"]}>
-              {" "}              <div className={styles["membersHeader"]}>
-                <h3>Liste des membres</h3>
+              <div className={styles["membersHeader"]}>
+                <h3>Liste des membres ({workspace.members?.length || 0})</h3>
                 {workspace.members && workspace.members.length > 5 && (
                   <span className={styles["scrollIndicator"]}>
                     📜 {workspace.members.length} membres - Faites défiler pour
@@ -140,79 +147,44 @@ const WorkspaceDetailPage: React.FC = () => {
                         <i className="fa-solid fa-times" aria-hidden="true"></i>
                       </button>
                     )}
-                  </div>                  {memberSearchQuery && (
+                  </div>{" "}
+                  {memberSearchQuery && (
                     <span className={styles["searchResultsCount"]}>
                       {(() => {
-                        const filteredCount = workspace.members?.filter((member: WorkspaceMember) =>
-                          (member.username || member.email)
-                            .toLowerCase()
-                            .includes(memberSearchQuery.toLowerCase()) ||
-                          member.email
-                            .toLowerCase()
-                            .includes(memberSearchQuery.toLowerCase())
-                        ).length || 0;
-                        return `${filteredCount} résultat${filteredCount > 1 ? 's' : ''} trouvé${filteredCount > 1 ? 's' : ''}`;
+                        const filteredCount =
+                          workspace.members?.filter(
+                            (member: WorkspaceMember) =>
+                              (member.username || member.email)
+                                .toLowerCase()
+                                .includes(memberSearchQuery.toLowerCase()) ||
+                              member.email
+                                .toLowerCase()
+                                .includes(memberSearchQuery.toLowerCase())
+                          ).length || 0;
+                        return `${filteredCount} résultat${
+                          filteredCount > 1 ? "s" : ""
+                        } trouvé${filteredCount > 1 ? "s" : ""}`;
                       })()}
                     </span>
                   )}
-                </div>
+                </div>{" "}
               </div>
-              {/* Invitation de nouveaux membres - Placée en haut pour être toujours accessible */}
-              {isAdminOrOwner && (
-                <div className={styles["inviteSection"]}>
-                  <div className={styles["inviteHeader"]}>
-                    <h4>✉️ Inviter un nouveau membre</h4>
-                  </div>
-                  <form
-                    className={styles["inviteForm"]}
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleInvite();
-                    }}
-                    autoComplete="off"
-                  >
-                    <input
-                      type="email"
-                      placeholder="Email du nouveau membre"
-                      value={inviteEmail}
-                      onChange={(e) => {
-                        setInviteEmail(e.target.value);
-                        if (inviteSuccess) setInviteSuccess(null);
-                      }}
-                      className={
-                        styles["input"] +
-                        (inviteError ? " " + styles["inputError"] : "")
-                      }
-                      required
-                      disabled={inviteLoading}
-                    />
-                    <button
-                      type="submit"
-                      className={styles["submitButton"]}
-                      disabled={inviteLoading}
-                    >
-                      {inviteLoading ? "Envoi..." : "Inviter"}
-                    </button>
-                  </form>
-                  {inviteError && (
-                    <div className={styles["error"]}>{inviteError}</div>
-                  )}
-                  {inviteSuccess && !inviteError && (
-                    <div className={styles["success"]}>{inviteSuccess}</div>
-                  )}                </div>
-              )}
               <ul className={styles["membersList"]}>
                 {(() => {
                   // Filtrer les membres selon la recherche
-                  const filteredMembers = workspace.members?.filter((member: WorkspaceMember) => {
-                    if (!memberSearchQuery.trim()) return true;
-                    
-                    const searchTerm = memberSearchQuery.toLowerCase();
-                    const username = (member.username || "").toLowerCase();
-                    const email = member.email.toLowerCase();
-                    
-                    return username.includes(searchTerm) || email.includes(searchTerm);
-                  }) || [];
+                  const filteredMembers =
+                    workspace.members?.filter((member: WorkspaceMember) => {
+                      if (!memberSearchQuery.trim()) return true;
+
+                      const searchTerm = memberSearchQuery.toLowerCase();
+                      const username = (member.username || "").toLowerCase();
+                      const email = member.email.toLowerCase();
+
+                      return (
+                        username.includes(searchTerm) ||
+                        email.includes(searchTerm)
+                      );
+                    }) || [];
 
                   // Afficher les résultats
                   if (filteredMembers.length > 0) {
@@ -282,7 +254,8 @@ const WorkspaceDetailPage: React.FC = () => {
                   } else if (memberSearchQuery) {
                     return (
                       <li className={styles["empty"]}>
-                        Aucun membre ne correspond à la recherche "{memberSearchQuery}"
+                        Aucun membre ne correspond à la recherche "
+                        {memberSearchQuery}"
                       </li>
                     );
                   } else {
@@ -290,6 +263,61 @@ const WorkspaceDetailPage: React.FC = () => {
                   }
                 })()}
               </ul>
+            </div>{" "}
+          </div>
+        );
+
+      case "invitations":
+        return (
+          <div className={styles["content"]}>
+            <h2>Invitations</h2>
+            <div className={styles["invitationsSection"]}>
+              <div className={styles["inviteSection"]}>
+                <div className={styles["inviteHeader"]}>
+                  <h3>✉️ Inviter un nouveau membre</h3>
+                  <p className={styles["inviteDescription"]}>
+                    Invitez de nouveaux utilisateurs à rejoindre ce workspace en
+                    saisissant leur adresse email.
+                  </p>
+                </div>
+                <form
+                  className={styles["inviteForm"]}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleInvite();
+                  }}
+                  autoComplete="off"
+                >
+                  <input
+                    type="email"
+                    placeholder="Email du nouveau membre"
+                    value={inviteEmail}
+                    onChange={(e) => {
+                      setInviteEmail(e.target.value);
+                      if (inviteSuccess) setInviteSuccess(null);
+                    }}
+                    className={
+                      styles["input"] +
+                      (inviteError ? " " + styles["inputError"] : "")
+                    }
+                    required
+                    disabled={inviteLoading}
+                  />
+                  <button
+                    type="submit"
+                    className={styles["submitButton"]}
+                    disabled={inviteLoading}
+                  >
+                    {inviteLoading ? "Envoi..." : "Inviter"}
+                  </button>
+                </form>
+                {inviteError && (
+                  <div className={styles["error"]}>{inviteError}</div>
+                )}
+                {inviteSuccess && !inviteError && (
+                  <div className={styles["success"]}>{inviteSuccess}</div>
+                )}
+              </div>
             </div>
           </div>
         );
