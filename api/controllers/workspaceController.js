@@ -185,12 +185,13 @@ exports.getWorkspaceMembers = async (req, res) => {
 
         const permissions = await Permission.find({
             workspaceId: workspace._id,
-        }).populate('userId', '_id')
-
-        // Enrichir les membres avec leurs rôles
+        }).populate('userId', '_id') // Enrichir les membres avec leurs rôles
         const membersWithRoles = populatedWorkspace.members.map((member) => {
             const memberPermission = permissions.find(
-                (perm) => String(perm.userId._id) === String(member._id)
+                (perm) =>
+                    perm.userId &&
+                    perm.userId._id &&
+                    String(perm.userId._id) === String(member._id)
             )
 
             // Correction: Extraire l'ID du propriétaire correctement
