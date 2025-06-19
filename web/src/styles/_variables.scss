@@ -32,13 +32,14 @@
   --color-link-hover: #60a5fa;
   --color-link-visited: #7c3aed;
   --color-card-hover: #e8f1fe;
-
   /* États */
   --color-success: #22c55e;
   --color-error: #ef4444;
   --color-error-hover: #f87171; /* Couleur hover pour les erreurs */
   --color-primary: #2563eb; /* Boutons principaux, accents */
+  --color-primary-dark: #1d4ed8; /* Version sombre du primary */
   --color-secondary: #f59e0b; /* Boutons secondaires, hover, accent */
+  --color-secondary-dark: #d97706; /* Version sombre du secondary */
 
   /* Layout */
   --header-height: 10rem;
@@ -76,11 +77,12 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
   --shadow-md: 0px 0px 4px 0px rgba(255, 255, 255, 0.05);
   --shadow-lg: 0px 2px 18px 0px rgba(0, 0, 0, 0.6);
-
   --color-link: #60a5fa;
   --color-link-hover: #93c5fd;
   --color-link-visited: #a78bfa;
 
   --color-primary: #3b82f6; /* Accent bleu plus clair en dark */
+  --color-primary-dark: #2563eb; /* Version plus sombre du primary en mode dark */
   --color-secondary: #fde68a; /* Jaune pastel plus doux en dark */
+  --color-secondary-dark: #f59e0b; /* Version plus sombre du secondary en mode dark */
 }

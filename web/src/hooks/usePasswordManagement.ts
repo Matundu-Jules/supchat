@@ -33,7 +33,6 @@ export function usePasswordManagement() {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
-
   const validateForm = (): boolean => {
     const newErrors: Partial<PasswordFormData> = {};
 
@@ -48,6 +47,12 @@ export function usePasswordManagement() {
     } else if (form.newPassword.length < 8) {
       newErrors.newPassword =
         'Le mot de passe doit contenir au moins 8 caractères';
+    } else if (form.newPassword.length > 128) {
+      newErrors.newPassword =
+        'Le mot de passe ne peut pas dépasser 128 caractères';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.newPassword)) {
+      newErrors.newPassword =
+        'Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre';
     }
 
     // Vérifier la confirmation
@@ -58,7 +63,11 @@ export function usePasswordManagement() {
     }
 
     // Vérifier que le nouveau mot de passe est différent de l'ancien
-    if (hasPassword && form.currentPassword === form.newPassword) {
+    if (
+      hasPassword &&
+      form.currentPassword &&
+      form.currentPassword === form.newPassword
+    ) {
       newErrors.newPassword =
         "Le nouveau mot de passe doit être différent de l'ancien";
     }
@@ -100,7 +109,11 @@ export function usePasswordManagement() {
         error.message || 'Erreur lors de la modification du mot de passe';
 
       // Gérer les erreurs spécifiques
-      if (errorMessage.toLowerCase().includes('mot de passe actuel')) {
+      if (
+        errorMessage.toLowerCase().includes('mot de passe actuel') ||
+        errorMessage.toLowerCase().includes('incorrect') ||
+        errorMessage.toLowerCase().includes('ancien')
+      ) {
         setErrors({ currentPassword: errorMessage });
       } else {
         setErrors({ newPassword: errorMessage });

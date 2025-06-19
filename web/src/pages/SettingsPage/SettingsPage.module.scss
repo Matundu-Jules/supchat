@@ -385,10 +385,70 @@
       border: none;
     }
   }
-
   .btnProfileInfo {
-    @extend .btn;
-    width: 16rem;
+    @extend .btn-secondary;
+    width: auto; /* Largeur automatique */
+    min-width: 16rem; /* Largeur minimale */
+    max-width: 100%; /* Ne dépasse pas le conteneur */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    white-space: nowrap; /* Garde le texte sur une ligne */
+    padding: 0.75rem 1.5rem; /* Plus de padding horizontal */
+    flex-shrink: 0; /* Ne se rétrécit pas */
+
+    i {
+      font-size: var(--font-size-s);
+      flex-shrink: 0; /* L'icône ne se réduit pas */
+    }
+
+    /* Pour mobile, permettre plus de flexibilité */
+    @media (max-width: 768px) {
+      width: 100%;
+      min-width: auto;
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  // Actions du profil - Nouveau conteneur pour les deux boutons
+  .profileActions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+  .btnPasswordChange {
+    @extend .btn-secondary;
+    width: auto; /* Largeur automatique */
+    min-width: 16rem; /* Largeur minimale */
+    max-width: 100%; /* Ne dépasse pas le conteneur */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    white-space: nowrap; /* Garde le texte sur une ligne */
+    text-align: center;
+    line-height: 1.2;
+    padding: 0.75rem 1.5rem; /* Plus de padding horizontal pour le confort */
+    flex-shrink: 0; /* Ne se rétrécit pas */
+
+    i {
+      font-size: var(--font-size-s);
+      flex-shrink: 0; /* L'icône ne se réduit pas */
+    }
+
+    /* Pour mobile, permettre plus de flexibilité */
+    @media (max-width: 768px) {
+      width: 100%;
+      min-width: auto;
+      padding: 0.75rem 1rem;
+    }
   }
 
   // Section Thème

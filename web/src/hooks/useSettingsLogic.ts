@@ -31,18 +31,12 @@ export const useSettingsLogic = () => {
   const { theme, status } = useSelector(
     (state: RootState) => state.preferences
   );
-  const user = useSelector((state: RootState) => state.auth.user);
-  // États locaux
+  const user = useSelector((state: RootState) => state.auth.user); // États locaux
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [avatar, setAvatar] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-
-  // États pour le changement de mot de passe
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [integrations, setIntegrations] = useState({
     googleDrive: false,
@@ -325,57 +319,13 @@ export const useSettingsLogic = () => {
     }
   };
 
-  // Changement de mot de passe
-  const handleChangePassword = async () => {
-    try {
-      if (newPassword !== confirmPassword) {
-        return {
-          success: false,
-          error: 'Les mots de passe ne correspondent pas',
-        };
-      }
-
-      if (newPassword.length < 8) {
-        return {
-          success: false,
-          error: 'Le mot de passe doit contenir au moins 8 caractères',
-        };
-      }
-      const passwordData: { currentPassword?: string; newPassword: string } = {
-        newPassword,
-      };
-
-      if (user?.hasPassword && currentPassword) {
-        passwordData.currentPassword = currentPassword;
-      }
-
-      await changePassword(passwordData);
-
-      // Réinitialiser les champs
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Erreur lors du changement de mot de passe:', error);
-      return {
-        success: false,
-        error: error.message || 'Erreur lors du changement de mot de passe',
-      };
-    }
-  };
-
   const startEditingProfile = () => {
     setIsEditingProfile(true);
   };
 
   const cancelEditingProfile = () => {
     setIsEditingProfile(false);
-    // Réinitialiser les champs du mot de passe
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword(''); // Réinitialiser les champs du profil aux valeurs originales
+    // Réinitialiser les champs du profil aux valeurs originales
     if (user) {
       setName(user.name || '');
       setEmail(user.email);
@@ -417,14 +367,5 @@ export const useSettingsLogic = () => {
     handleLogoutAll,
     handleExport,
     handleDeleteAccount,
-
-    // Action changement de mot de passe
-    currentPassword,
-    setCurrentPassword,
-    newPassword,
-    setNewPassword,
-    confirmPassword,
-    setConfirmPassword,
-    handleChangePassword,
   };
 };

@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { getAvatarUrl } from "@utils/avatarUtils";
 import { useSettingsHandlers } from "@hooks/useSettingsHandlers";
+import PasswordChangeModal from "@components/PasswordChangeModal";
 import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
   const {
     // États
     user,
@@ -14,13 +17,6 @@ const SettingsPage: React.FC = () => {
     avatar,
     isEditingProfile,
     integrations,
-    // États du mot de passe
-    currentPassword,
-    setCurrentPassword,
-    newPassword,
-    setNewPassword,
-    confirmPassword,
-    setConfirmPassword,
     // Actions du profil
     handleSaveProfileWithFeedback,
     handleAvatarChangeWithFeedback,
@@ -36,8 +32,7 @@ const SettingsPage: React.FC = () => {
     // Actions de sécurité
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,
-    handleDeleteAccountWithConfirmation, // Actions du mot de passe
-    handleChangePasswordWithFeedback,
+    handleDeleteAccountWithConfirmation,
   } = useSettingsHandlers();
 
   if (!user) return null;
@@ -123,18 +118,30 @@ const SettingsPage: React.FC = () => {
                   <div className={styles["infoItem"]}>
                     <strong>Email</strong>
                     <span>{email}</span>
-                  </div>
+                  </div>{" "}
                   <div className={styles["infoItem"]}>
                     <strong>Mot de passe</strong>
                     <span>{"•".repeat(12)}</span>
                   </div>
                 </div>
-                <button
-                  onClick={startEditingProfile}
-                  className={styles["btnProfileInfo"]}
-                >
-                  Modifier le profil
-                </button>
+                <div className={styles["profileActions"]}>
+                  <button
+                    onClick={startEditingProfile}
+                    className={styles["btnProfileInfo"]}
+                  >
+                    <i className="fa-solid fa-edit"></i>
+                    Modifier le profil
+                  </button>
+                  <button
+                    onClick={() => setIsPasswordModalOpen(true)}
+                    className={styles["btnPasswordChange"]}
+                  >
+                    <i className="fa-solid fa-key"></i>
+                    {user?.hasPassword
+                      ? "Changer le mot de passe"
+                      : "Définir un mot de passe"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className={styles["profileEdit"]}>
@@ -172,51 +179,7 @@ const SettingsPage: React.FC = () => {
                     <small className={styles["fieldNote"]}>
                       📧 L'email ne peut pas être modifié pour des raisons de
                       sécurité
-                    </small>
-                  </div>
-
-                  {/* Section Mot de passe */}
-                  <div className={styles["passwordSection"]}>
-                    <h4>🔑 Changement de mot de passe</h4>
-
-                    {user?.hasPassword && (
-                      <div className={styles["field"]}>
-                        <label htmlFor="current-password">
-                          Mot de passe actuel
-                        </label>
-                        <input
-                          id="current-password"
-                          name="currentPassword"
-                          type="password"
-                          placeholder="Mot de passe actuel"
-                          className={styles["input"]}
-                        />
-                      </div>
-                    )}
-
-                    <div className={styles["field"]}>
-                      <label htmlFor="new-password">Nouveau mot de passe</label>
-                      <input
-                        id="new-password"
-                        name="newPassword"
-                        type="password"
-                        placeholder="Nouveau mot de passe (min. 8 caractères)"
-                        className={styles["input"]}
-                      />
-                    </div>
-
-                    <div className={styles["field"]}>
-                      <label htmlFor="confirm-password">
-                        Confirmer le nouveau mot de passe
-                      </label>
-                      <input
-                        id="confirm-password"
-                        name="confirmPassword"
-                        type="password"
-                        placeholder="Confirmer le nouveau mot de passe"
-                        className={styles["input"]}
-                      />
-                    </div>
+                    </small>{" "}
                   </div>
 
                   <div className={styles["editActions"]}>
@@ -347,7 +310,7 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className={styles["dangerZone"]}>
-              <h3>Zone dangereuse</h3>
+              <h3>Zone dangereuse</h3>{" "}
               <p>
                 Cette action est irréversible. Toutes vos données seront
                 définitivement supprimées.
@@ -362,6 +325,12 @@ const SettingsPage: React.FC = () => {
           </section>
         </div>
       </div>
+
+      {/* Modal de changement de mot de passe */}
+      <PasswordChangeModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </section>
   );
 };

@@ -280,21 +280,73 @@ exports.getUser = async (req, res) => {
 // ================== CHANGE PASSWORD (utilisateur connecté) ==================
 exports.changePassword = async (req, res) => {
     try {
+        const { changePasswordSchema } = require('../validators/userValidators')
         const userId = req.user.id
-        const { oldPassword, newPassword } = req.body
+
         const user = await User.findById(userId)
         if (!user)
             return res.status(404).json({ message: 'Utilisateur non trouvé.' })
-        const isMatch = await bcrypt.compare(oldPassword, user.password)
-        if (!isMatch)
-            return res
-                .status(400)
-                .json({ message: 'Ancien mot de passe incorrect.' })
-        user.password = await bcrypt.hash(newPassword, 10)
+
+        // Validation des données avec contexte utilisateur
+        const { error } = changePasswordSchema.validate(req.body, {
+            context: { hasPassword: !!user.password },
+        })
+        if (error) {
+            return res.status(400).json({
+                message: 'Données invalides',
+                error: error.details[0].message,
+            })
+        }
+
+        const { oldPassword, currentPassword, newPassword } = req.body
+        const actualCurrentPassword = currentPassword || oldPassword
+
+        // Vérification du mot de passe actuel si l'utilisateur en a un
+        if (user.password) {
+            if (!actualCurrentPassword) {
+                return res.status(400).json({
+                    message: 'Le mot de passe actuel est requis',
+                })
+            }
+
+            const isMatch = await bcrypt.compare(
+                actualCurrentPassword,
+                user.password
+            )
+            if (!isMatch) {
+                return res.status(400).json({
+                    message: 'Mot de passe actuel incorrect',
+                })
+            }
+
+            // Vérifier que le nouveau mot de passe est différent de l'ancien
+            const isSamePassword = await bcrypt.compare(
+                newPassword,
+                user.password
+            )
+            if (isSamePassword) {
+                return res.status(400).json({
+                    message:
+                        "Le nouveau mot de passe doit être différent de l'ancien",
+                })
+            }
+        }
+
+        // Hacher et sauvegarder le nouveau mot de passe
+        user.password = await bcrypt.hash(newPassword, 12) // Utilisation de 12 rounds pour plus de sécurité
+        user.hasPassword = true // Marquer que l'utilisateur a maintenant un mot de passe
         await user.save()
-        res.status(200).json({ message: 'Mot de passe modifié avec succès.' })
+
+        res.status(200).json({
+            message: 'Mot de passe modifié avec succès.',
+            hasPassword: true,
+        })
     } catch (error) {
-        res.status(500).json({ message: 'Erreur serveur.', error })
+        console.error('Erreur lors du changement de mot de passe:', error)
+        res.status(500).json({
+            message: 'Erreur serveur.',
+            error: error.message,
+        })
     }
 }
 
@@ -697,29 +749,33 @@ exports.deleteUser = async (req, res) => {
 // ================== SET PASSWORD (pour utilisateurs social login) ==================
 exports.setPassword = async (req, res) => {
     try {
-        const { newPassword } = req.body
+        const { setPasswordSchema } = require('../validators/userValidators')
 
-        if (!newPassword || newPassword.length < 8) {
+        // Validation des données
+        const { error } = setPasswordSchema.validate(req.body)
+        if (error) {
             return res.status(400).json({
-                message: 'Le mot de passe doit contenir au moins 8 caractères.',
+                message: 'Données invalides',
+                error: error.details[0].message,
             })
         }
 
+        const { newPassword } = req.body
         const user = await User.findById(req.user.id)
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur non trouvé.' })
         }
 
-        // Vérifier si l'utilisateur s'est connecté via social login
-        if (!user.googleId && !user.facebookId) {
+        // Vérifier si l'utilisateur a déjà un mot de passe
+        if (user.password) {
             return res.status(400).json({
                 message:
-                    'Cette fonctionnalité est réservée aux utilisateurs connectés via les réseaux sociaux.',
+                    'Vous avez déjà un mot de passe. Utilisez la fonction de changement de mot de passe.',
             })
         }
 
-        // Hasher le nouveau mot de passe
-        const hashedPassword = await bcrypt.hash(newPassword, 10)
+        // Hasher le nouveau mot de passe avec plus de sécurité
+        const hashedPassword = await bcrypt.hash(newPassword, 12)
 
         // Mettre à jour le mot de passe et hasPassword
         user.password = hashedPassword
@@ -740,6 +796,10 @@ exports.setPassword = async (req, res) => {
             },
         })
     } catch (error) {
-        res.status(500).json({ message: 'Erreur serveur.', error })
+        console.error('Erreur lors de la création du mot de passe:', error)
+        res.status(500).json({
+            message: 'Erreur serveur.',
+            error: error.message,
+        })
     }
 }

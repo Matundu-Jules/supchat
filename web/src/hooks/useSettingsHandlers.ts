@@ -130,17 +130,6 @@ export const useSettingsHandlers = () => {
     }
   };
 
-  // Handler pour le changement de mot de passe avec feedback
-  const handleChangePasswordWithFeedback = async () => {
-    const result = await settingsLogic.handleChangePassword();
-    if (result.success) {
-      settingsInteractionService.showSuccess(
-        'Mot de passe modifié avec succès'
-      );
-    } else {
-      settingsInteractionService.showError(result.error || 'Erreur inconnue');
-    }
-  };
   return {
     // États et données depuis settingsLogic
     ...settingsLogic,
@@ -156,6 +145,5 @@ export const useSettingsHandlers = () => {
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,
     handleDeleteAccountWithConfirmation,
-    handleChangePasswordWithFeedback,
   };
 };
