@@ -61,15 +61,23 @@ const WorkspacesPage: React.FC = () => {
   const ownedWorkspaces = filteredWorkspaces.filter(
     (ws) => ws.userStatus?.isOwner
   );
-
   // Workspaces dont je suis membre (mais pas propriétaire)
   const memberWorkspaces = filteredWorkspaces.filter(
     (ws) => ws.userStatus?.isMember && !ws.userStatus?.isOwner
   );
 
+  // Workspaces où je suis invité (mais pas encore membre)
+  const invitedWorkspaces = filteredWorkspaces.filter(
+    (ws) => ws.userStatus?.isInvited && !ws.userStatus?.isMember
+  );
+
   // Workspaces publics disponibles (que je n'ai pas encore rejoints)
   const availableWorkspaces = filteredWorkspaces.filter(
-    (ws) => ws.isPublic && !ws.userStatus?.isMember && !ws.userStatus?.isOwner
+    (ws) =>
+      ws.isPublic &&
+      !ws.userStatus?.isMember &&
+      !ws.userStatus?.isOwner &&
+      !ws.userStatus?.isInvited
   );
 
   // Pour les admins : tous les autres workspaces (privés non rejoints)
@@ -246,6 +254,32 @@ const WorkspacesPage: React.FC = () => {
                 showOnlyJoinActions={false}
                 requestJoinLoading={requestJoinLoading}
                 acceptInviteLoading={acceptInviteLoading}
+              />{" "}
+            </section>
+          )}
+          {/* Workspaces où je suis invité */}
+          {invitedWorkspaces.length > 0 && (
+            <section className={styles["workspaceCategory"]}>
+              <h2 className={styles["categoryTitle"]}>
+                <i className="fa-solid fa-envelope"></i> Invitations reçues (
+                {invitedWorkspaces.length})
+              </h2>
+              <p className={styles["categoryDescription"]}>
+                Des espaces de travail privés auxquels vous avez été invité
+              </p>
+              <WorkspaceList
+                workspaces={invitedWorkspaces}
+                filter=""
+                user={user ?? undefined}
+                onAccess={handleAccess}
+                onInvite={handleInviteClick}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onRequestJoin={handleRequestJoin}
+                onAcceptInvite={handleAcceptInvite}
+                showOnlyJoinActions={true}
+                requestJoinLoading={requestJoinLoading}
+                acceptInviteLoading={acceptInviteLoading}
               />
             </section>
           )}
@@ -331,6 +365,7 @@ const WorkspacesPage: React.FC = () => {
           {search &&
             ownedWorkspaces.length === 0 &&
             memberWorkspaces.length === 0 &&
+            invitedWorkspaces.length === 0 &&
             adminWorkspaces.length === 0 &&
             (!isAdmin ? availableWorkspaces.length === 0 : true) && (
               <div className={styles["emptyState"]}>
@@ -346,6 +381,7 @@ const WorkspacesPage: React.FC = () => {
           {!search &&
             ownedWorkspaces.length === 0 &&
             memberWorkspaces.length === 0 &&
+            invitedWorkspaces.length === 0 &&
             adminWorkspaces.length === 0 &&
             (!isAdmin ? availableWorkspaces.length === 0 : true) && (
               <div className={styles["emptyState"]}>

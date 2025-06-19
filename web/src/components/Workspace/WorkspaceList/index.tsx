@@ -91,29 +91,30 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
 
         // Peut rejoindre via invitation : utilisateur invité, pas encore membre
         const canAcceptInvite = isInvited && !isMember;
-
         return (
           <li key={ws._id} className={styles["workspace-list-item"]}>
             <div className={styles["workspace-list-header"]}>
-              <strong>{ws.name}</strong>
-              <span
-                className={
-                  `${styles["workspace-badge"]} ` +
-                  (ws.isPublic ? styles["public"] : styles["private"])
-                }
-              >
-                {ws.isPublic ? "Public" : "Privé"}
-              </span>
-              {isInvited && !isMember && (
-                <span className={styles["workspace-invited-badge"]}>
-                  <i className="fa-solid fa-envelope"></i> Invitation reçue
+              <h3>{ws.name}</h3>
+              <div className={styles["workspace-badges"]}>
+                <span
+                  className={
+                    `${styles["workspace-badge"]} ` +
+                    (ws.isPublic ? styles["public"] : styles["private"])
+                  }
+                >
+                  {ws.isPublic ? "Public" : "Privé"}
                 </span>
-              )}
+                {isInvited && !isMember && (
+                  <span className={styles["workspace-invited-badge"]}>
+                    <i className="fa-solid fa-envelope"></i> Invitation reçue
+                  </span>
+                )}
+              </div>
             </div>
             {ws.description && (
-              <div className={styles["workspace-description"]}>
+              <p className={styles["workspace-description"]}>
                 {ws.description}
-              </div>
+              </p>
             )}{" "}
             <div className={styles["workspace-actions"]}>
               {/* Action principale : Accéder (membre/propriétaire/admin et pas en mode joinActions) */}
