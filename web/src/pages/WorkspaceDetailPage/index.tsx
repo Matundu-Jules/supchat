@@ -111,7 +111,61 @@ const WorkspaceDetailPage: React.FC = () => {
           <div className={styles["content"]}>
             <h2>Membres du workspace</h2>
             <div className={styles["membersSection"]}>
-              <h3>Liste des membres</h3>
+              {" "}
+              <div className={styles["membersHeader"]}>
+                <h3>Liste des membres</h3>
+                {workspace.members && workspace.members.length > 5 && (
+                  <span className={styles["scrollIndicator"]}>
+                    📜 {workspace.members.length} membres - Faites défiler pour
+                    voir plus
+                  </span>
+                )}
+              </div>
+              {/* Invitation de nouveaux membres - Placée en haut pour être toujours accessible */}
+              {isAdminOrOwner && (
+                <div className={styles["inviteSection"]}>
+                  <div className={styles["inviteHeader"]}>
+                    <h4>✉️ Inviter un nouveau membre</h4>
+                  </div>
+                  <form
+                    className={styles["inviteForm"]}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleInvite();
+                    }}
+                    autoComplete="off"
+                  >
+                    <input
+                      type="email"
+                      placeholder="Email du nouveau membre"
+                      value={inviteEmail}
+                      onChange={(e) => {
+                        setInviteEmail(e.target.value);
+                        if (inviteSuccess) setInviteSuccess(null);
+                      }}
+                      className={
+                        styles["input"] +
+                        (inviteError ? " " + styles["inputError"] : "")
+                      }
+                      required
+                      disabled={inviteLoading}
+                    />
+                    <button
+                      type="submit"
+                      className={styles["submitButton"]}
+                      disabled={inviteLoading}
+                    >
+                      {inviteLoading ? "Envoi..." : "Inviter"}
+                    </button>
+                  </form>
+                  {inviteError && (
+                    <div className={styles["error"]}>{inviteError}</div>
+                  )}
+                  {inviteSuccess && !inviteError && (
+                    <div className={styles["success"]}>{inviteSuccess}</div>
+                  )}
+                </div>
+              )}
               <ul className={styles["membersList"]}>
                 {workspace.members && workspace.members.length > 0 ? (
                   workspace.members.map((member: WorkspaceMember) => {
@@ -179,52 +233,8 @@ const WorkspaceDetailPage: React.FC = () => {
                   })
                 ) : (
                   <li className={styles["empty"]}>Aucun membre</li>
-                )}
+                )}{" "}
               </ul>
-
-              {/* Invitation de nouveaux membres */}
-              {isAdminOrOwner && (
-                <div className={styles["inviteSection"]}>
-                  <h3>Inviter un nouveau membre</h3>
-                  <form
-                    className={styles["inviteForm"]}
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleInvite();
-                    }}
-                    autoComplete="off"
-                  >
-                    <input
-                      type="email"
-                      placeholder="Email du membre"
-                      value={inviteEmail}
-                      onChange={(e) => {
-                        setInviteEmail(e.target.value);
-                        if (inviteSuccess) setInviteSuccess(null);
-                      }}
-                      className={
-                        styles["input"] +
-                        (inviteError ? " " + styles["inputError"] : "")
-                      }
-                      required
-                      disabled={inviteLoading}
-                    />
-                    <button
-                      type="submit"
-                      className={styles["submitButton"]}
-                      disabled={inviteLoading}
-                    >
-                      {inviteLoading ? "Envoi..." : "Inviter"}
-                    </button>
-                  </form>
-                  {inviteError && (
-                    <div className={styles["error"]}>{inviteError}</div>
-                  )}{" "}
-                  {inviteSuccess && !inviteError && (
-                    <div className={styles["success"]}>{inviteSuccess}</div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         );
