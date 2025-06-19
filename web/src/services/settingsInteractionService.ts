@@ -38,6 +38,7 @@ export const settingsInteractionService = {
     profile: {
       saveSuccess: 'Profil sauvegardé avec succès !',
       avatarUploadSuccess: 'Avatar mis à jour avec succès !',
+      avatarDeleteSuccess: 'Avatar supprimé avec succès !',
     },
     integrations: {
       googleDriveConnected: 'Google Drive connecté avec succès !',

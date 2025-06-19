@@ -108,9 +108,9 @@ const Header: React.FC = () => {
         {user ? (
           <>
             {" "}
-            {/* Avatar simple (visible seulement sous 1300px) */}
+            {/* Avatar simple (visible seulement sous 1300px) */}{" "}
             <div className={styles["simpleAvatar"]}>
-              {user.avatar ? (
+              {user.avatar && user.avatar.trim() !== "" ? (
                 <img
                   src={getAvatarUrl(user.avatar, !!user.avatarUpdatedAt) || ""}
                   alt="Avatar"
@@ -130,9 +130,9 @@ const Header: React.FC = () => {
                 onClick={toggleStatusDropdown}
               >
                 {" "}
-                {/* Avatar */}
+                {/* Avatar */}{" "}
                 <div className={styles["userAvatar"]}>
-                  {user.avatar ? (
+                  {user.avatar && user.avatar.trim() !== "" ? (
                     <img
                       src={
                         getAvatarUrl(user.avatar, !!user.avatarUpdatedAt) || ""

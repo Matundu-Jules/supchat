@@ -10,7 +10,7 @@ export function getAvatarUrl(
   avatarPath: string | undefined | null,
   bustCache: boolean = false
 ): string | null {
-  if (!avatarPath) return null;
+  if (!avatarPath || avatarPath.trim() === '') return null;
 
   // Si c'est déjà une URL complète, la retourner telle quelle
   if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {

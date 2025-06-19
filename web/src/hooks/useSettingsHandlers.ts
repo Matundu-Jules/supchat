@@ -130,17 +130,28 @@ export const useSettingsHandlers = () => {
     }
   };
 
+  // Handler pour la suppression d'avatar
+  const handleDeleteAvatarWithFeedback = async () => {
+    const result = await settingsLogic.handleDeleteAvatar();
+    if (result.success) {
+      settingsInteractionService.showSuccess(
+        settingsInteractionService.messages.profile.avatarDeleteSuccess
+      );
+    } else {
+      settingsInteractionService.showError(result.error || 'Erreur inconnue');
+    }
+  };
+
   return {
     // États et données depuis settingsLogic
-    ...settingsLogic,
-
-    // Handlers avec interactions utilisateur
+    ...settingsLogic, // Handlers avec interactions utilisateur
     handleLinkDriveWithPrompt,
     handleUnlinkDriveWithFeedback,
     handleLinkGithubWithPrompt,
     handleUnlinkGithubWithFeedback,
     handleSaveProfileWithFeedback,
     handleAvatarChangeWithFeedback,
+    handleDeleteAvatarWithFeedback,
     handleThemeToggleWithFeedback,
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,

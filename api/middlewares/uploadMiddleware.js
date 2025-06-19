@@ -161,7 +161,88 @@ const createAvatarUploadConfig = (uploadDir) => {
     })
 }
 
+/**
+ * Configuration Multer sécurisée pour les fichiers de messages
+ */
+const createMessageUploadConfig = (uploadDir) => {
+    const storage = multer.diskStorage({
+        destination: uploadDir,
+        filename: (req, file, cb) => {
+            const timestamp = Date.now()
+            const randomSuffix = Math.round(Math.random() * 1e9)
+            const extension = path.extname(file.originalname).toLowerCase()
+
+            // Nettoyer le nom de fichier original
+            const cleanName = path
+                .basename(file.originalname, extension)
+                .replace(/[^a-zA-Z0-9.-]/g, '_')
+                .substring(0, 50)
+
+            cb(null, `${timestamp}-${randomSuffix}-${cleanName}${extension}`)
+        },
+    })
+
+    const fileFilter = (req, file, cb) => {
+        // Types MIME autorisés pour les messages
+        const allowedMimeTypes = [
+            // Images
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            // Documents
+            'application/pdf',
+            'text/plain',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]
+
+        // Extensions autorisées
+        const allowedExtensions = [
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.gif',
+            '.webp',
+            '.pdf',
+            '.txt',
+            '.doc',
+            '.docx',
+        ]
+        const fileExtension = path.extname(file.originalname).toLowerCase()
+
+        // Vérifier le type MIME ET l'extension
+        if (
+            allowedMimeTypes.includes(file.mimetype) &&
+            allowedExtensions.includes(fileExtension)
+        ) {
+            cb(null, true)
+        } else {
+            cb(
+                new Error(
+                    'Format de fichier non autorisé. Types autorisés: JPG, PNG, GIF, WebP, PDF, TXT, DOC, DOCX'
+                ),
+                false
+            )
+        }
+    }
+
+    return multer({
+        storage,
+        fileFilter,
+        limits: {
+            fileSize: 10 * 1024 * 1024, // 10MB
+            files: 1,
+            fields: 10,
+            fieldNameSize: 100,
+            fieldSize: 1024,
+        },
+    })
+}
+
 module.exports = {
     handleMulterError,
     createAvatarUploadConfig,
+    createMessageUploadConfig,
 }

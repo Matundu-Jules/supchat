@@ -9,23 +9,32 @@ const {
     deleteMessage,
 } = require('../controllers/messageController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
+const {
+    createMessageUploadConfig,
+    handleMulterError,
+} = require('../middlewares/uploadMiddleware')
 
 const uploadDir = path.join(__dirname, '../uploads')
-const storage = multer.diskStorage({
-    destination: uploadDir,
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
-        cb(null, `${unique}-${file.originalname}`)
-    },
-})
-const upload = multer({ storage })
+const upload = createMessageUploadConfig(uploadDir)
 
 const router = express.Router()
 
-router.post('/', authMiddleware, upload.single('file'), sendMessage)
+router.post(
+    '/',
+    authMiddleware,
+    upload.single('file'),
+    handleMulterError,
+    sendMessage
+)
 router.get('/channel/:channelId', authMiddleware, getMessagesByChannel)
 router.get('/:id', authMiddleware, getMessageById)
-router.put('/:id', authMiddleware, upload.single('file'), updateMessage)
+router.put(
+    '/:id',
+    authMiddleware,
+    upload.single('file'),
+    handleMulterError,
+    updateMessage
+)
 router.delete('/:id', authMiddleware, deleteMessage)
 
 // Routes pour les réactions sur les messages

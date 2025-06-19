@@ -15,6 +15,7 @@ import {
   getPreferences,
   updatePreferences,
   uploadAvatar,
+  deleteAvatar,
   exportUserData,
 } from '@services/userApi';
 import {
@@ -145,6 +146,40 @@ export const useSettingsLogic = () => {
     } catch (error) {
       console.error("Erreur lors de l'upload:", error);
       return { success: false, error: "Erreur lors de l'upload de l'avatar" };
+    }
+  };
+  const handleDeleteAvatar = async () => {
+    try {
+      // D'abord vider l'avatar localement pour éviter les tentatives de rechargement
+      setAvatar('');
+      dispatch(
+        updateUserProfile({
+          avatar: '',
+          avatarUpdatedAt: Date.now(),
+        })
+      );
+
+      // Ensuite supprimer côté serveur
+      await deleteAvatar();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+
+      // En cas d'erreur, restaurer l'avatar précédent si possible
+      if (user?.avatar) {
+        setAvatar(user.avatar);
+        dispatch(
+          updateUserProfile({
+            avatar: user.avatar,
+          })
+        );
+      }
+
+      return {
+        success: false,
+        error: "Erreur lors de la suppression de l'avatar",
+      };
     }
   };
   // Gestion du thème
@@ -351,11 +386,10 @@ export const useSettingsLogic = () => {
     avatarFile,
     setAvatarFile,
     isEditingProfile,
-    integrations,
-
-    // Actions du profil
+    integrations, // Actions du profil
     handleSaveProfile,
     handleAvatarChange,
+    handleDeleteAvatar,
     startEditingProfile,
     cancelEditingProfile,
 

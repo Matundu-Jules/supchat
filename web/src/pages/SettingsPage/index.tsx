@@ -6,7 +6,6 @@ import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
   const {
     // États
     user,
@@ -20,6 +19,7 @@ const SettingsPage: React.FC = () => {
     // Actions du profil
     handleSaveProfileWithFeedback,
     handleAvatarChangeWithFeedback,
+    handleDeleteAvatarWithFeedback,
     startEditingProfile,
     cancelEditingProfile,
     // Actions du thème
@@ -54,7 +54,8 @@ const SettingsPage: React.FC = () => {
             <div className={styles["avatarSection"]}>
               {" "}
               <div className={styles["avatarContainer"]}>
-                {avatar || user?.avatar ? (
+                {(avatar && avatar !== "") ||
+                (user?.avatar && user?.avatar !== "") ? (
                   <img
                     src={
                       getAvatarUrl(
@@ -92,9 +93,10 @@ const SettingsPage: React.FC = () => {
                   className={styles["btn-secondary"]}
                 >
                   {avatar ? "Changer l'avatar" : "Ajouter un avatar"}
-                </button>
+                </button>{" "}
                 {/* Bouton supprimer - seulement si on a un avatar */}
-                {avatar && (
+                {((avatar && avatar !== "") ||
+                  (user?.avatar && user?.avatar !== "")) && (
                   <button
                     onClick={() => {
                       if (
@@ -102,8 +104,7 @@ const SettingsPage: React.FC = () => {
                           "Êtes-vous sûr de vouloir supprimer votre avatar ?"
                         )
                       ) {
-                        // TODO: Implémenter handleDeleteAvatar dans les hooks
-                        console.log("Supprimer avatar");
+                        handleDeleteAvatarWithFeedback();
                       }
                     }}
                     className={styles["btn-delete"]}

@@ -17,6 +17,10 @@ const {
     addChannelMember,
 } = require('../controllers/channelController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
+const {
+    createMessageUploadConfig,
+    handleMulterError,
+} = require('../middlewares/uploadMiddleware')
 const { validate } = require('../middlewares/validationMiddleware')
 const {
     createChannelSchema,
@@ -26,21 +30,9 @@ const {
     channelMemberParamSchema,
 } = require('../validators/channelValidators')
 
-// Configuration de multer pour l'upload de fichiers
+// Configuration de multer pour l'upload de fichiers sécurisé
 const uploadDir = path.join(__dirname, '../uploads')
-const storage = multer.diskStorage({
-    destination: uploadDir,
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
-        cb(null, `${unique}-${file.originalname}`)
-    },
-})
-const upload = multer({
-    storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB
-    },
-})
+const upload = createMessageUploadConfig(uploadDir)
 
 const router = express.Router()
 
@@ -162,26 +154,12 @@ router.post(
     authMiddleware,
     messageRateLimiter,
     upload.single('file'),
+    handleMulterError,
     async (req, res, next) => {
-        // Injecte channelId dans le body pour compatibilité avec le contrôleur
-        req.body.channelId = req.params.id
+        // Injecte channelId dans le body pour compatibilité avec le contrôleur        req.body.channelId = req.params.id
         next()
     },
-    require('../controllers/messageController').uploadFile,
-    // Middleware de gestion d'erreurs Multer
-    (error, req, res, next) => {
-        if (error instanceof multer.MulterError) {
-            if (error.code === 'LIMIT_FILE_SIZE') {
-                return res
-                    .status(413)
-                    .json({ message: 'Fichier trop volumineux.' })
-            }
-            return res
-                .status(400)
-                .json({ message: "Erreur lors de l'upload du fichier." })
-        }
-        next(error)
-    }
+    require('../controllers/messageController').uploadFile
 )
 
 // Routes pour les paramètres de notification par channel
