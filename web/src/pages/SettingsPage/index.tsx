@@ -1,8 +1,6 @@
 import React from "react";
 import { getAvatarUrl } from "@utils/avatarUtils";
-import { useNotificationPrefs } from "@hooks/useNotificationPrefs";
 import { useSettingsHandlers } from "@hooks/useSettingsHandlers";
-import NotificationPrefList from "@components/Notification/NotificationPrefList";
 import styles from "./SettingsPage.module.scss";
 
 const SettingsPage: React.FC = () => {
@@ -38,12 +36,9 @@ const SettingsPage: React.FC = () => {
     // Actions de sécurité
     handleLogoutAllWithFeedback,
     handleExportWithFeedback,
-    handleDeleteAccountWithConfirmation,
-    // Actions du mot de passe
+    handleDeleteAccountWithConfirmation, // Actions du mot de passe
     handleChangePasswordWithFeedback,
   } = useSettingsHandlers();
-
-  const { prefs, updatePref } = useNotificationPrefs();
 
   if (!user) return null;
 
@@ -332,11 +327,6 @@ const SettingsPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </section>{" "}
-          {/* Section Notifications */}
-          <section className={styles["settingsSection"]}>
-            <h2>🔔 Notifications</h2>
-            <NotificationPrefList items={prefs} onChange={updatePref} />
           </section>
           {/* Section Sécurité */}
           <section className={styles["settingsSection"]}>

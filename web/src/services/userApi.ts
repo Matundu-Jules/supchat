@@ -2,13 +2,13 @@ import api, { fetchCsrfToken } from '@utils/axiosInstance';
 
 export async function getProfile() {
   const { data } = await api.get('/user/profile');
-  return data;
+  return data.data; // Extraire les données utilisateur du wrapper API
 }
 
 export async function updateProfile(data: { name?: string; avatar?: string }) {
   await fetchCsrfToken();
   const res = await api.put('/user/profile', data);
-  return res.data;
+  return res.data.data; // Extraire les données utilisateur du wrapper API
 }
 
 export async function getPreferences() {
@@ -28,7 +28,7 @@ export async function updatePreferences(data: {
   );
 
   const res = await api.put('/user/preferences', filteredData);
-  return res.data;
+  return res.data.data; // Extraire les données du wrapper API
 }
 
 export async function exportUserData() {
@@ -39,7 +39,7 @@ export async function exportUserData() {
 export async function updateEmail(email: string) {
   await fetchCsrfToken();
   const { data } = await api.put('/user/email', { email });
-  return data;
+  return data; // Retourner directement les données
 }
 
 export async function uploadAvatar(file: File) {
@@ -49,7 +49,7 @@ export async function uploadAvatar(file: File) {
   const { data } = await api.post('/user/avatar', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return data;
+  return data.data; // Extraire les données du wrapper API
 }
 
 export async function deleteAvatar() {

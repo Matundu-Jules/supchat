@@ -107,17 +107,19 @@ const Header: React.FC = () => {
         {" "}
         {user ? (
           <>
+            {" "}
             {/* Avatar simple (visible seulement sous 1300px) */}
             <div className={styles["simpleAvatar"]}>
               {user.avatar ? (
                 <img src={getAvatarUrl(user.avatar) || ""} alt="Avatar" />
               ) : (
                 <div className={styles["simpleAvatarPlaceholder"]}>
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.name?.charAt(0)?.toUpperCase() ||
+                    user.email?.charAt(0)?.toUpperCase() ||
+                    "?"}
                 </div>
               )}
             </div>
-
             {/* User info with status dropdown (visible seulement au-dessus de 1300px) */}
             <div className={styles["userInfo"]} ref={statusDropdownRef}>
               <div
@@ -131,13 +133,17 @@ const Header: React.FC = () => {
                     <img src={getAvatarUrl(user.avatar) || ""} alt="Avatar" />
                   ) : (
                     <div className={styles["avatarPlaceholder"]}>
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name?.charAt(0)?.toUpperCase() ||
+                        user.email?.charAt(0)?.toUpperCase() ||
+                        "?"}
                     </div>
                   )}
                 </div>
                 <div className={styles["userDetails"]}>
                   <div className={styles["userNameRow"]}>
-                    <span className={styles["username"]}>{user.name}</span>
+                    <span className={styles["username"]}>
+                      {user.name || user.email || "Utilisateur"}
+                    </span>
                     <span className={styles["dropdownArrow"]}>
                       {isStatusDropdownOpen ? "▲" : "▼"}
                     </span>
@@ -222,7 +228,6 @@ const Header: React.FC = () => {
                 </div>
               )}
             </div>
-
             <button
               className={styles["logoutBtn"] + " " + styles["logoutDesktop"]}
               onClick={handleLogout}

@@ -21,15 +21,14 @@ const {
 const router = express.Router()
 
 router.get('/', authMiddleware, listIntegrations)
-router.delete('/:id', authMiddleware, deleteIntegration)
 
-// Routes Google Drive
+// Routes Google Drive (spécifiques d'abord)
 router.post('/google-drive', authMiddleware, linkGoogleDrive)
 router.delete('/google-drive', authMiddleware, unlinkGoogleDrive)
 router.post('/google-drive/connect', authMiddleware, connectGoogleDrive)
 router.post('/google-drive/share', authMiddleware, shareGoogleDriveFile)
 
-// Routes GitHub
+// Routes GitHub (spécifiques d'abord)
 router.post('/github', authMiddleware, linkGithub)
 router.delete('/github', authMiddleware, unlinkGithub)
 router.post('/github/connect', authMiddleware, connectGithub)
@@ -37,6 +36,9 @@ router.post('/github/webhook', githubWebhook)
 
 // Routes Microsoft Teams
 router.post('/teams/connect', authMiddleware, connectTeams)
+
+// Route générique (doit être en dernier)
+router.delete('/:id', authMiddleware, deleteIntegration)
 
 // Routes OAuth
 router.post('/google', authMiddleware, linkGoogleAccount)

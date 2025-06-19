@@ -375,10 +375,9 @@ export const useSettingsLogic = () => {
     // Réinitialiser les champs du mot de passe
     setCurrentPassword('');
     setNewPassword('');
-    setConfirmPassword('');
-    // Réinitialiser les champs du profil aux valeurs originales
+    setConfirmPassword(''); // Réinitialiser les champs du profil aux valeurs originales
     if (user) {
-      setName(user.name);
+      setName(user.name || '');
       setEmail(user.email);
     }
   };
