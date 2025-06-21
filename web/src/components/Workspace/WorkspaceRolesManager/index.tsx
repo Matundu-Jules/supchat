@@ -1,9 +1,9 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { usePermissions } from "@hooks/usePermissions";
-import RoleSelector from "@components/Permissions/RoleSelector";
-import UserAvatar from "@components/UserAvatar";
-import Loader from "@components/Loader";
+import RoleSelector from "@components/permissions/RoleSelector";
+import UserAvatar from "@components/user/UserAvatar";
+import Loader from "@components/core/ui/Loader";
 import styles from "./WorkspaceRolesManager.module.scss";
 import type { RootState } from "@store/store";
 

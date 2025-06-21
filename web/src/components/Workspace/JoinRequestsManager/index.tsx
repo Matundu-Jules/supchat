@@ -4,7 +4,7 @@ import {
   approveJoinRequest,
   rejectJoinRequest,
 } from "@services/workspaceApi";
-import UserAvatar from "@components/UserAvatar";
+import UserAvatar from "@components/user/UserAvatar";
 import styles from "./JoinRequestsManager.module.scss";
 
 interface JoinRequest {

@@ -24,21 +24,20 @@ import styles from "./App.module.scss";
 
 import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
-import PrivateRoute from "@components/layout/PrivateRoute";
-import PublicRoute from "@components/layout/PublicRoute";
-import Loader from "@components/Loader";
+import PrivateRoute from "@components/core/routes/PrivateRoute";
+import PublicRoute from "@components/core/routes/PublicRoute";
+import Loader from "@components/core/ui/Loader";
 
-import WorkspacePage from "@pages/WorkspacePage";
-import MessagesPage from "@pages/MessagesPage";
-import ChannelsPageWrapper from "@pages/ChannelsPage/wrapper";
-import RegisterPage from "@pages/RegisterPage";
-import LoginPage from "@pages/LoginPage";
-import ForgotPasswordPage from "@pages/ForgotPasswordPage";
-import ResetPasswordPage from "@pages/ResetPasswordPage";
-import SetPasswordPage from "@pages/SetPasswordPage";
-import WorkspaceDetailPage from "@pages/WorkspaceDetailPage";
-import InviteWorkspacePage from "@pages/InviteWorkspacePage";
-import SettingsPage from "@pages/SettingsPage";
+import WorkspacePage from "@pages/workspaces/WorkspacePage";
+import ChannelChatPageWrapper from "@pages/channels/ChannelChatPage/wrapper";
+import RegisterPage from "@pages/auth/RegisterPage";
+import LoginPage from "@pages/auth/LoginPage";
+import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@pages/auth/ResetPasswordPage";
+import SetPasswordPage from "@pages/auth/SetPasswordPage";
+import WorkspaceDetailPage from "@pages/workspaces/WorkspaceDetailPage";
+import InviteWorkspacePage from "@pages/workspaces/InviteWorkspacePage";
+import SettingsPage from "@pages/user/SettingsPage";
 
 const AppContent = ({
   theme,
@@ -75,8 +74,7 @@ const AppContent = ({
             <Route path="/set-password" element={<SetPasswordPage />} />{" "}
             <Route path="/workspace" element={<WorkspacePage />} />
             <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
-            <Route path="/channels" element={<ChannelsPageWrapper />} />
-            <Route path="/message" element={<MessagesPage />} />
+            <Route path="/channels" element={<ChannelChatPageWrapper />} />
             <Route path="/settings" element={<SettingsPage />} />
             {/* Route par défaut - redirection vers workspace */}
             <Route index element={<WorkspacePage />} />
