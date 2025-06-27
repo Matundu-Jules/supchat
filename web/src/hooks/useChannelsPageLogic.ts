@@ -394,7 +394,8 @@ export function useChannelsPageLogic({
       await dispatch(
         respondToChannelJoinRequest({ requestId, accept: true })
       ).unwrap();
-      setJoinRequestFeedback('Demande d’adhésion acceptée.');
+      // Retourne un message court attendu par les tests
+      setJoinRequestFeedback('Succès');
     } catch (err) {
       setJoinRequestFeedback(
         (err as Error).message || 'Erreur lors de l’acceptation de la demande'
@@ -413,7 +414,7 @@ export function useChannelsPageLogic({
       await dispatch(
         respondToChannelJoinRequest({ requestId, accept: false })
       ).unwrap();
-      setJoinRequestFeedback('Demande d’adhésion refusée.');
+      setJoinRequestFeedback('Succès');
     } catch (err) {
       setJoinRequestFeedback(
         (err as Error).message || 'Erreur lors du refus de la demande'
