@@ -8,7 +8,7 @@ Refactorisation complète et unification de la navigation des channels avec rés
 
 ### 1. Unification de la Navigation Channels
 
-- **Fichier Principal** : `src/pages/channels/UnifiedChannelPage/index.tsx`
+- **Fichier Principal** : `src/pages/channels/ChannelsPage/index.tsx`
 - **Problème** : Multiples pages de channels avec navigation incohérente
 - **Solution** : Page unifiée avec sidebar, contenu principal et panneau latéral
 - **Impact** : Navigation fluide et cohérente dans toute l'application
@@ -59,7 +59,7 @@ const selectReactionsByMessageId = useMemo(
 
 ### 6. Mise à Jour du Routing
 
-- **`App.tsx`** : Routes unifiées vers `UnifiedChannelPage`
+- **`App.tsx`** : Routes unifiées vers `ChannelsPage`
 - **`WorkspaceDetailPage.tsx`** : Navigation mise à jour
 - **Impact** : Cohérence du routing dans toute l'application
 
@@ -74,8 +74,8 @@ const selectReactionsByMessageId = useMemo(
 
 ### Pages et Composants
 
-- `src/pages/channels/UnifiedChannelPage/index.tsx` ⭐ **Principal**
-- `src/pages/channels/UnifiedChannelPage/UnifiedChannelPage.module.scss`
+- `src/pages/channels/ChannelsPage/index.tsx` ⭐ **Principal**
+- `src/pages/channels/ChannelsPage/ChannelsPage.module.scss`
 - `src/pages/channels/ChannelChatPage/index.tsx` (sécurisation arrays)
 - `src/pages/workspaces/WorkspaceDetailPage/index.tsx` (navigation)
 - `src/App.tsx` (routing)

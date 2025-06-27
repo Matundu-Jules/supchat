@@ -37,12 +37,10 @@ import SetPasswordPage from "@pages/auth/SetPasswordPage";
 import WorkspaceDetailPage from "@pages/workspaces/WorkspaceDetailPage";
 import InviteWorkspacePage from "@pages/workspaces/InviteWorkspacePage";
 import SettingsPage from "@pages/user/SettingsPage";
-import UnifiedChannelPage from "@pages/channels/UnifiedChannelPage";
+import ChannelsPage from "@pages/channels/ChannelsPage";
 import SearchResultsPage from "@pages/search/SearchResultsPage";
 import WebSocketTestPage from "@pages/testing/WebSocketTestPage";
 
-// 🔧 TEMPORAIRE: Composant de test pour diagnostiquer l'authentification WebSocket
-import { WebSocketAuthTester } from "@components/testing/WebSocketAuthTester";
 import { SocketProvider } from "@contexts/SocketContext";
 
 const AppContent = ({
@@ -85,11 +83,11 @@ const AppContent = ({
             />{" "}
             <Route
               path="/workspaces/:workspaceId/channels"
-              element={<UnifiedChannelPage />}
+              element={<ChannelsPage />}
             />
             <Route
               path="/workspaces/:workspaceId/channels/:channelId"
-              element={<UnifiedChannelPage />}
+              element={<ChannelsPage />}
             />{" "}
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
@@ -100,8 +98,6 @@ const AppContent = ({
         </Routes>
       </main>
       <Footer theme={theme} toggleTheme={toggleTheme} />
-      {/* 🔧 TEMPORAIRE: Composant de test pour diagnostiquer l'authentification WebSocket */}
-      <WebSocketAuthTester />
     </div>
   );
 };
@@ -109,7 +105,7 @@ const AppContent = ({
 const App: React.FC = () => {
   const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => state.preferences.theme);
-  const status = useSelector((state: RootState) => state.preferences.status);
+  // const status = useSelector((state: RootState) => state.preferences.status); // supprimé car non utilisé
   const authLoading = useSelector((state: RootState) => state.auth.isLoading);
   // Initialise theme from store
   useEffect(() => {
@@ -162,7 +158,7 @@ const App: React.FC = () => {
             })
           );
         }
-      } catch (authError) {
+      } catch {
         dispatch(logout());
         // Réinitialiser les préférences pour un utilisateur non authentifié
         dispatch(resetPreferences());

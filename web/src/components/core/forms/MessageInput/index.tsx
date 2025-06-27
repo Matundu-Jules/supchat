@@ -8,7 +8,11 @@ import {
 import styles from "./MessageInput.module.scss";
 
 interface MessageInputProps {
-  onSend: (text: string, file?: File | null) => Promise<void> | void;
+  onSend: (
+    text: string,
+    file?: File | null,
+    e?: React.FormEvent
+  ) => Promise<void> | void;
   loading?: boolean;
   canWrite?: boolean;
 }
@@ -24,8 +28,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // 🔧 CORRECTION: Empêcher la propagation de l'événement
     if (!text.trim() && !file) return;
-    await onSend(text.trim(), file);
+    await onSend(text.trim(), file, e); // 🔧 CORRECTION: Passer l'événement à onSend
     setText("");
     setFile(null);
   };

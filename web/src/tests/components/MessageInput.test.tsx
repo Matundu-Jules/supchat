@@ -12,6 +12,6 @@ describe("MessageInput", () => {
     const btn = screen.getByRole("button", { name: /envoyer/i });
     await user.type(input, "hello");
     await user.click(btn);
-    expect(onSend).toHaveBeenCalledWith("hello", null);
+    expect(onSend).toHaveBeenCalledWith("hello", null, expect.any(Object));
   });
 });

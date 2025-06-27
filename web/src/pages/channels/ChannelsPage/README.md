@@ -84,9 +84,9 @@ L'ancienne architecture avait plusieurs problèmes majeurs d'UX :
 ### Composants unifiés
 
 ```tsx
-UnifiedChannelPage/
+ChannelsPage/
 ├── index.tsx              // Logique principale
-├── UnifiedChannelPage.module.scss  // Styles
+├── ChannelsPage.module.scss  // Styles
 └── README.md             // Documentation
 ```
 
@@ -110,7 +110,7 @@ UnifiedChannelPage/
 
 - ❌ `ChannelsPage` (liste uniquement)
 - ❌ `ChannelChatPage` (chat uniquement)
-- ✅ `UnifiedChannelPage` (tout en un)
+- ✅ `ChannelsPage` (tout en un)
 
 ### Conservation de la logique métier
 

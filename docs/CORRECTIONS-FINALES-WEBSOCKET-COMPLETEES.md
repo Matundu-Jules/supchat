@@ -1,10 +1,10 @@
-# ✅ CORRECTIONS FINALISÉES : UnifiedChannelPage.tsx et Authentification WebSocket
+# ✅ CORRECTIONS FINALISÉES : ChannelsPage.tsx et Authentification WebSocket
 
 ## 🎯 Status : CORRECTIONS TERMINÉES - PRÊT POUR TESTS UTILISATEUR
 
 ### 🔧 Problèmes Résolus
 
-#### 1. Erreurs de Structure JSX dans `UnifiedChannelPage.tsx`
+#### 1. Erreurs de Structure JSX dans `ChannelsPage.tsx`
 
 **Problème** : Erreurs de syntaxe JSX qui empêchaient la compilation
 
@@ -153,7 +153,7 @@ docker-compose logs web --tail=10
 
    - ✅ `web/src/hooks/useSocket.ts` - Authentification cookies HTTP-only
    - ✅ `web/src/hooks/useMessages.ts` - Protection défensive
-   - ✅ `web/src/pages/channels/UnifiedChannelPage/index.tsx` - Structure JSX corrigée
+   - ✅ `web/src/pages/channels/ChannelsPage/index.tsx` - Structure JSX corrigée
    - ✅ `web/src/App.tsx` - Route de test ajoutée
 
 2. **Backend** :

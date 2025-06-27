@@ -44,7 +44,7 @@ Cette correction a été appliquée à :
 
 #### 2. **Protection Renforcée dans les Composants**
 
-**Fichiers :** `UnifiedChannelPage/index.tsx` et `ChannelChatPage/index.tsx`
+**Fichiers :** `ChannelsPage/index.tsx` et `ChannelChatPage/index.tsx`
 
 ```typescript
 // ✅ Protection multiple niveau
@@ -72,7 +72,7 @@ Cette correction a été appliquée à :
 
 #### 3. **Correction API WorkspaceUsers**
 
-**Fichier :** `UnifiedChannelPage/index.tsx` et `ChannelChatPage/index.tsx`
+**Fichier :** `ChannelsPage/index.tsx` et `ChannelChatPage/index.tsx`
 
 ```typescript
 // ✅ Avant (404 error)
@@ -93,7 +93,7 @@ getWorkspaceMembers(workspaceId).then((response) => {
 
    - Correction format payload pour `fetchMessages` et `addMessage`
 
-2. **`src/pages/channels/UnifiedChannelPage/index.tsx`**
+2. **`src/pages/channels/ChannelsPage/index.tsx`**
 
    - Protection Array.isArray() pour messages
    - Correction API getWorkspaceMembers
@@ -144,7 +144,7 @@ safeArray.map(...)
 
 ### 🎉 **Statut Final :**
 
-**🟢 RÉSOLU** - La `UnifiedChannelPage` fonctionne parfaitement sans erreurs !
+**🟢 RÉSOLU** - La `ChannelsPage` fonctionne parfaitement sans erreurs !
 
 - Navigation entre canaux ✅
 - Affichage des messages ✅

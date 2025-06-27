@@ -4,7 +4,7 @@
 
 ### 1. Architecture Unifiée
 
-- ✅ Création de `UnifiedChannelPage` remplaçant les anciennes pages fragmentées
+- ✅ Création de `ChannelsPage` remplaçant les anciennes pages fragmentées
 - ✅ Intégration de tous les hooks existants (useChannels, useMessages, useChannelDetails, etc.)
 - ✅ Design responsive avec sidebar, contenu principal et panel droit
 - ✅ Gestion d'état optimisée avec Redux Toolkit patterns
@@ -25,7 +25,7 @@
 
 ### 4. Styles & UI/UX
 
-- ✅ `UnifiedChannelPage.module.scss` avec design moderne et responsive
+- ✅ `ChannelsPage.module.scss` avec design moderne et responsive
 - ✅ Layout 3-colonnes : Sidebar (channels) + Contenu + Panel droit
 - ✅ États vides engageants
 - ✅ Design adaptatif mobile/tablet/desktop
@@ -71,11 +71,11 @@
 ### Nouveaux Fichiers
 
 ```
-web/src/pages/channels/UnifiedChannelPage/
+web/src/pages/channels/ChannelsPage/
 ├── index.tsx                           # 🆕 Page principale unifiée
-├── UnifiedChannelPage.module.scss      # 🆕 Styles responsives
+├── ChannelsPage.module.scss      # 🆕 Styles responsives
 ├── README.md                           # 🆕 Documentation
-└── UnifiedChannelPage.test.tsx         # 🆕 Tests unitaires
+└── ChannelsPage.test.tsx         # 🆕 Tests unitaires
 
 web/src/hooks/
 ├── useChannelNavigation.ts             # 🆕 Hook navigation channels
@@ -112,7 +112,7 @@ cd web && npm run dev
 
 ```bash
 # Tests unitaires
-cd web && npm test UnifiedChannelPage
+cd web && npm test ChannelsPage
 
 # Validation migration
 bash scripts/test-unified-channels.sh

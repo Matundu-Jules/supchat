@@ -153,6 +153,7 @@ useAppSelector = useSelector.withTypes<RootState>();
 - Controllers, Services, Models, Middlewares séparés
 - Documentation organisée par catégories dans docs/
 - Support ES modules natif Node.js 22
+- **Tous les types TypeScript métiers (User, Channel, Message, etc.) doivent être définis dans le dossier `web/src/types/` dans un fichier dédié, et importés dans les composants/hooks. Ne jamais redéfinir un type métier dans un composant.**
 
 ### Backend Node.js 22
 
@@ -216,6 +217,8 @@ supchat/
 │   │   ├── contexts/     # Contextes React (Socket, etc.)
 │   │   ├── hooks/        # Hooks personnalisés typés (useAppDispatch, useAppSelector)
 │   │   ├── pages/        # Pages avec Suspense
+│   │   │   └── channels/
+│   │   │       └── ChannelsPage/   # ✅ Page unique canaux (ex-UnifiedChannelPage)
 │   │   ├── services/     # Services API
 │   │   ├── store/        # **Redux Toolkit store et slices (CENTRAL)**
 │   │   │   ├── store.ts          # Configuration du store
@@ -244,6 +247,12 @@ supchat/
     ├── environments.sh
     └── ...
 ```
+
+## Pages de canaux - Convention 2025
+
+- **Page unique** : `web/src/pages/channels/ChannelsPage/` (anciennement UnifiedChannelPage)
+- **Toutes les anciennes pages** `ChannelsPage` et `ChannelChatPage` **ont été supprimées** pour éviter les doublons.
+- **La navigation et la logique de chat passent exclusivement par cette page unique.**
 
 ## Gestion Redux Toolkit - **NOUVEAU**
 

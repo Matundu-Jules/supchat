@@ -1,4 +1,4 @@
-# 🐛 Correction : Erreur "messages is not iterable" - UnifiedChannelPage
+# 🐛 Correction : Erreur "messages is not iterable" - ChannelsPage
 
 ## ✅ Problème Résolu
 
@@ -39,7 +39,7 @@ Le hook `useMessages` peut temporairement retourner `null` ou `undefined` pour `
 
 ### 📋 **Fichiers Modifiés :**
 
-- `web/src/pages/channels/UnifiedChannelPage/index.tsx` (lignes 324 et 332)
+- `web/src/pages/channels/ChannelsPage/index.tsx` (lignes 324 et 332)
 
 ### 🛡️ **Protection Ajoutée :**
 

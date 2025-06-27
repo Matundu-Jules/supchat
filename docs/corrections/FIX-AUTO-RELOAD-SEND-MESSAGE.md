@@ -58,7 +58,7 @@ export const addMessage = createAsyncThunk(
 
 ### 3️⃣ **Nettoyage Messages Optimistes**
 
-**Fichier** : `src/pages/channels/UnifiedChannelPage/index.tsx`
+**Fichier** : `src/pages/channels/ChannelsPage/index.tsx`
 
 ```typescript
 // ✅ Nettoyer les messages optimistes lors du changement de channel
@@ -145,7 +145,7 @@ POST /api/messages     ← Envoi seulement
    - Action `addMessage` : Suppression du `getMessages()`
    - Reducer `addMessage.fulfilled` : Pas de remplacement du state
 
-2. **`src/pages/channels/UnifiedChannelPage/index.tsx`**
+2. **`src/pages/channels/ChannelsPage/index.tsx`**
    - Ajout `useEffect` pour nettoyer messages optimistes
    - Correction parenthèse manquante (erreur syntaxe)
 

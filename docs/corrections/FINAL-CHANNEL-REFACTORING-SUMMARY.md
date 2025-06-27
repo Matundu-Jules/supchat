@@ -9,11 +9,11 @@ Cette refactorisation complète a unifié la navigation des channels, éliminé 
 ### 1. 🔄 Unification de la Navigation des Channels
 
 **Problème** : Navigation incohérente avec multiples pages/composants
-**Solution** : Page unifiée `UnifiedChannelPage` avec hooks personnalisés
+**Solution** : Page unifiée `ChannelsPage` avec hooks personnalisés
 
 **Fichiers Créés/Modifiés** :
 
-- ✅ `src/pages/channels/UnifiedChannelPage/index.tsx` (nouveau)
+- ✅ `src/pages/channels/ChannelsPage/index.tsx` (nouveau)
 - ✅ `src/hooks/useRightPanel.ts` (nouveau)
 - ✅ `src/hooks/useChannelNavigation.ts` (nouveau)
 - ✅ `src/App.tsx` (routing mis à jour)
@@ -33,7 +33,7 @@ Cette refactorisation complète a unifié la navigation des channels, éliminé 
 **Fichiers Modifiés** :
 
 - ✅ `src/store/messagesSlice.ts` (garantie des arrays)
-- ✅ `src/pages/channels/UnifiedChannelPage/index.tsx` (vérifications `Array.isArray`)
+- ✅ `src/pages/channels/ChannelsPage/index.tsx` (vérifications `Array.isArray`)
 - ✅ `src/pages/channels/ChannelChatPage/index.tsx` (défense arrays)
 
 **Code de Sécurisation** :
@@ -199,7 +199,7 @@ getWorkspaceMembers(workspaceId);
 
 ```
 src/pages/channels/
-├── UnifiedChannelPage/          # ✅ Page principale unifiée
+├── ChannelsPage/          # ✅ Page principale unifiée
 │   ├── index.tsx               # Interface complète
 │   ├── *.module.scss          # Styles modulaires
 │   └── README.md              # Documentation

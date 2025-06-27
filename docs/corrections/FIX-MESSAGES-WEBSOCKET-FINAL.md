@@ -95,7 +95,7 @@ VITE_API_URL=http://localhost:3001
 
 ### 3️⃣ **Messages Optimistes Nettoyés**
 
-**Fichier** : `src/pages/channels/UnifiedChannelPage/index.tsx`
+**Fichier** : `src/pages/channels/ChannelsPage/index.tsx`
 
 ```typescript
 // ✅ Nettoyage lors changement de channel
@@ -191,7 +191,7 @@ graph TD
 
 - `src/store/messagesSlice.ts` → Logique envoi optimisée
 - `src/hooks/useSocket.ts` → Configuration WebSocket robuste
-- `src/pages/channels/UnifiedChannelPage/index.tsx` → Nettoyage optimistes
+- `src/pages/channels/ChannelsPage/index.tsx` → Nettoyage optimistes
 
 ### Configuration
 

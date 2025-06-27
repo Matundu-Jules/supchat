@@ -1,4 +1,4 @@
-# Migration vers UnifiedChannelPage - Résolution de l'incohérence UX
+# Migration vers ChannelsPage - Résolution de l'incohérence UX
 
 ## 🎯 Problème résolu
 
@@ -26,7 +26,7 @@ ChannelChatPage (route: /workspaces/:id/channels/:channelId)
 ### Architecture après (solution)
 
 ```
-UnifiedChannelPage (routes unifiées)
+ChannelsPage (routes unifiées)
 ├── /workspaces/:workspaceId/channels
 ├── /workspaces/:workspaceId/channels/:channelId
 │
@@ -61,7 +61,7 @@ UnifiedChannelPage (routes unifiées)
 
 - ❌ `pages/channels/ChannelsPage/` (liste uniquement)
 - ❌ `pages/channels/ChannelChatPage/` (chat uniquement)
-- ✅ `pages/channels/UnifiedChannelPage/` (solution complète)
+- ✅ `pages/channels/ChannelsPage/` (solution complète)
 
 ### Routes mises à jour
 
@@ -72,16 +72,16 @@ UnifiedChannelPage (routes unifiées)
 <Route path="/workspaces/:id/channels/:channelId" element={<ChannelChatPageWrapper />} />
 
 // Nouveau (unifié)
-<Route path="/workspaces/:workspaceId/channels" element={<UnifiedChannelPage />} />
-<Route path="/workspaces/:workspaceId/channels/:channelId" element={<UnifiedChannelPage />} />
+<Route path="/workspaces/:workspaceId/channels" element={<ChannelsPage />} />
+<Route path="/workspaces/:workspaceId/channels/:channelId" element={<ChannelsPage />} />
 ```
 
 ### Architecture des composants
 
 ```tsx
-UnifiedChannelPage/
+ChannelsPage/
 ├── index.tsx                      // Logique unifiée
-├── UnifiedChannelPage.module.scss // Styles responsive
+├── ChannelsPage.module.scss // Styles responsive
 └── README.md                      // Documentation complète
 ```
 
@@ -166,7 +166,7 @@ Pour tester la nouvelle architecture :
 
 ## 📚 Documentation complète
 
-Consultez `pages/channels/UnifiedChannelPage/README.md` pour :
+Consultez `pages/channels/ChannelsPage/README.md` pour :
 
 - Architecture détaillée
 - Patterns UX appliqués

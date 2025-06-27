@@ -4,7 +4,7 @@ import "@testing-library/jest-dom";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { configureStore } from "@reduxjs/toolkit";
-import UnifiedChannelPage from "@pages/channels/UnifiedChannelPage";
+import ChannelsPage from "@pages/channels/ChannelsPage";
 
 // Mock des hooks personnalisés
 vi.mock("@hooks/useChannelNavigation", () => ({
@@ -101,14 +101,14 @@ const renderWithProviders = (component: React.ReactElement) => {
   );
 };
 
-describe("UnifiedChannelPage", () => {
+describe("ChannelsPage", () => {
   it("should render without crashing", () => {
-    renderWithProviders(<UnifiedChannelPage />);
+    renderWithProviders(<ChannelsPage />);
     expect(screen.getByText("Canaux")).toBeInTheDocument();
   });
 
   it("should display empty state when no channel is selected", () => {
-    renderWithProviders(<UnifiedChannelPage />);
+    renderWithProviders(<ChannelsPage />);
     expect(screen.getByText("Bienvenue dans les canaux")).toBeInTheDocument();
     expect(
       screen.getByText(

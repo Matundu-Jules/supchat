@@ -1,6 +1,5 @@
 // Page de test pour diagnostiquer l'authentification WebSocket
 import React from "react";
-import { WebSocketAuthTester } from "@components/testing/WebSocketAuthTester";
 
 const WebSocketTestPage: React.FC = () => {
   return (
@@ -10,7 +9,6 @@ const WebSocketTestPage: React.FC = () => {
         Cette page permet de diagnostiquer l'authentification WebSocket de
         SUPCHAT.
       </p>
-      <WebSocketAuthTester />
     </div>
   );
 };
