@@ -309,7 +309,8 @@ export function useChannelsPageLogic({
 
   // Helpers permissions métier (basés sur channelRoles et user)
   const currentUserRole =
-    channelRoles.find((r) => r.userId === user?._id)?.role || userChannelRole;
+    channelRoles.find((r) => r.userId === user?._id)?.role ||
+    (user?.role === 'admin' ? 'admin' : userChannelRole);
   const isAdmin = currentUserRole === 'admin';
   const isMember = currentUserRole === 'membre';
   const isInvite = currentUserRole === 'invité';
@@ -492,7 +493,7 @@ export function useChannelsPageLogic({
     setJoinRequestTarget(channelId);
     try {
       await dispatch(sendChannelJoinRequest({ channelId })).unwrap();
-      setJoinRequestFeedback('Demande d’adhésion envoyée.');
+      setJoinRequestFeedback('Demande envoyée.');
     } catch (err) {
       setJoinRequestFeedback(
         (err as Error).message || 'Erreur lors de la demande d’adhésion'
