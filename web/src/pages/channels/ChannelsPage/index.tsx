@@ -13,6 +13,7 @@ import ChannelInviteModal from "@components/messaging/Channel/ChannelInviteModal
 import Loader from "@components/core/ui/Loader";
 import MessageItem from "@components/messaging/Message/MessageItem";
 import ChannelInvitationsList from "@components/messaging/Channel/ChannelInvitationsList";
+import ChannelJoinRequestsList from "@components/messaging/Channel/ChannelJoinRequestsList";
 import FeedbackToast from "@components/core/ui/FeedbackToast";
 import type { Channel, ChannelType } from "@ts_types/channel";
 import type { WorkspaceMember } from "@ts_types/workspace";
@@ -408,6 +409,21 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
     );
   };
 
+  // Affichage des demandes d'adhésion en attente
+  const renderJoinRequests = () => {
+    if (!logic.joinRequests || logic.joinRequests.length === 0) return null;
+    return (
+      <ChannelJoinRequestsList
+        requests={logic.joinRequests}
+        loading={logic.joinRequestsLoading}
+        error={logic.joinRequestsError}
+        onAccept={logic.handleAcceptJoinRequest}
+        onDecline={logic.handleDeclineJoinRequest}
+        feedback={logic.joinRequestFeedback}
+      />
+    );
+  };
+
   return (
     <div className={styles["unifiedChannelPage"]}>
       <FeedbackToast feedbacks={logic.feedbacks} />
@@ -505,7 +521,7 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
                       )}
                     </button>
                     {/* Bouton Rejoindre pour channels publics si non membre */}
-                    {isPublic && !isMember && logic.canInvite && (
+                    {isPublic && !isMember && (
                       <>
                         <button
                           className={styles["joinChannelBtn"]}
@@ -549,6 +565,7 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
       {/* Contenu principal */}
       <main className={styles["mainContent"]}>
         {renderInvitations()}
+        {renderJoinRequests()}
         {renderMainContent()}
       </main>
       {/* Panel droit (membres/paramètres/rôles) */}
