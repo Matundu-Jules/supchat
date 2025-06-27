@@ -99,7 +99,8 @@ beforeEach(() => {
       return HttpResponse.json([]);
     }),
     // Handler pour les permissions du workspace (évite l’erreur permissions.find)
-    http.get("/api/permissions", ({ request }) => {
+    // Utilise un motif avec wildcard pour matcher l'URL complète peu importe le préfixe
+    http.get("*/permissions", ({ request }) => {
       const url = new URL(request.url);
       if (url.searchParams.get("workspaceId") === "ws1") {
         return HttpResponse.json([
@@ -122,7 +123,7 @@ beforeEach(() => {
       return HttpResponse.json([]);
     }),
     // Handler pour les membres du workspace
-    http.get("/api/workspaces/ws1/members", () => {
+    http.get("*/workspaces/ws1/members", () => {
       return HttpResponse.json([
         { _id: "user1", username: "Alice", role: "admin" },
         { _id: "user2", username: "Bob", role: "member" },
