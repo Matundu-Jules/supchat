@@ -63,12 +63,15 @@ const ChannelJoinRequestsList: React.FC<ChannelJoinRequestsListProps> = ({
         </div>
       )}
       <ul style={{ listStyle: "none", padding: 0 }}>
+
         {requests.filter(Boolean).map((req) => (
+
           <li
             key={req._id}
             style={{ marginBottom: 8, display: "flex", alignItems: "center" }}
           >
             <span style={{ flex: 1 }}>
+
               Demande de <b>{req.userId ?? 'Utilisateur'}</b>
             </span>
             <button
