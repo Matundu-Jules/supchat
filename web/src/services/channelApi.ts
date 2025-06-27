@@ -109,7 +109,8 @@ export async function getChannelJoinRequests(
   try {
     await fetchCsrfToken();
     const { data } = await api.get(`/channels/${channelId}/join-requests`);
-    return data.joinRequests || [];
+    // Certains mocks renvoient directement un tableau
+    return data.joinRequests || data || [];
   } catch (err: unknown) {
     const message =
       err instanceof Error
@@ -124,7 +125,7 @@ export async function sendChannelJoinRequest(
 ): Promise<import('@ts_types/channel').ChannelJoinRequest> {
   try {
     await fetchCsrfToken();
-    const { data } = await api.post(`/channels/${channelId}/join`);
+    const { data } = await api.post(`/channels/${channelId}/join-request`);
     return data.joinRequest;
   } catch (err: unknown) {
     const message =
@@ -141,10 +142,10 @@ export async function respondToChannelJoinRequest(
 ): Promise<import('@ts_types/channel').ChannelJoinRequest> {
   try {
     await fetchCsrfToken();
-    const { data } = await api.post(
-      `/channel-join-requests/${requestId}/respond`,
-      { accept }
-    );
+    const endpoint = accept
+      ? `/channel-join-requests/${requestId}/accept`
+      : `/channel-join-requests/${requestId}/decline`;
+    const { data } = await api.post(endpoint);
     return data.joinRequest;
   } catch (err: unknown) {
     const message =
