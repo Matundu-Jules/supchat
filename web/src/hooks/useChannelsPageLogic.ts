@@ -308,9 +308,8 @@ export function useChannelsPageLogic({
   };
 
   // Helpers permissions métier (basés sur channelRoles et user)
-  const currentUserRole = channelRoles.find(
-    (r) => r.userId === user?._id
-  )?.role;
+  const currentUserRole =
+    channelRoles.find((r) => r.userId === user?._id)?.role || userChannelRole;
   const isAdmin = currentUserRole === 'admin';
   const isMember = currentUserRole === 'membre';
   const isInvite = currentUserRole === 'invité';
