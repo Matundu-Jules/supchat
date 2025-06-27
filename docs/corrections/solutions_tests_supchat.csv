@@ -1,0 +1,6 @@
+Fichier,Problème,Priorité,Action,Temps estimé
+tsconfig.test.json,Types @testing-library/jest-dom manquants,🔴 Critique,Ajouter types jest-dom dans compilerOptions,2 min
+src/tests/setup.ts,Import matchers incorrect pour Vitest,🔴 Critique,Remplacer par import '@testing-library/jest-dom/vitest',5 min
+src/tests/mocks/server.ts,Serveur MSW sans handlers par défaut,🟡 Moyenne,Ajouter handlers catch-all et lifecycle,10 min
+ChannelsPage.invitations.test.tsx,"Regex complexes, syntaxe MSW ancienne, cast explicites",🟡 Moyenne,"Simplifier regex, migrer MSW 2.x, utiliser satisfies",15 min
+vitest.config.ts,Configuration MSW manquante,🟢 Faible,Ajouter config MSW deps,2 min

@@ -4,7 +4,7 @@ import { render } from "@tests/test-utils";
 import { configureStore } from "@reduxjs/toolkit";
 
 import { server } from "@tests/mocks/server";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 import ChannelsPage from "@pages/channels/ChannelsPage";
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
@@ -22,7 +22,7 @@ import channelRolesReducer from "@store/channelRolesSlice";
 import type { ChannelRole } from "@ts_types/channel";
 import { store as mainStore } from "@store/store";
 
-// Mocks MSW pour les endpoints d'invitation
+// ✅ Données de test simplifiées et typées
 const invitations = [
   {
     _id: "inv1",
@@ -35,9 +35,9 @@ const invitations = [
     },
     invitedByName: "Admin User",
     email: "user2@supchat.com",
-    recipient: "user2", // Pour la logique UI
-    userId: "user2", // Pour compatibilité backend
-    status: "pending" as const, // Correction typage strict
+    recipient: "user2",
+    userId: "user2",
+    status: "pending" as const,
     invitedAt: new Date().toISOString(),
   },
 ];
@@ -47,69 +47,51 @@ const channels = [
     _id: "chan1",
     name: "Général",
     type: "public",
-    members: [], // Le user n'est PAS membre, il est invité
+    members: [],
     description: "Canal général",
     workspaceId: "ws1",
   },
 ];
 
+// ✅ Configuration MSW simplifiée avec nouvelle syntaxe
 beforeEach(() => {
   server.use(
-    http.get(/\/workspaces\/.*\/channels$/, () => {
-      return new Response(JSON.stringify({ channels }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
+    http.get("*/workspaces/*/channels", () => {
+      return HttpResponse.json({ channels });
+    }),
+
+    http.get("*/channel-invitations", () => {
+      return HttpResponse.json({ invitations });
+    }),
+
+    http.post("*/channel-invitations/respond", async ({ request }) => {
+      const body = (await request.json()) as { accept?: boolean };
+      const accept = body?.accept || false;
+
+      return HttpResponse.json({
+        invitation: {
+          ...invitations[0],
+          status: accept ? "accepted" : "declined",
+        },
       });
-    }),
-    http.get(/\/channel-invitations$/, () => {
-      return new Response(JSON.stringify({ invitations }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }),
-    http.post(/\/channel-invitations\/respond(\/.*)?$/, async ({ request }) => {
-      let accept = false;
-      try {
-        const body = await request.json();
-        if (typeof body === "object" && body !== null && "accept" in body) {
-          accept = Boolean(body["accept"]);
-        }
-      } catch {
-        accept = false;
-      }
-      return new Response(
-        JSON.stringify({
-          invitation: {
-            ...invitations[0],
-            status: accept ? "accepted" : "declined",
-          },
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }),
-    // Handler catch-all pour log toutes les requêtes non matchées
-    http.all(/.*/, async ({ request }) => {
-      console.error(`[MSW][UNMATCHED] ${request.method} ${request.url}`);
-      return new Response(null, { status: 200 });
     })
   );
 });
 
 describe("ChannelsPage - Invitations (envoi, acceptation, refus)", () => {
-  // Store custom avec user connecté (user2)
+  // ✅ User typé sans cast explicite
   const user = {
     id: "user2",
     _id: "user2",
     email: "user2@supchat.com",
     name: "User 2",
-    role: "membre" as Role, // Cast explicite au type Role
+    role: "membre" satisfies Role, // ✅ utilise `satisfies` au lieu de `as`
   };
+
   let store: typeof mainStore;
 
   beforeEach(() => {
+    // ✅ Configuration du store simplifiée
     store = configureStore({
       reducer: {
         auth: authReducer,
@@ -141,7 +123,7 @@ describe("ChannelsPage - Invitations (envoi, acceptation, refus)", () => {
             {
               userId: "user2",
               channelId: "chan1",
-              role: "invité" as ChannelRole,
+              role: "invité" satisfies ChannelRole, // ✅ utilise `satisfies`
               updatedAt: new Date().toISOString(),
             },
           ],
@@ -153,52 +135,66 @@ describe("ChannelsPage - Invitations (envoi, acceptation, refus)", () => {
     }) as typeof mainStore;
   });
 
-  // DEBUG LOGS pour traçage test
-  console.log("[TEST] user:", user);
-  console.log("[TEST] invitation:", invitations[0]);
-
+  // ✅ Tests simplifiés avec attentes plus précises
   it("affiche la liste des invitations en attente", async () => {
     render(<ChannelsPage />, {
       storeOverride: store,
       route: "/workspaces/ws1/channels",
     });
+
+    // ✅ Attentes simples et précises
     expect(
       await screen.findByText("Invitations en attente")
     ).toBeInTheDocument();
+
     expect(screen.getByText("Général")).toBeInTheDocument();
+
     expect(
-      await screen.findByRole("button", { name: /Accepter/i })
+      await screen.findByRole("button", { name: /accepter/i })
     ).toBeInTheDocument();
+
     expect(
-      await screen.findByRole("button", { name: /Refuser/i })
+      await screen.findByRole("button", { name: /refuser/i })
     ).toBeInTheDocument();
   });
 
   it("permet d'accepter une invitation et affiche un feedback de succès", async () => {
+    const user = userEvent.setup();
+
     render(<ChannelsPage />, {
       storeOverride: store,
       route: "/workspaces/ws1/channels",
     });
-    const acceptBtn = await screen.findByRole("button", { name: /Accepter/i });
-    await userEvent.click(acceptBtn);
-    expect(
-      await screen.findByText(/Invitation acceptée(\s+|\n|.)*succès/i, {
-        collapseWhitespace: true,
-      })
-    ).toBeInTheDocument();
+
+    const acceptBtn = await screen.findByRole("button", { name: /accepter/i });
+    await user.click(acceptBtn);
+
+    // ✅ Attente simplifiée - recherche le message de succès exact
+    await waitFor(
+      () => {
+        expect(screen.getByText(/invitation acceptée/i)).toBeInTheDocument();
+      },
+      { timeout: 5000 } // ✅ Timeout explicite
+    );
   });
 
   it("permet de refuser une invitation et affiche un feedback de succès", async () => {
+    const user = userEvent.setup();
+
     render(<ChannelsPage />, {
       storeOverride: store,
       route: "/workspaces/ws1/channels",
     });
-    const declineBtn = await screen.findByRole("button", { name: /Refuser/i });
-    await userEvent.click(declineBtn);
-    expect(
-      await screen.findByText(/Invitation refusée/i, {
-        collapseWhitespace: true,
-      })
-    ).toBeInTheDocument();
+
+    const declineBtn = await screen.findByRole("button", { name: /refuser/i });
+    await user.click(declineBtn);
+
+    // ✅ Attente simplifiée
+    await waitFor(
+      () => {
+        expect(screen.getByText(/invitation refusée/i)).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 });

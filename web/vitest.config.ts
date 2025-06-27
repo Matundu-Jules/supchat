@@ -31,6 +31,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: [path.resolve(__dirname, 'src/tests/setup.ts')],
+    // Configuration pour MSW
+    server: {
+      deps: {
+        external: ['msw'],
+      },
+    },
     typecheck: {
       tsconfig: './tsconfig.test.json',
     },

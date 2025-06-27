@@ -1,14 +1,20 @@
-import '@testing-library/jest-dom';
-import { expect, afterEach, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
-
-// Extension des matchers Vitest avec jest-dom
-expect.extend(matchers);
+import { server } from './mocks/server';
 
 // Nettoyage après chaque test
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'warn' });
+});
+
 afterEach(() => {
   cleanup();
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  server.close();
 });
 
 // Configuration globale pour les tests
@@ -40,4 +46,9 @@ Object.defineProperty(window, 'localStorage', {
 // Mock pour sessionStorage
 Object.defineProperty(window, 'sessionStorage', {
   value: localStorageMock,
+});
+
+// Configuration globale pour les timeouts
+vi.setConfig({
+  testTimeout: 10000, // 10 secondes pour les tests async
 });
