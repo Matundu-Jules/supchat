@@ -1,12 +1,12 @@
 // src/types/channel.ts
 
-export type ChannelType = 'public' | 'private';
+export type ChannelType = 'public' | 'private' | 'direct';
 
 export interface ChannelMember {
   _id: string;
   username: string;
   avatar?: string;
-  role?: string;
+  role?: import('./role').ChannelRole;
 }
 
 export interface Channel {
@@ -14,8 +14,11 @@ export interface Channel {
   name: string;
   description?: string;
   type: ChannelType;
-  workspaceId: string;
+  workspace: string;
+  createdBy: string;
   members?: ChannelMember[];
+  invitations?: import('./invitation').ChannelInvitation[];
+  messages?: string[];
   createdAt?: string;
   updatedAt?: string;
   unreadCount?: number;
@@ -24,11 +27,10 @@ export interface Channel {
 // Payloads pour création/mise à jour de canal (aligné sur ChannelFormData)
 export interface ChannelFormData {
   name: string;
-  workspaceId: string;
+  workspace: string;
   description?: string;
   type?: ChannelType;
 }
 
-export type ChannelCreatePayload = Omit<ChannelFormData, 'workspaceId'>;
-export type ChannelUpdatePayload = Partial<Omit<ChannelFormData, 'workspaceId'>>;
-
+export type ChannelCreatePayload = Omit<ChannelFormData, 'workspace'>;
+export type ChannelUpdatePayload = Partial<Omit<ChannelFormData, 'workspace'>>;

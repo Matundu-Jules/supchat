@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useAppSelector } from "@hooks/redux";
 import { useSocket } from "@hooks/useSocket";
 import type { RootState } from "@store/store";
-import { API_BASE_URL, WEBSOCKET_URL } from "../../config/api";
 
 interface DiagnosticInfo {
   auth: {
@@ -35,8 +34,8 @@ export const WebSocketDiagnostic: React.FC = () => {
 
   useEffect(() => {
     // Récupérer les URLs d'environnement
-    const socketUrl = (window as any).__SUPCHAT_SOCKET_URL__ || 'Non défini';
-    const apiUrl = (window as any).__SUPCHAT_API_URL__ || 'Non défini';
+    const socketUrl = (window as any).__SUPCHAT_SOCKET_URL__ || "Non défini";
+    const apiUrl = (window as any).__SUPCHAT_API_URL__ || "Non défini";
 
     setDiagnosticInfo({
       auth: {
@@ -77,13 +76,17 @@ export const WebSocketDiagnostic: React.FC = () => {
       <h4 style={{ margin: "0 0 8px 0", color: "#333" }}>
         🔧 Diagnostic WebSocket
       </h4>
-      
+
       <div style={{ marginBottom: "8px" }}>
         <strong>📊 État d'authentification:</strong>
         <div style={{ paddingLeft: "10px" }}>
           <div>
-            Connecté: {" "}
-            <span style={{ color: diagnosticInfo.auth.isAuthenticated ? "green" : "red" }}>
+            Connecté:{" "}
+            <span
+              style={{
+                color: diagnosticInfo.auth.isAuthenticated ? "green" : "red",
+              }}
+            >
               {diagnosticInfo.auth.isAuthenticated ? "✅ OUI" : "❌ NON"}
             </span>
           </div>
@@ -100,14 +103,20 @@ export const WebSocketDiagnostic: React.FC = () => {
         <strong>🔌 État WebSocket:</strong>
         <div style={{ paddingLeft: "10px" }}>
           <div>
-            Socket initialisé: {" "}
-            <span style={{ color: diagnosticInfo.socket.exists ? "green" : "red" }}>
+            Socket initialisé:{" "}
+            <span
+              style={{ color: diagnosticInfo.socket.exists ? "green" : "red" }}
+            >
               {diagnosticInfo.socket.exists ? "✅ OUI" : "❌ NON"}
             </span>
           </div>
           <div>
-            Connecté: {" "}
-            <span style={{ color: diagnosticInfo.socket.connected ? "green" : "red" }}>
+            Connecté:{" "}
+            <span
+              style={{
+                color: diagnosticInfo.socket.connected ? "green" : "red",
+              }}
+            >
               {diagnosticInfo.socket.connected ? "✅ OUI" : "❌ NON"}
             </span>
           </div>

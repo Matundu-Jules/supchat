@@ -13,7 +13,7 @@ import EditWorkspaceModal from "@components/workspace/EditWorkspaceModal";
 import UserStatusBadge from "@components/user/UserStatusBadge";
 import UserRoleBadge from "@components/user/UserRoleBadge";
 import UserAvatar from "@components/user/UserAvatar";
-import { WorkspaceMember } from "../../../types/workspace";
+import { WorkspaceMember } from "@ts_types/workspace";
 
 type MenuItem =
   | "members"

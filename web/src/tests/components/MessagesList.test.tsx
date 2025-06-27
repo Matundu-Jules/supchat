@@ -76,7 +76,7 @@ const mockSocket = {
   connected: true,
 };
 
-vi.mock("../../hooks/useSocket", () => ({
+vi.mock("@hooks/useSocket", () => ({
   useSocket: () => ({
     socket: mockSocket,
     isConnected: true,

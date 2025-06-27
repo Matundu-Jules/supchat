@@ -1,7 +1,7 @@
 import React from "react";
 import { useChannelPermissions } from "@hooks/useChannelPermissions";
 import styles from "./ChannelList.module.scss";
-import type { Channel } from "../../../../types/channel";
+import type { Channel } from "@ts_types/channel";
 
 interface ChannelListProps {
   channels: Channel[];

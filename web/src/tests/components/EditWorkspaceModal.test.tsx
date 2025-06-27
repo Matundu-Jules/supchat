@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import EditWorkspaceModal from "@components/Workspace/EditWorkspaceModal";
-import "../../tests/setup";
+import "@tests/setup";
 
 describe("EditWorkspaceModal - Privacy Toggle", () => {
   const mockWorkspace = {

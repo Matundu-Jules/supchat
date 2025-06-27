@@ -121,11 +121,21 @@ export const TestProvider = ({
 // Permet d'utiliser le store Redux typé et le router dans tous les tests
 function render(
   ui: ReactElement,
-  { route = "/", ...renderOptions }: { route?: string } & RenderOptions = {}
+  {
+    route = "/",
+    storeOverride,
+    ...renderOptions
+  }: { route?: string; storeOverride?: typeof store } & RenderOptions = {}
 ) {
+  // Si un store custom est fourni, l'utiliser, sinon store par défaut
+  const usedStore = storeOverride || store;
   return rtlRender(ui, {
     wrapper: ({ children }) => (
-      <TestProvider route={route}>{children}</TestProvider>
+      <Provider store={usedStore}>
+        <MockSocketProvider>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </MockSocketProvider>
+      </Provider>
     ),
     ...renderOptions,
   });

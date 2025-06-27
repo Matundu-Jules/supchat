@@ -12,11 +12,12 @@ import ChannelRolesManager from "@components/messaging/Channel/ChannelRolesManag
 import ChannelInviteModal from "@components/messaging/Channel/ChannelInviteModal";
 import Loader from "@components/core/ui/Loader";
 import MessageItem from "@components/messaging/Message/MessageItem";
-import type { Channel } from "../../../types/channel";
-import type { WorkspaceMember } from "../../../types/workspace";
-import type { User } from "../../../types/user";
-import type { Message } from "../../../types/message";
-import type { ChannelType } from "@ts_types/channel";
+import ChannelInvitationsList from "@components/messaging/Channel/ChannelInvitationsList";
+import FeedbackToast from "@components/core/ui/FeedbackToast";
+import type { Channel, ChannelType } from "@ts_types/channel";
+import type { WorkspaceMember } from "@ts_types/workspace";
+import type { User } from "@ts_types/user";
+import type { Message } from "@ts_types/message";
 
 // Ajout de unreadCount au type Channel local pour le composant
 interface ChannelWithUnread extends Channel {
@@ -359,22 +360,30 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
                 <p>Gestion des rôles pour le canal actuel</p>
               </div>
               {logic.channel && (
-                <ChannelRolesManager
-                  workspaceId={logic.workspaceId || ""}
-                  channels={logic.channels as Channel[]}
-                  isOwnerOrAdmin={logic.canManageMembers}
-                  channel={logic.channel as Channel}
-                  currentUserId={user?._id || ""}
-                  onPromote={(userId: string, role: string) => {
-                    // TODO: Implémenter la promotion
-                    console.log("Promote user", userId, "to", role);
-                  }}
-                  onDemote={(userId: string, role: string) => {
-                    // TODO: Implémenter la rétrogradation
-                    console.log("Demote user", userId, "to", role);
-                  }}
-                  canEdit={logic.canEditChannel}
-                />
+                <>
+                  {logic.feedbacks.role && (
+                    <div
+                      style={{
+                        color: logic.feedbacks.role.includes("Erreur")
+                          ? "red"
+                          : "green",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {logic.feedbacks.role}
+                    </div>
+                  )}
+                  <ChannelRolesManager
+                    workspaceId={logic.workspaceId || ""}
+                    channels={logic.channels as Channel[]}
+                    isOwnerOrAdmin={logic.canManageMembers}
+                    channel={logic.channel as Channel}
+                    currentUserId={user?._id || ""}
+                    onPromote={logic.handlePromoteMember}
+                    onDemote={logic.handleDemoteMember}
+                    canEdit={logic.canEditChannel}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -384,8 +393,24 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
     }
   };
 
+  // Ajout de l'affichage des invitations en attente (UI/UX)
+  const renderInvitations = () => {
+    if (!logic.invitations || logic.invitations.length === 0) return null;
+    return (
+      <ChannelInvitationsList
+        invitations={logic.invitations}
+        loading={logic.invitationsLoading}
+        error={logic.invitationsError}
+        onAccept={logic.handleAcceptInvitation}
+        onDecline={logic.handleDeclineInvitation}
+        feedback={logic.invitationFeedback}
+      />
+    );
+  };
+
   return (
     <div className={styles["unifiedChannelPage"]}>
+      <FeedbackToast feedbacks={logic.feedbacks} />
       {/* Sidebar gauche avec liste des canaux */}
       <aside className={styles["leftSidebar"]}>
         <div className={styles["sidebarHeader"]}>
@@ -432,32 +457,100 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
                   .toLowerCase()
                   .includes(logic.searchQuery.toLowerCase())
               )
-              .map((channel) => (
-                <button
-                  key={channel._id}
-                  className={`${styles["channelItem"]} ${
-                    logic.activeChannelId === channel._id
-                      ? styles["active"]
-                      : ""
-                  }`}
-                  onClick={() => logic.handleChannelSelect(channel._id)}
-                >
-                  <span className={styles["channelIcon"]}>
-                    {channel.type === "private" ? "🔒" : "#"}
-                  </span>
-                  <span className={styles["channelName"]}>{channel.name}</span>
-                  {channel.unreadCount && (
-                    <span className={styles["unreadBadge"]}>
-                      {channel.unreadCount}
-                    </span>
-                  )}
-                </button>
-              ))
+              .map((channel) => {
+                // Détermination de l'état d'adhésion pour chaque channel public
+                const isPublic = channel.type === "public";
+                const isMember = channel.members?.some(
+                  (m) => m._id === user?._id
+                );
+                const joinRequest = logic.joinRequests?.find(
+                  (req) =>
+                    req.channelId === channel._id &&
+                    req.userId === user?._id &&
+                    req.status === "pending"
+                );
+                return (
+                  <div
+                    key={channel._id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <button
+                      key={channel._id}
+                      className={`${styles["channelItem"]} ${
+                        logic.activeChannelId === channel._id
+                          ? styles["active"]
+                          : ""
+                      }`}
+                      onClick={() => logic.handleChannelSelect(channel._id)}
+                      style={{ flex: 1 }}
+                      disabled={channel.type === "private" && !logic.canInvite}
+                      aria-disabled={
+                        channel.type === "private" && !logic.canInvite
+                      }
+                    >
+                      <span className={styles["channelIcon"]}>
+                        {channel.type === "private" ? "🔒" : "#"}
+                      </span>
+                      <span className={styles["channelName"]}>
+                        {channel.name}
+                      </span>
+                      {channel.unreadCount && (
+                        <span className={styles["unreadBadge"]}>
+                          {channel.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    {/* Bouton Rejoindre pour channels publics si non membre */}
+                    {isPublic && !isMember && logic.canInvite && (
+                      <>
+                        <button
+                          className={styles["joinChannelBtn"]}
+                          onClick={() =>
+                            logic.handleSendJoinRequest(channel._id)
+                          }
+                          disabled={!!joinRequest || logic.joinRequestsLoading}
+                          aria-disabled={
+                            !!joinRequest || logic.joinRequestsLoading
+                          }
+                          style={{ marginLeft: 8 }}
+                        >
+                          {logic.joinRequestsLoading &&
+                          logic.joinRequestTarget === channel._id
+                            ? "..."
+                            : joinRequest
+                            ? "En attente"
+                            : "Rejoindre"}
+                        </button>
+                        {joinRequest && (
+                          <span
+                            className={styles["pendingBadge"]}
+                            style={{
+                              marginLeft: 4,
+                              color: "#888",
+                              fontSize: 12,
+                            }}
+                            aria-label="Demande en attente"
+                          >
+                            En attente
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })
           )}
         </div>
       </aside>
       {/* Contenu principal */}
-      <main className={styles["mainContent"]}>{renderMainContent()}</main>
+      <main className={styles["mainContent"]}>
+        {renderInvitations()}
+        {renderMainContent()}
+      </main>
       {/* Panel droit (membres/paramètres/rôles) */}
       {renderRightPanel()}
       {/* Modales */}

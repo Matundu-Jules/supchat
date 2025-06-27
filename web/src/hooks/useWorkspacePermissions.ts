@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useMemo } from 'react';
 import type { RootState } from '@store/store';
-import type { WorkspaceMember } from '../types/workspace';
+import type { WorkspaceMember } from '@ts_types/workspace';
 
 interface Workspace {
   _id: string;

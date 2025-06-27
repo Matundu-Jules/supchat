@@ -15,6 +15,9 @@ const {
     updateChannelMemberRole,
     removeChannelMember,
     addChannelMember,
+    createInvitation,
+    getChannelInvitations,
+    respondToInvitation,
 } = require('../controllers/channelController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
 const {
@@ -174,6 +177,17 @@ router.put(
     },
     require('../controllers/notificationController')
         .updateChannelNotificationSettings
+)
+
+// Créer une invitation enrichie
+router.post('/:channelId/invitations', authMiddleware, createInvitation)
+// Récupérer toutes les invitations enrichies d'un canal
+router.get('/:channelId/invitations', authMiddleware, getChannelInvitations)
+// Accepter/refuser une invitation
+router.post(
+    '/invitations/respond/:invitationId',
+    authMiddleware,
+    respondToInvitation
 )
 
 module.exports = router

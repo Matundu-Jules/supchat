@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MessageInput from "@components/core/forms/MessageInput";
-import "../../tests/setup";
+import "@tests/setup";
 
 describe("MessageInput", () => {
   it("sends message text", async () => {

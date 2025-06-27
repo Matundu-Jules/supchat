@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as yup from "yup";
 import styles from "../ChannelCreateForm/ChannelCreateForm.module.scss";
-import type { Channel } from "../../../../types/channel";
+import type { Channel } from "@ts_types/channel";
 
 interface ChannelEditFormProps {
   channel: Channel;

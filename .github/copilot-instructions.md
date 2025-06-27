@@ -1,5 +1,108 @@
-````instructions
+# SUPCHAT Copilot Memory & Configuration Conventions (MCP Compatible)
+
+## 1. MCP Memory Structure (Obligatoire)
+
+- Toutes les entités doivent respecter le schéma JSON MCP :
+  - `type` (toujours "entity")
+  - `name` (identifiant unique, format SUPCHAT\_... SANS année/version, ex : SUPCHAT_STACK_TECHNIQUE)
+  - `entityType` (catégorie explicite, ex : project_context, tech_stack, test_infrastructure, convention, documentation, etc.)
+  - `observations` (array de chaînes, jamais null)
+  - `relations` (array optionnelle d’objets `{ relationType, to }`)
+- Un seul nœud racine : `SUPCHAT_PROJECT` (type: entity, entityType: project_context)
+- Unicité stricte : un concept = une entité (pas de doublons, pas d’alias non reliés)
+- Relations explicites entre entités (ex : has_stack, has_docker_config, has_test_infra, has_convention, has_documentation, etc.)
+- Noms d’entités : format SUPCHAT\_<DOMAINE> (ex : SUPCHAT_STACK_TECHNIQUE) — NE PAS ajouter d’année/version (\_2025, \_V2, etc.)
+- Les entités obsolètes sont archivées dans une section `deprecated` ou via une entité dédiée
+
+## 2. Ajout/Mise à jour/Suppression (MCP)
+
+- Avant ajout, toujours rechercher par `name` et `entityType` (unicité)
+- Mise à jour : modifier l’entité existante, jamais de duplication
+- Suppression : archiver ou supprimer proprement, jamais de suppression sauvage
+
+## 3. Formatage et organisation
+
+- Format JSON MCP strict, pas de champs ou structures non supportés
+- Les relations sont toujours des objets `{ relationType, to }`, jamais des chaînes
+- Les noms d’entités sont uniques, explicites, sans espaces, sans caractères spéciaux, SANS année/version
+- Les types d’entités sont en anglais (convention MCP)
+
+## 4. Documentation et synchronisation
+
+- Toute modification de la mémoire doit être consignée ici et dans la mémoire MCP
+- Ce fichier doit rappeler en tête les conventions MCP et SUPCHAT
+
+---
+
+> Toute entité ou relation ne respectant pas ce format sera ignorée ou supprimée par le serveur MCP.
+
+# Convention de gestion de la mémoire SUPCHAT (Copilot 2025)
+
+## 1. Structure hiérarchique et typage strict
+
+- Racine : Un seul nœud racine `SUPCHAT_PROJECT` qui référence tous les sous-domaines.
+- Types d’entités : Toujours utiliser un type unique et explicite (`project_context`, `docker_config`, `feature`, `bugfix`, `roadmap`, `test_infrastructure`, etc.).
+- Unicité : Une seule entité par concept métier (ex : une seule entité pour la stack technique, une seule pour la configuration Docker, etc.).
+- Relations : Utiliser des relations explicites pour lier les entités (ex : `has_feature`, `depends_on`, `documents`, `corrects`, etc.).
+
+## 2. Règles d’ajout/mise à jour/suppression
+
+- Ajout : Avant d’ajouter une entité, toujours vérifier si elle existe déjà (par nom/type). Si oui, mettre à jour l’observation existante, sinon créer une nouvelle entité.
+- Mise à jour : Toujours modifier l’entité existante, ne jamais dupliquer une information.
+- Suppression : Si une information devient obsolète, la supprimer ou l’archiver dans une section dédiée (ex : `deprecated`).
+
+## 3. Formatage et organisation
+
+- Format JSON : Toutes les entités doivent suivre un format JSON strict, avec les champs : `type`, `name`, `entityType`, `observations` (array), et optionnellement `relations`.
+- Pas de doublons : Un concept = une entité, même nom, même type.
+- Historique : Les corrections/bugs/fixes sont liés à l’entité concernée via une relation `corrects` ou `updates`.
+- Roadmap : Les roadmaps sont des entités à part, liées aux features ou modules concernés.
+
+## 4. Accès et priorisation
+
+- Recherche : Toujours rechercher par `name` et `entityType` pour éviter les collisions.
+- Priorité : Si deux versions existent, utiliser la plus récente (champ `lastUpdated` à ajouter si besoin).
+- Alias : Les alias (ex : `SUPCHAT_STACK_TECHNIQUE_2025` et `SUPCHAT_STACK_TECHNIQUE`) doivent être fusionnés ou reliés explicitement.
+
+## 5. Exemples d’organisation
+
+```json
+{
+  "type": "entity",
+  "name": "SUPCHAT_PROJECT",
+  "entityType": "project_context",
+  "observations": [
+    "Projet SUPCHAT, plateforme collaborative, architecture Docker, etc."
+  ],
+  "relations": [
+    { "relationType": "has_stack", "to": "SUPCHAT_STACK_TECHNIQUE_2025" },
+    { "relationType": "has_docker_config", "to": "SUPCHAT_DOCKER_CONFIG" },
+    { "relationType": "has_feature", "to": "SUPCHAT_FEATURE_AUTH" },
+    { "relationType": "has_roadmap", "to": "SUPCHAT_ROADMAP_2025" }
+  ]
+}
+```
+
+## 6. Convention de nommage
+
+- Toujours préfixer par `SUPCHAT_` puis le domaine (`STACK`, `DOCKER`, `FEATURE`, `BUGFIX`, etc.), puis l’année/version si pertinent.
+- Exemples : `SUPCHAT_STACK_TECHNIQUE_2025`, `SUPCHAT_DOCKER_CONFIG`, `SUPCHAT_FEATURE_CHANNELS`, `SUPCHAT_BUGFIX_AUTH_LOOP_2025`.
+
+## 7. Documentation et synchronisation
+
+- Toute modification de la mémoire doit être consignée dans le fichier de config et documentée.
+- Les conventions doivent être rappelées en début de fichier de config.
+
+---
+
+> Ces conventions garantissent une mémoire harmonisée, fiable et évolutive pour SUPCHAT. Toute entité ou relation ne respectant pas ce format doit être corrigée ou supprimée.
+
 # Instructions SUPCHAT pour GitHub Copilot - VERSION 2025 MISE À JOUR
+
+## ⚠️ Conventions supplémentaires :
+
+- Lors de l’utilisation du MCP Filesystem, TOUJOURS utiliser un chemin commençant par "C:" (majuscule) et JAMAIS "c:" (minuscule) pour éviter les erreurs d’accès sur Windows.
+- ❌ INTERDICTION de masquer les erreurs ESLint/TypeScript avec des commentaires `eslint-disable` ou similaires. Toute erreur doit être corrigée proprement par refactorisation du code, jamais contournée.
 
 ## 🚨 **RÈGLES CRITIQUES - ARCHITECTURE DOCKER OBLIGATOIRE - VERSION 2025**
 
@@ -154,6 +257,7 @@ useAppSelector = useSelector.withTypes<RootState>();
 - Documentation organisée par catégories dans docs/
 - Support ES modules natif Node.js 22
 - **Tous les types TypeScript métiers (User, Channel, Message, etc.) doivent être définis dans le dossier `web/src/types/` dans un fichier dédié, et importés dans les composants/hooks. Ne jamais redéfinir un type métier dans un composant.**
+- **Interdiction stricte d'utiliser `any` dans tout le code TypeScript du projet SUPCHAT (frontend et backend). Utiliser `unknown` pour les erreurs, puis caster avec `err instanceof Error`. Tous les services, slices Redux, hooks, helpers, etc. doivent être typés strictement, sans aucun usage de `any`.**
 
 ### Backend Node.js 22
 
@@ -390,56 +494,54 @@ docker compose -f docker-compose.test.yml --env-file .env.test exec api npm test
 
 ```typescript
 // src/tests/test-utils.tsx - **CONFIGURATION FINALE VALIDÉE**
-import React from 'react';
-import { render } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
-import { vi } from 'vitest';
-import { store } from '@store/store';
+import React from "react";
+import { render } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
+import { vi } from "vitest";
+import { store } from "@store/store";
 
 // **Mock du hook useSocket - OBLIGATOIRE**
-vi.mock('@hooks/useSocket', () => ({
+vi.mock("@hooks/useSocket", () => ({
   useSocket: () => ({
     socket: {
-      id: 'mock-socket-id',
+      id: "mock-socket-id",
       connected: true,
       on: vi.fn(),
       off: vi.fn(),
       emit: vi.fn(),
     },
     connected: true,
-    socketId: 'mock-socket-id'
-  })
+    socketId: "mock-socket-id",
+  }),
 }));
 
 // **MockSocketProvider - Configuration finale validée**
-const MockSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const MockSocketProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const mockContextValue = {
     socket: {
-      id: 'mock-socket-id',
+      id: "mock-socket-id",
       connected: true,
       on: vi.fn(),
       off: vi.fn(),
       emit: vi.fn(),
     },
     connected: true,
-    socketId: 'mock-socket-id'
+    socketId: "mock-socket-id",
   };
 
-  return (
-    <div data-testid="mock-socket-provider">
-      {children}
-    </div>
-  );
+  return <div data-testid="mock-socket-provider">{children}</div>;
 };
 
 // **TestProvider - Helper principal validé**
-const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const TestProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => (
   <Provider store={store}>
     <MockSocketProvider>
-      <BrowserRouter>
-        {children}
-      </BrowserRouter>
+      <BrowserRouter>{children}</BrowserRouter>
     </MockSocketProvider>
   </Provider>
 );
@@ -456,21 +558,27 @@ export { renderWithProviders, TestProvider, MockSocketProvider };
 
 ```typescript
 // ✅ CORRECT - Pattern de test validé avec tous les mocks
-import { renderWithProviders } from '@tests/test-utils';
-import { vi } from 'vitest';
+import { renderWithProviders } from "@tests/test-utils";
+import { vi } from "vitest";
 
 // Mock nécessaire si useSocket utilisé directement
-vi.mock('@hooks/useSocket', () => ({
+vi.mock("@hooks/useSocket", () => ({
   useSocket: () => ({
-    socket: { id: 'mock', connected: true, on: vi.fn(), off: vi.fn(), emit: vi.fn() },
+    socket: {
+      id: "mock",
+      connected: true,
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn(),
+    },
     connected: true,
-    socketId: 'mock'
-  })
+    socketId: "mock",
+  }),
 }));
 
-test('Mon composant', () => {
+test("Mon composant", () => {
   const { getByText } = renderWithProviders(<MonComposant />);
-  expect(getByText('Texte attendu')).toBeInTheDocument();
+  expect(getByText("Texte attendu")).toBeInTheDocument();
 });
 ```
 
@@ -497,21 +605,21 @@ test('Mon composant', () => {
 
 ```typescript
 // ✅ Test avec MSW et helpers validés
-import { renderWithProviders } from '@tests/test-utils';
-import { server } from '@tests/mocks/server';
-import { rest } from 'msw';
+import { renderWithProviders } from "@tests/test-utils";
+import { server } from "@tests/mocks/server";
+import { rest } from "msw";
 
 beforeEach(() => {
   server.use(
-    rest.get('/api/users', (req, res, ctx) => {
+    rest.get("/api/users", (req, res, ctx) => {
       return res(ctx.json([]));
     })
   );
 });
 
-test('Mon test', () => {
+test("Mon test", () => {
   const { getByText } = renderWithProviders(<MonComposant />);
-  expect(getByText('Mon texte')).toBeInTheDocument();
+  expect(getByText("Mon texte")).toBeInTheDocument();
 });
 ```
 
@@ -543,5 +651,4 @@ test('Mon test', () => {
 
 ---
 
-*Cette documentation reflète l'état final validé après résolution complète des 112 tests frontend avec succès.*
-````
+_Cette documentation reflète l'état final validé après résolution complète des 112 tests frontend avec succès._

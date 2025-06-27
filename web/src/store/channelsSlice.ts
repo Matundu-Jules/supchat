@@ -1,116 +1,132 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import {
-  getChannels,
-  createChannel,
-  updateChannel,
-  deleteChannel,
-  ChannelFormData,
-} from '@services/channelApi';
-import api from '@utils/axiosInstance';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import type { Channel } from '@ts_types/channel';
+import * as channelApi from '@services/channelApi';
 
-export const fetchChannels = createAsyncThunk(
-  'channels/fetchAll',
-  async (workspaceId: string) => {
-    return await getChannels(workspaceId);
+interface ChannelStatus {
+  loading: boolean;
+  error: string | null;
+  lastAction?: string;
+}
+
+interface ChannelsState {
+  items: Channel[];
+  loading: boolean;
+  error: string | null;
+  statusById: Record<string, ChannelStatus>;
+}
+
+const initialState: ChannelsState = {
+  items: [],
+  loading: false,
+  error: null,
+  statusById: {},
+};
+
+export const fetchChannels = createAsyncThunk<
+  Channel[],
+  string,
+  { rejectValue: string }
+>('channels/fetchAll', async (workspaceId, { rejectWithValue }) => {
+  try {
+    return await channelApi.getChannels(workspaceId);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue';
+    return rejectWithValue(message);
   }
-);
+});
 
-export const addChannel = createAsyncThunk(
-  'channels/add',
-  async (formData: ChannelFormData, { rejectWithValue }) => {
-    try {
-      await createChannel(formData);
-      return await getChannels(formData.workspaceId);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
-    }
+export const addChannel = createAsyncThunk<
+  Channel[],
+  channelApi.ChannelFormData,
+  { rejectValue: string }
+>('channels/add', async (formData, { rejectWithValue }) => {
+  try {
+    await channelApi.createChannel(formData);
+    return await channelApi.getChannels(formData.workspaceId);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue';
+    return rejectWithValue(message);
   }
-);
+});
 
-export const editChannel = createAsyncThunk(
+export const editChannel = createAsyncThunk<
+  Channel[],
+  { channelId: string; workspace: string; data: Partial<channelApi.ChannelFormData> },
+  { rejectValue: string }
+>(
   'channels/edit',
-  async (
-    params: {
-      channelId: string;
-      workspaceId: string;
-      data: Partial<Omit<ChannelFormData, 'workspaceId'>>;
-    },
-    { rejectWithValue }
-  ) => {
+  async (params, { rejectWithValue }) => {
     try {
-      await updateChannel(params.channelId, params.data);
-      return await getChannels(params.workspaceId);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+      await channelApi.updateChannel(params.channelId, params.data);
+      return await channelApi.getChannels(params.workspace);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      return rejectWithValue(message);
     }
   }
 );
 
-export const removeChannel = createAsyncThunk(
-  'channels/remove',
-  async (
-    params: { channelId: string; workspaceId: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      await deleteChannel(params.channelId);
-      return await getChannels(params.workspaceId);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
-    }
+export const removeChannel = createAsyncThunk<
+  Channel[],
+  { channelId: string; workspace: string },
+  { rejectValue: string }
+>('channels/remove', async (params, { rejectWithValue }) => {
+  try {
+    await channelApi.deleteChannel(params.channelId);
+    return await channelApi.getChannels(params.workspace);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue';
+    return rejectWithValue(message);
   }
-);
+});
 
-export const joinChannel = createAsyncThunk(
-  'channels/join',
-  async (
-    params: { channelId: string; workspaceId: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      await api.post(`/api/channels/${params.channelId}/join`);
-      return await getChannels(params.workspaceId);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
-    }
+export const joinChannel = createAsyncThunk<
+  Channel[],
+  { channelId: string; workspace: string },
+  { rejectValue: string }
+>('channels/join', async (params, { rejectWithValue }) => {
+  try {
+    await channelApi.joinChannel(params.channelId);
+    return await channelApi.getChannels(params.workspace);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue';
+    return rejectWithValue(message);
   }
-);
+});
 
-export const leaveChannel = createAsyncThunk(
-  'channels/leave',
-  async (
-    params: { channelId: string; workspaceId: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      await api.post(`/api/channels/${params.channelId}/leave`);
-      return await getChannels(params.workspaceId);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
-    }
+export const leaveChannel = createAsyncThunk<
+  Channel[],
+  { channelId: string; workspace: string },
+  { rejectValue: string }
+>('channels/leave', async (params, { rejectWithValue }) => {
+  try {
+    await channelApi.leaveChannel(params.channelId);
+    return await channelApi.getChannels(params.workspace);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue';
+    return rejectWithValue(message);
   }
-);
+});
 
 const channelsSlice = createSlice({
   name: 'channels',
-  initialState: {
-    items: [] as any[],
-    loading: false,
-    error: null as string | null,
-  },
+  initialState,
   reducers: {
-    addLocal: (state, action) => {
-      // Ajoute le channel s'il n'existe pas déjà
-      if (!state.items.some((c) => c._id === action.payload._id)) {
-        state.items.push(action.payload);
-      }
+    setStatusById: (
+      state,
+      action: PayloadAction<{ channelId: string; status: Partial<ChannelStatus> }>
+    ) => {
+      const { channelId, status } = action.payload;
+      state.statusById[channelId] = {
+        ...state.statusById[channelId],
+        ...status,
+      };
     },
-    editLocal: (state, action) => {
-      const idx = state.items.findIndex((c) => c._id === action.payload._id);
-      if (idx !== -1) state.items[idx] = action.payload;
+    resetError: (state) => {
+      state.error = null;
     },
-    removeLocal: (state, action) => {
-      state.items = state.items.filter((c) => c._id !== action.payload);
+    resetStatus: (state, action: PayloadAction<string>) => {
+      delete state.statusById[action.payload];
     },
   },
   extraReducers: (builder) => {
@@ -137,10 +153,7 @@ const channelsSlice = createSlice({
       })
       .addCase(addChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          (action.payload as string) ||
-          action.error.message ||
-          'Erreur lors de la création';
+        state.error = (action.payload as string) || action.error.message || 'Erreur lors de la création';
       })
       .addCase(editChannel.pending, (state) => {
         state.loading = true;
@@ -152,10 +165,7 @@ const channelsSlice = createSlice({
       })
       .addCase(editChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          (action.payload as string) ||
-          action.error.message ||
-          'Erreur lors de la mise à jour';
+        state.error = (action.payload as string) || action.error.message || 'Erreur lors de la mise à jour';
       })
       .addCase(removeChannel.pending, (state) => {
         state.loading = true;
@@ -167,10 +177,7 @@ const channelsSlice = createSlice({
       })
       .addCase(removeChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          (action.payload as string) ||
-          action.error.message ||
-          'Erreur lors de la suppression';
+        state.error = (action.payload as string) || action.error.message || 'Erreur lors de la suppression';
       })
       .addCase(joinChannel.pending, (state) => {
         state.loading = true;
@@ -182,10 +189,7 @@ const channelsSlice = createSlice({
       })
       .addCase(joinChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          (action.payload as string) ||
-          action.error.message ||
-          'Erreur lors de la jointure';
+        state.error = (action.payload as string) || action.error.message || 'Erreur lors de la jointure';
       })
       .addCase(leaveChannel.pending, (state) => {
         state.loading = true;
@@ -197,12 +201,11 @@ const channelsSlice = createSlice({
       })
       .addCase(leaveChannel.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          (action.payload as string) ||
-          action.error.message ||
-          'Erreur lors du quit';
+        state.error = (action.payload as string) || action.error.message || 'Erreur lors du quit';
       });
   },
 });
 
+export const { setStatusById, resetError, resetStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;
+

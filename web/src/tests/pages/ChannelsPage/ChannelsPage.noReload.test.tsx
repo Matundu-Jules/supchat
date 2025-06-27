@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, vi, expect } from "vitest";
-import { render, fireEvent, screen } from "../../test-utils";
+import { render, fireEvent, screen } from "@tests/test-utils";
 import ChannelsPage from "@pages/channels/ChannelsPage";
 import userEvent from "@testing-library/user-event";
 

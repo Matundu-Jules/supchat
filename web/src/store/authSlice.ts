@@ -3,6 +3,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type Role = 'admin' | 'membre' | 'invité';
+export type { Role };
 
 export interface User {
   id: string; // identifiant unique

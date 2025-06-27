@@ -2,6 +2,8 @@ const channelService = require('../services/channelService')
 const Notification = require('../models/Notification')
 const { getIo } = require('../socket')
 const User = require('../models/User')
+const ChannelInvitation = require('../models/ChannelInvitation')
+const Channel = require('../models/Channel')
 
 // ✅ Créer un canal
 exports.createChannel = async (req, res) => {
@@ -211,6 +213,97 @@ exports.inviteToChannel = async (req, res) => {
         return res
             .status(500)
             .json({ message: "Erreur lors de l'invitation", error })
+    }
+}
+
+// Créer une invitation enrichie (ex-channelInvitationController)
+exports.createInvitation = async (req, res) => {
+    try {
+        const { channelId, userId } = req.body
+        const channel = await Channel.findById(channelId)
+        if (!channel)
+            return res.status(404).json({ message: 'Canal non trouvé' })
+        const invitedUser = await User.findById(userId)
+        if (!invitedUser)
+            return res.status(404).json({ message: 'Utilisateur non trouvé' })
+        // Vérifier que l'utilisateur courant est membre/admin du canal
+        const isMember = channel.members.some(
+            (m) => m.toString() === req.user._id.toString()
+        )
+        if (
+            !isMember &&
+            channel.createdBy.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                message: 'Seuls les membres/admins du canal peuvent inviter.',
+            })
+        }
+        // Vérifier si déjà invité
+        const existing = await ChannelInvitation.findOne({ channelId, userId })
+        if (existing && existing.status === 'pending') {
+            return res.status(400).json({ message: 'Déjà invité' })
+        }
+        const invitation = await ChannelInvitation.create({
+            channelId,
+            userId,
+            email: invitedUser.email,
+            status: 'pending',
+            invitedBy: req.user._id,
+            invitedAt: new Date(),
+        })
+        return res.status(201).json({ invitation })
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ message: 'Erreur création invitation', error: err })
+    }
+}
+
+// Récupérer toutes les invitations enrichies d'un canal (ex-channelInvitationController)
+exports.getChannelInvitations = async (req, res) => {
+    try {
+        const { channelId } = req.params
+        const invitations = await ChannelInvitation.find({ channelId })
+            .populate('invitedBy', 'email username')
+            .populate('userId', 'email username')
+        // Ajouter le nom du canal pour l'UI
+        const channel = await Channel.findById(channelId)
+        const channelName = channel ? channel.name : ''
+        const result = invitations.map((inv) => ({
+            ...inv.toObject(),
+            channelName,
+        }))
+        return res.status(200).json({ invitations: result })
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ message: 'Erreur récupération invitations', error: err })
+    }
+}
+
+// Accepter/refuser une invitation (ex-channelInvitationController)
+exports.respondToInvitation = async (req, res) => {
+    try {
+        const { invitationId } = req.params
+        const { accept } = req.body
+        const invitation = await ChannelInvitation.findById(invitationId)
+        if (!invitation)
+            return res.status(404).json({ message: 'Invitation non trouvée' })
+        // Vérifier que seul le destinataire peut répondre
+        if (invitation.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message:
+                    'Seul le destinataire peut répondre à cette invitation.',
+            })
+        }
+        invitation.status = accept ? 'accepted' : 'declined'
+        invitation.respondedAt = new Date()
+        await invitation.save()
+        return res.status(200).json({ invitation })
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ message: 'Erreur réponse invitation', error: err })
     }
 }
 

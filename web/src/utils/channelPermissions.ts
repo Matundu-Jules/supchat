@@ -1,6 +1,6 @@
 // Types et utilitaires pour la gestion des rôles et permissions des canaux
 
-export type ChannelRole = 'admin' | 'member' | 'guest';
+export type ChannelRole = 'admin' | 'member' | 'guest' | 'invité';
 
 export interface ChannelPermissions {
   // Permissions de lecture
@@ -128,6 +128,19 @@ export const getDefaultPermissions = (
         canAccessPublicChannels: false,
         canSearchChannels: false,
       };
+    case 'invité':
+      return {
+        ...basePermissions,
+        // Permissions pour l'invité (invité par admin)
+        canRead: true,
+        canWrite: false, // Par défaut, les invités ne peuvent pas écrire
+        canSendFiles: false, // Par défaut, les invités ne peuvent pas envoyer de fichiers
+        canEditOwnMessages: true,
+        canDeleteOwnMessages: true,
+        // Ne peut PAS : accéder canaux publics, chercher, gérer, modérer
+        canAccessPublicChannels: false,
+        canSearchChannels: false,
+      };
 
     default:
       return basePermissions;
@@ -200,6 +213,8 @@ export const getRoleLabel = (role: ChannelRole): string => {
       return 'Membre';
     case 'guest':
       return 'Invité';
+    case 'invité':
+      return 'Invité (par admin)';
     default:
       return 'Inconnu';
   }
@@ -216,6 +231,8 @@ export const getRoleDescription = (role: ChannelRole): string => {
       return 'Peut lire tout le contenu, envoyer messages/fichiers/réactions. Modifie/supprime ses propres messages uniquement.';
     case 'guest':
       return "Peut lire les messages. L'écriture et l'envoi de fichiers dépendent des autorisations accordées par un admin.";
+    case 'invité':
+      return "Peut lire les messages. L'écriture et l'envoi de fichiers ne sont pas autorisés par défaut.";
     default:
       return '';
   }
@@ -232,6 +249,8 @@ export const getRoleIcon = (role: ChannelRole): string => {
       return '👤';
     case 'guest':
       return '🔒';
+    case 'invité':
+      return '🔑'; // Clé pour invité (invité par admin)
     default:
       return '❓';
   }
@@ -248,6 +267,8 @@ export const getRoleColor = (role: ChannelRole): string => {
       return 'var(--color-primary)'; // Bleu pour membre
     case 'guest':
       return 'var(--color-warning)'; // Orange pour invité
+    case 'invité':
+      return 'var(--color-info)'; // Vert pour invité (invité par admin)
     default:
       return 'var(--color-text-secondary)';
   }

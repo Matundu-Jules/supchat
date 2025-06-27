@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Loader from "@components/core/ui/Loader";
 import styles from "./ChannelInviteModal.module.scss";
-import type { Channel } from "../../../../types/channel";
+import type { Channel } from "@ts_types/channel";
 
 interface User {
   id: string;
