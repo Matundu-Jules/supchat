@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
   const backendUrl =
     process.env.NODE_ENV === 'development' && process.env.DOCKER_ENV
       ? 'http://api:3000'
-      : env.VITE_BACKEND_URL || 'http://127.0.0.1:3000';
+      : env.VITE_API_URL || 'http://127.0.0.1:3000';
 
   return {
     plugins: [react()],
@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
         '@services': path.resolve(__dirname, 'src/services'),
         '@styles': path.resolve(__dirname, 'src/styles'),
         '@utils': path.resolve(__dirname, 'src/utils'),
+        '@contexts': path.resolve(__dirname, 'src/contexts'),
+        '@tests': path.resolve(__dirname, 'src/tests'),
+        '@ts_types': path.resolve(__dirname, 'src/types'),
       },
     },
     css: {

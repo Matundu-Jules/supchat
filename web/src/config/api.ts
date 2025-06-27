@@ -2,22 +2,21 @@
 
 /**
  * Configuration API pour SupChat client-web
- * Utilise les variables d'environnement Vite pour la détection automatique d'IP
+ * ARCHITECTURE DOCKER OBLIGATOIRE - Port 3000 uniquement
  */
 
-// URL de base du backend - utilise la variable d'environnement générée automatiquement
-export const BACKEND_URL =
-  import.meta.env['VITE_BACKEND_URL'] || 'http://localhost:3000';
+// Une seule source de vérité : VITE_API_URL
+export const SERVER_URL = 
+  import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000';
 
-// URL de l'API - ajout du préfixe /api
-export const API_BASE_URL =
-  import.meta.env['VITE_API_URL'] || `${BACKEND_URL}/api`;
+// URL de l'API - avec préfixe /api
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// URL des WebSockets/Socket.io
-export const SOCKET_URL = import.meta.env['VITE_SOCKET_URL'] || BACKEND_URL;
+// URL des WebSockets/Socket.io (même serveur que l'API, sans /api)
+export const WEBSOCKET_URL = SERVER_URL;
 
 // IP de l'hôte pour référence
-export const HOST_IP = import.meta.env['VITE_HOST_IP'] || 'localhost';
+export const HOST_IP = import.meta.env.VITE_HOST_IP || 'localhost';
 
 // Configuration des endpoints
 export const ENDPOINTS = {
@@ -50,7 +49,7 @@ export const ENDPOINTS = {
  */
 export const API_CONFIG = {
   baseURL: API_BASE_URL,
-  socketURL: SOCKET_URL,
+  socketURL: WEBSOCKET_URL,
   withCredentials: true,
   timeout: 10000,
   headers: {

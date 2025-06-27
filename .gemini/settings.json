@@ -1,0 +1,48 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "mcp-git-ingest": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/adhikasp/mcp-git-ingest",
+        "mcp-git-ingest"
+      ]
+    },
+    "mongodb": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mongodb-mcp-server",
+        "--connectionString",
+        "mongodb://supchat-admin:0E5X7oeN2j+Yk09MCBHZWCnph8RvrwzdjmNnPVy2CYw=@localhost:27017/supchat?authSource=admin"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/dev/supchat"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "ddg-search": {
+      "command": "uvx",
+      "args": ["duckduckgo-mcp-server"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}

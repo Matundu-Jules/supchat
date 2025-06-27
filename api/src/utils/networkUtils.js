@@ -80,7 +80,7 @@ function displayNetworkInfo(port = 3000) {
         console.log(`   Mobile:     http://${localIP}:${port}`)
     }
     console.log('\n🎯 Pour client-web (Vite):')
-    console.log(`   VITE_BACKEND_URL=http://${localIP}:${port}`)
+    console.log(`   VITE_API_URL=http://${localIP}:${port}`)
     console.log('\n📱 Pour client-mobile (Expo):')
     console.log(`   EXPO_PUBLIC_HOST=${localIP}`)
     console.log(`   EXPO_PUBLIC_API_URL=http://${localIP}:${port}/api`)

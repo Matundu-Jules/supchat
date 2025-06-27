@@ -12,7 +12,7 @@ Ce document liste tous les liens d'accès aux différents modules et services de
 - **Technologies :** React + Vite
 - **Variables d'environnement :**
   - `VITE_API_URL=/api`
-  - `VITE_WEBSOCKET_URL=/socket.io`
+  - `VITE_API_URL=/socket.io`
   - `VITE_APP_NAME=SupChat`
 
 ### 🔧 API Backend (Serveur Node.js)

@@ -1,8 +1,9 @@
 // src/components/Header/Header.tsx
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useHeaderLogic } from "@hooks/useHeaderLogic";
 import { getAvatarUrl } from "@utils/avatarUtils";
+import { FaSearch } from "react-icons/fa";
 
 import styles from "./Header.module.scss";
 
@@ -15,7 +16,6 @@ const Header: React.FC = () => {
     toggleMenu,
     handleLogout,
     user,
-    navigate,
     status,
     theme,
     isStatusDropdownOpen,
@@ -24,6 +24,8 @@ const Header: React.FC = () => {
     handleStatusChange,
     handleThemeToggle,
   } = useHeaderLogic();
+
+  const navigate = useNavigate();
 
   return (
     <header className={styles["header"]}>
@@ -251,6 +253,19 @@ const Header: React.FC = () => {
             Se connecter
           </button>
         )}
+        <button
+          className={styles["searchBtn"]}
+          aria-label="Recherche globale"
+          onClick={() => navigate("/search")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            marginLeft: 8,
+          }}
+        >
+          <FaSearch size={22} color="var(--color-text)" />
+        </button>
       </div>
     </header>
   );

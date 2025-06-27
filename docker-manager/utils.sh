@@ -12,6 +12,8 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 GRAY='\033[0;37m'
+ORANGE='\033[0;33m'
+MAGENTA='\033[1;35m'
 NC='\033[0m' # No Color
 
 # Variables globales
@@ -182,8 +184,8 @@ select_environment() {
         echo ""
         
         if [[ "${active_envs[dev]}" == true ]]; then
-            env_options+=("🔧 Développement (docker-compose.yml)")
-            compose_options+=("")
+            env_options+=("🔧 Développement (docker-compose.development.yml)")
+            compose_options+=("-f docker-compose.development.yml")
         fi
         
         if [[ "${active_envs[prod]}" == true ]]; then
@@ -238,8 +240,8 @@ check_prerequisites() {
     fi
 
     # Vérifier que nous sommes dans le bon répertoire
-    if [[ ! -f "docker-compose.yml" ]]; then
-        echo -e "${RED}❌ Fichier docker-compose.yml non trouvé. Assurez-vous d'être dans le répertoire racine du projet.${NC}"
+    if [[ ! -f "docker-compose.development.yml" ]]; then
+        echo -e "${RED}❌ Fichier docker-compose.development.yml non trouvé. Assurez-vous d'être dans le répertoire racine du projet.${NC}"
         return 1
     fi
     

@@ -2,6 +2,45 @@ const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
 const User = require('./models/User')
 
+// Fonction utilitaire pour parser les cookies
+function parseCookies(cookieHeader) {
+    const cookies = {}
+    cookieHeader.split(';').forEach((cookie) => {
+        const [name, value] = cookie.trim().split('=')
+        if (name && value) {
+            cookies[name] = decodeURIComponent(value)
+        }
+    })
+    return cookies
+}
+
+// 📊 Système de monitoring WebSocket
+const connectionStats = {
+    totalConnections: 0,
+    activeChannels: new Set(),
+    messagesPerSecond: 0,
+    averageLatency: 0,
+    errors: 0,
+    messageCount: 0,
+    latencySum: 0,
+    lastMessageTime: Date.now(),
+}
+
+const channelStats = new Map() // channelId -> { name, activeUsers, messageCount, lastActivity }
+const monitoringClients = new Set() // clients qui demandent le monitoring
+
+// Calcul des messages par seconde
+setInterval(() => {
+    const now = Date.now()
+    const timeDiff = (now - connectionStats.lastMessageTime) / 1000
+    if (timeDiff > 0) {
+        connectionStats.messagesPerSecond =
+            connectionStats.messageCount / Math.max(timeDiff, 1)
+    }
+    connectionStats.messageCount = 0
+    connectionStats.lastMessageTime = now
+}, 5000)
+
 let io
 
 function initSocket(
@@ -19,17 +58,37 @@ function initSocket(
             methods: ['GET', 'POST'],
             credentials: true,
         },
-    })
-
-    // Middleware d'authentification pour les connexions WebSocket
+    }) // Middleware d'authentification pour les connexions WebSocket
     io.use(async (socket, next) => {
         try {
-            const token = socket.handshake.auth.token
+            console.log('[WebSocket Auth] Headers:', {
+                cookie: socket.handshake.headers.cookie,
+                auth: socket.handshake.auth,
+            })
+
+            // 🔧 CORRECTION: Récupérer le token depuis les cookies HTTP-only
+            let token = socket.handshake.auth.token // Token passé explicitement (fallback)
+
+            // Si pas de token en auth, essayer de l'extraire des cookies
+            if (!token && socket.handshake.headers.cookie) {
+                const cookies = parseCookies(socket.handshake.headers.cookie)
+                console.log('[WebSocket Auth] Cookies parsés:', cookies)
+                token = cookies.access || cookies.accessToken || cookies.jwt
+            }
+
             if (!token) {
+                console.warn(
+                    '[WebSocket Auth] Aucun token trouvé dans auth ou cookies'
+                )
                 return next(
                     new Error('Authentication error: No token provided')
                 )
             }
+
+            console.log(
+                '[WebSocket Auth] Token trouvé:',
+                token.substring(0, 20) + '...'
+            )
 
             const decoded = jwt.verify(
                 token,
@@ -43,8 +102,15 @@ function initSocket(
 
             socket.userId = user._id.toString()
             socket.user = user
+            console.log(
+                `[WebSocket] Utilisateur authentifié: ${user.email} (${socket.userId})`
+            )
             next()
         } catch (err) {
+            console.error(
+                "[WebSocket Auth] Erreur d'authentification:",
+                err.message
+            )
             next(new Error('Authentication error: Invalid token'))
         }
     })
@@ -87,6 +153,24 @@ function initSocket(
                 statusError
             )
         }
+
+        // 📊 Mise à jour des statistiques de connexion
+        connectionStats.totalConnections++
+        updateMonitoringClients()
+
+        // 📊 Événements de monitoring
+        socket.on('request-stats', () => {
+            sendStatsToClient(socket)
+        })
+
+        socket.on('start-monitoring', () => {
+            monitoringClients.add(socket.id)
+            sendStatsToClient(socket)
+        })
+
+        socket.on('stop-monitoring', () => {
+            monitoringClients.delete(socket.id)
+        })
 
         // Gérer les événements de frappe
         const typingTimeouts = new Map()
@@ -191,9 +275,13 @@ function initSocket(
             }
         }) // Gérer les messages
         socket.on('send-message', async (data) => {
+            const messageStartTime = Date.now() // 📊 Mesure de latence
+
             try {
                 // Validation des données
                 if (!data || typeof data !== 'object') {
+                    connectionStats.errors++
+                    updateMonitoringClients()
                     return socket.emit('error', {
                         code: 'INVALID_DATA',
                         message: 'Données invalides: format incorrect',
@@ -229,29 +317,40 @@ function initSocket(
                         message:
                             "Vous n'avez pas la permission d'envoyer des messages dans ce channel",
                     })
-                } // Créer le message en base
+                } // 🔧 CORRECTION: Créer le message avec les champs requis
                 const newMessage = await Message.create({
                     content: data.content,
+                    text: data.content, // Synchronisation
                     userId: socket.userId,
+                    sender: socket.userId, // Synchronisation
                     channel: data.channelId,
+                    channelId: data.channelId, // Synchronisation
                     type: data.type || 'text',
                 })
 
                 await newMessage.populate('userId', 'username email')
 
-                // Diffuser le nouveau message aux autres clients du channel
-                socket.to(data.channelId).emit('new-message', {
+                // 🔧 CORRECTION: Structure uniforme du message pour WebSocket
+                const messageForClient = {
                     _id: newMessage._id,
                     content: newMessage.content,
+                    text: newMessage.text,
                     channelId: newMessage.channel.toString(),
+                    channel: newMessage.channel.toString(),
                     author: {
                         _id: newMessage.userId._id.toString(),
                         username: newMessage.userId.username,
                         email: newMessage.userId.email,
                     },
+                    userId: newMessage.userId._id.toString(), // Compatibilité
                     type: newMessage.type,
                     createdAt: newMessage.createdAt,
-                })
+                    edited: newMessage.edited,
+                    reactions: newMessage.reactions || [],
+                }
+
+                // Diffuser le nouveau message aux autres clients du channel
+                socket.to(data.channelId).emit('new-message', messageForClient)
 
                 // Traiter les mentions
                 if (data.mentions && data.mentions.length > 0) {
@@ -291,12 +390,29 @@ function initSocket(
                                 },
                             })
                     })
-                }
+                } // Confirmer à l'expéditeur avec le message complet
+                const messageLatency = Date.now() - messageStartTime // 📊 Calcul de latence
 
-                // Confirmer à l'expéditeur
+                // 📊 Mise à jour des statistiques
+                connectionStats.messageCount++
+                connectionStats.latencySum += messageLatency
+                connectionStats.averageLatency =
+                    connectionStats.latencySum / connectionStats.messageCount
+
+                // 📊 Mise à jour des stats du channel
+                updateChannelStats(channel._id.toString(), channel.name)
+
+                // 📊 Notifier les clients de monitoring
+                broadcastMessageActivity({
+                    timestamp: new Date(),
+                    type: 'sent',
+                    channelId: channel._id.toString(),
+                    latency: messageLatency,
+                })
+
                 socket.emit('message-sent', {
                     success: true,
-                    message: newMessage,
+                    message: messageForClient,
                 })
             } catch (error) {
                 socket.emit('error', {
@@ -305,29 +421,53 @@ function initSocket(
                 })
             }
         })
+
         socket.on('edit-message', async (data) => {
             try {
                 const Message = require('./models/Message')
 
                 const message = await Message.findOneAndUpdate(
                     { _id: data.messageId, userId: socket.userId },
-                    { content: data.newContent, edited: true },
+                    {
+                        content: data.newContent,
+                        text: data.newContent, // Synchronisation
+                        edited: true,
+                        editedAt: new Date(),
+                    },
                     { new: true }
-                ).populate('userId', 'username')
+                ).populate('userId', 'username email')
 
                 if (message) {
-                    socket.to(message.channel).emit('message-updated', {
-                        message: {
-                            _id: message._id,
-                            content: message.content,
-                            edited: true,
-                            userId: message.userId._id.toString(),
-                            channel: message.channel.toString(),
+                    const updatedMessage = {
+                        _id: message._id,
+                        content: message.content,
+                        text: message.text,
+                        edited: true,
+                        editedAt: message.editedAt,
+                        userId: message.userId._id.toString(),
+                        author: {
+                            _id: message.userId._id.toString(),
+                            username: message.userId.username,
+                            email: message.userId.email,
                         },
-                    })
+                        channel: message.channel.toString(),
+                        channelId: message.channel.toString(),
+                        type: message.type,
+                        createdAt: message.createdAt,
+                        reactions: message.reactions || [],
+                    }
+
+                    socket
+                        .to(message.channel)
+                        .emit('message-updated', updatedMessage)
+                    socket.emit('message-updated', updatedMessage) // Confirmer à l'expéditeur
                 }
             } catch (error) {
-                socket.emit('error', { message: 'Failed to edit message' })
+                socket.emit('error', {
+                    code: 'EDIT_FAILED',
+                    message: 'Failed to edit message',
+                    details: error.message,
+                })
             }
         })
 
@@ -341,14 +481,26 @@ function initSocket(
                 })
 
                 if (message) {
-                    socket.to(message.channel).emit('message-deleted', {
+                    const deletionData = {
                         messageId: message._id,
+                        _id: message._id, // Compatibilité
                         channelId: message.channel.toString(),
+                        channel: message.channel.toString(),
                         userId: socket.userId,
-                    })
+                        deletedAt: new Date(),
+                    }
+
+                    socket
+                        .to(message.channel)
+                        .emit('message-deleted', deletionData)
+                    socket.emit('message-deleted', deletionData) // Confirmer à l'expéditeur
                 }
             } catch (error) {
-                socket.emit('error', { message: 'Failed to delete message' })
+                socket.emit('error', {
+                    code: 'DELETE_FAILED',
+                    message: 'Failed to delete message',
+                    details: error.message,
+                })
             }
         })
 
@@ -607,6 +759,14 @@ function initSocket(
                 }
             })()
 
+            // 📊 Mise à jour des statistiques de déconnexion
+            connectionStats.totalConnections = Math.max(
+                0,
+                connectionStats.totalConnections - 1
+            )
+            monitoringClients.delete(socket.id)
+            updateMonitoringClients()
+
             // Notifier la déconnexion
             socket.broadcast.emit('user-offline', {
                 userId: socket.userId,
@@ -624,6 +784,90 @@ function getIo() {
         throw new Error('Socket.io not initialized')
     }
     return io
+}
+
+// 📊 Fonctions de monitoring WebSocket
+function updateMonitoringClients() {
+    if (monitoringClients.size === 0) return
+
+    const stats = {
+        totalConnections: connectionStats.totalConnections,
+        activeChannels: connectionStats.activeChannels.size,
+        messagesPerSecond: connectionStats.messagesPerSecond,
+        averageLatency: Math.round(connectionStats.averageLatency),
+        errors: connectionStats.errors,
+    }
+
+    const channels = Array.from(channelStats.entries()).map(
+        ([channelId, data]) => ({
+            channelId,
+            channelName: data.name,
+            activeUsers: data.activeUsers,
+            messageCount: data.messageCount,
+            lastActivity: data.lastActivity,
+        })
+    )
+
+    monitoringClients.forEach((clientId) => {
+        const clientSocket = io.sockets.sockets.get(clientId)
+        if (clientSocket) {
+            clientSocket.emit('stats-update', stats)
+            clientSocket.emit('channel-stats', channels)
+        }
+    })
+}
+
+function sendStatsToClient(socket) {
+    const stats = {
+        totalConnections: connectionStats.totalConnections,
+        activeChannels: connectionStats.activeChannels.size,
+        messagesPerSecond: connectionStats.messagesPerSecond,
+        averageLatency: Math.round(connectionStats.averageLatency),
+        errors: connectionStats.errors,
+    }
+
+    const channels = Array.from(channelStats.entries()).map(
+        ([channelId, data]) => ({
+            channelId,
+            channelName: data.name,
+            activeUsers: data.activeUsers,
+            messageCount: data.messageCount,
+            lastActivity: data.lastActivity,
+        })
+    )
+
+    socket.emit('stats-update', stats)
+    socket.emit('channel-stats', channels)
+}
+
+function updateChannelStats(channelId, channelName) {
+    if (!channelStats.has(channelId)) {
+        channelStats.set(channelId, {
+            name: channelName,
+            activeUsers: 0,
+            messageCount: 0,
+            lastActivity: new Date(),
+        })
+    }
+
+    const stats = channelStats.get(channelId)
+    stats.messageCount++
+    stats.lastActivity = new Date()
+
+    // Compter les utilisateurs actifs dans le channel
+    const channelSockets = io.sockets.adapter.rooms.get(channelId)
+    stats.activeUsers = channelSockets ? channelSockets.size : 0
+
+    connectionStats.activeChannels.add(channelId)
+}
+
+function broadcastMessageActivity(activity) {
+    monitoringClients.forEach((clientId) => {
+        const clientSocket = io.sockets.sockets.get(clientId)
+        if (clientSocket) {
+            clientSocket.emit('message-activity', activity)
+        }
+    })
 }
 
 module.exports = { initSocket, getIo }

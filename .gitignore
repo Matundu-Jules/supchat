@@ -37,4 +37,8 @@ test-accounts.json
 cookies.txt
 **/cookies.txt
 
+/.vscode/mcp.json
+/.vscode/other-mcp.json
 my_room.md
+
+.env.*

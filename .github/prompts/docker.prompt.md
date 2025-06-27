@@ -10,10 +10,11 @@ Tu es un **Expert DevOps** spécialisé dans l'infrastructure Docker pour le pro
 ## 🐳 Architecture Docker Multi-Environnements
 
 ### Structure Docker SUPCHAT 2025
+
 ```
 docker/
 ├── compose/                → Fichiers Docker Compose par environnement
-│   ├── docker-compose.yml        → Configuration développement par défaut
+│   ├── docker-compose.development.yml        → Configuration développement par défaut
 │   ├── docker-compose.test.yml   → Configuration tests automatisés
 │   ├── docker-compose.staging.yml → Configuration préproduction
 │   ├── docker-compose.prod.yml   → Configuration production
@@ -42,9 +43,10 @@ docker/
 ## 🛠️ Configurations Docker Compose 2025
 
 ### Docker Compose Base (Développement)
+
 ```yaml
-# docker-compose.yml
-version: '3.9'
+# docker-compose.development.yml
+version: "3.9"
 name: supchat-dev
 
 services:
@@ -74,7 +76,15 @@ services:
     networks:
       - supchat-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -173,9 +183,10 @@ volumes:
 ```
 
 ### Docker Compose Production
+
 ```yaml
 # docker-compose.prod.yml
-version: '3.9'
+version: "3.9"
 name: supchat-prod
 
 services:
@@ -215,7 +226,15 @@ services:
         max_attempts: 3
         window: 120s
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -375,9 +394,10 @@ volumes:
 ```
 
 ### Docker Compose Tests
+
 ```yaml
 # docker-compose.test.yml
-version: '3.9'
+version: "3.9"
 name: supchat-test
 
 services:
@@ -479,6 +499,7 @@ volumes:
 ## 📄 Dockerfiles Multi-Stage
 
 ### API Backend Dockerfile
+
 ```dockerfile
 # services/api/Dockerfile
 FROM node:22-alpine AS base
@@ -533,6 +554,7 @@ CMD ["node", "dist/index.js"]
 ```
 
 ### Web Frontend Dockerfile
+
 ```dockerfile
 # services/web/Dockerfile
 FROM node:22-alpine AS base
@@ -577,6 +599,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ## 🔧 Configuration NGINX Optimisée
 
 ### NGINX Frontend Configuration
+
 ```nginx
 # services/web/nginx.conf
 server {
@@ -631,6 +654,7 @@ server {
 ```
 
 ### NGINX Reverse Proxy Configuration
+
 ```nginx
 # services/nginx/conf.d/default.conf
 upstream api_servers {
@@ -640,12 +664,12 @@ upstream api_servers {
 server {
     listen 80;
     server_name example.com www.example.com;
-    
+
     # Redirect HTTP to HTTPS
     location / {
         return 301 https://$host$request_uri;
     }
-    
+
     # LetsEncrypt challenge
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -655,12 +679,12 @@ server {
 server {
     listen 443 ssl http2;
     server_name example.com www.example.com;
-    
+
     # SSL config
     ssl_certificate /etc/nginx/ssl/live/example.com/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/live/example.com/privkey.pem;
     ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-    
+
     # Security optimizations
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
@@ -670,21 +694,21 @@ server {
     ssl_session_tickets off;
     ssl_stapling on;
     ssl_stapling_verify on;
-    
+
     # Headers
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
     add_header X-XSS-Protection "1; mode=block";
     add_header Referrer-Policy "strict-origin-when-cross-origin";
-    
+
     # Frontend static files
     location / {
         root /usr/share/nginx/html;
         try_files $uri $uri/ /index.html;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
-    
+
     # API proxy
     location /api {
         proxy_pass http://api_servers;
@@ -699,7 +723,7 @@ server {
         proxy_buffering off;
         proxy_read_timeout 300s;
     }
-    
+
     # WebSocket proxy for Socket.io
     location /socket.io {
         proxy_pass http://api_servers;
@@ -711,7 +735,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-    
+
     # Cache pour assets statiques
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
         root /usr/share/nginx/html;
@@ -725,8 +749,9 @@ server {
 ## 📊 Variables d'Environnement
 
 ### Variables d'Environnement pour Production
+
 ```bash
-# .env.production
+# .env.prod
 # API Configuration
 NODE_ENV=production
 PORT=3000
@@ -770,6 +795,7 @@ NODE_MAX_OLD_SPACE_SIZE=2048
 ## 🚀 Script Docker Manager
 
 ### Utilitaire CLI pour Docker
+
 ```bash
 #!/bin/bash
 # scripts/docker-manager.sh
@@ -795,7 +821,7 @@ DOCKER_COMPOSE_COMMAND="docker compose"
 case $ENV in
   dev|development)
     ENV="dev"
-    ENV_FILE=".env.development"
+    ENV_FILE=".env.dev"
     COMPOSE_FILE="${DOCKER_COMPOSE_FILE}.yml"
     ;;
   test)
@@ -810,12 +836,12 @@ case $ENV in
     ;;
   prod|production)
     ENV="prod"
-    ENV_FILE=".env.production"
+    ENV_FILE=".env.prod"
     COMPOSE_FILE="${DOCKER_COMPOSE_FILE}.prod.yml"
     ;;
   secure)
     ENV="secure"
-    ENV_FILE=".env.production"
+    ENV_FILE=".env.prod"
     COMPOSE_FILE="${DOCKER_COMPOSE_FILE}.secure.yml"
     ;;
   *)
@@ -874,17 +900,17 @@ case $ACTION in
     DATE=$(date +%Y%m%d_%H%M%S)
     BACKUP_DIR="backups/$ENV/$DATE"
     mkdir -p $BACKUP_DIR
-    
+
     # Backup MongoDB
     echo -e "${YELLOW}Sauvegarde MongoDB...${NC}"
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE exec -T mongodb mongodump --out=/data/db/backup
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE cp mongodb:/data/db/backup $BACKUP_DIR/mongodb
-    
+
     # Backup Redis (si nécessaire)
     echo -e "${YELLOW}Sauvegarde Redis...${NC}"
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE exec -T redis redis-cli SAVE
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE cp redis:/data/dump.rdb $BACKUP_DIR/redis-dump.rdb
-    
+
     echo -e "${GREEN}Sauvegarde terminée dans $BACKUP_DIR${NC}"
     ;;
   restore)
@@ -893,16 +919,16 @@ case $ACTION in
       echo -e "${RED}Chemin de sauvegarde invalide: $BACKUP_PATH${NC}"
       exit 1
     fi
-    
+
     echo -e "${YELLOW}Restauration depuis $BACKUP_PATH pour l'environnement $ENV...${NC}"
-    
+
     # Restore MongoDB
     if [ -d "$BACKUP_PATH/mongodb" ]; then
       echo -e "${YELLOW}Restauration MongoDB...${NC}"
       $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE cp $BACKUP_PATH/mongodb mongodb:/data/db/restore
       $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE exec -T mongodb mongorestore /data/db/restore
     fi
-    
+
     # Restore Redis
     if [ -f "$BACKUP_PATH/redis-dump.rdb" ]; then
       echo -e "${YELLOW}Restauration Redis...${NC}"
@@ -910,19 +936,19 @@ case $ACTION in
       $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE cp $BACKUP_PATH/redis-dump.rdb redis:/data/dump.rdb
       $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE start redis
     fi
-    
+
     echo -e "${GREEN}Restauration terminée${NC}"
     ;;
   deploy)
     echo -e "${GREEN}Déploiement de l'environnement $ENV...${NC}"
-    
+
     # Pull latest changes
     git pull
-    
+
     # Build and restart
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE build
     $DOCKER_COMPOSE_COMMAND -f $COMPOSE_FILE --env-file $ENV_FILE up -d
-    
+
     echo -e "${GREEN}Déploiement terminé${NC}"
     ;;
   *)

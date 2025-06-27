@@ -1,37 +1,46 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   getMessages,
   sendMessage,
   updateMessage as apiUpdateMessage,
   removeMessage as apiRemoveMessage,
   MessageFormData,
-} from "@services/messageApi";
+} from '@services/messageApi';
 
 export const fetchMessages = createAsyncThunk(
-  "messages/fetchAll",
+  'messages/fetchAll',
   async (channelId: string) => {
     return await getMessages(channelId);
   }
 );
 
 export const addMessage = createAsyncThunk(
-  "messages/add",
+  'messages/add',
   async (formData: MessageFormData) => {
-    await sendMessage(formData);
-    return await getMessages(formData.channelId);
+    const newMessage = await sendMessage(formData);
+    // Ne pas recharger tous les messages - le nouveau message arrivera via WebSocket
+    return newMessage;
   }
 );
 
 export const editMessage = createAsyncThunk(
-  "messages/edit",
-  async ({ id, text, file }: { id: string; text: string; file?: File | null }) => {
+  'messages/edit',
+  async ({
+    id,
+    text,
+    file,
+  }: {
+    id: string;
+    text: string;
+    file?: File | null;
+  }) => {
     const data = await apiUpdateMessage(id, { text, file });
     return data;
   }
 );
 
 export const deleteMessage = createAsyncThunk(
-  "messages/delete",
+  'messages/delete',
   async (id: string) => {
     await apiRemoveMessage(id);
     return id;
@@ -39,7 +48,7 @@ export const deleteMessage = createAsyncThunk(
 );
 
 const messagesSlice = createSlice({
-  name: "messages",
+  name: 'messages',
   initialState: {
     items: [] as any[],
     loading: false,
@@ -47,7 +56,11 @@ const messagesSlice = createSlice({
   },
   reducers: {
     pushMessage: (state, action) => {
-      state.items.push(action.payload);
+      // Éviter les doublons - ne pas ajouter si le message existe déjà
+      const exists = state.items.some((m) => m._id === action.payload._id);
+      if (!exists) {
+        state.items.push(action.payload);
+      }
     },
     replaceMessage: (state, action) => {
       const idx = state.items.findIndex((m) => m._id === action.payload._id);
@@ -64,20 +77,27 @@ const messagesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
-        state.items = action.payload;
+        // L'API peut retourner un tableau directement ou un objet { messages: [...] }
+        const payload = action.payload;
+        state.items = Array.isArray(payload) ? payload : payload.messages || [];
         state.loading = false;
       })
       .addCase(fetchMessages.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Erreur lors du chargement";
+        state.error = action.error.message || 'Erreur lors du chargement';
       })
       .addCase(addMessage.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(addMessage.fulfilled, (state, action) => {
-        state.items = action.payload;
+        // Ajouter le message retourné par l'API au state
+        // Le WebSocket enverra aussi le message, mais cela assure l'affichage immédiat
+        if (action.payload) {
+          state.items.push(action.payload);
+        }
         state.loading = false;
+        state.error = null;
       })
       .addCase(addMessage.rejected, (state, action) => {
         state.loading = false;

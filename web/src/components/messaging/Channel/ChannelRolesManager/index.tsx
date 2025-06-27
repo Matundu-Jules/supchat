@@ -9,12 +9,27 @@ interface ChannelRolesManagerProps {
   workspaceId: string;
   channels: any[];
   isOwnerOrAdmin: boolean;
+  channel: any;
+  currentUserId: string;
+  onPromote: (userId: string, role: string) => void;
+  onDemote: (userId: string, role: string) => void;
+  canEdit: boolean;
 }
+
+const ROLES = ["admin", "moderator", "member", "guest"];
+
+// Fournit des callbacks vides par défaut pour éviter les erreurs si non utilisés
+const noop = () => {};
 
 const ChannelRolesManager: React.FC<ChannelRolesManagerProps> = ({
   workspaceId,
   channels,
   isOwnerOrAdmin,
+  channel = { members: [] },
+  currentUserId = "",
+  onPromote = noop,
+  onDemote = noop,
+  canEdit = false,
 }) => {
   const [selectedChannel, setSelectedChannel] = useState<string | null>(
     channels.length > 0 ? channels[0]._id : null
@@ -180,6 +195,62 @@ const ChannelRolesManager: React.FC<ChannelRolesManagerProps> = ({
             Le rôle spécifique remplace le rôle du workspace pour ce canal
           </li>
           <li>Utilisez "Reset" pour revenir au rôle du workspace</li>
+        </ul>
+      </div>
+
+      <div className={styles["manager"]}>
+        <h3>Rôles du canal « {channel.name} »</h3>
+        <ul className={styles["userList"]}>
+          {channel.members.map((m: any) => (
+            <li key={m._id} className={styles["userItem"]}>
+              <span>{m.username || m.email}</span>
+              <span className={styles["roleBadge"]}>{m.role || "member"}</span>
+              {canEdit && m._id !== currentUserId && (
+                <div className={styles["actions"]}>
+                  {m.role !== "admin" && (
+                    <button
+                      className="btn"
+                      onClick={() => onPromote(m._id, "admin")}
+                    >
+                      Promouvoir admin
+                    </button>
+                  )}
+                  {m.role === "admin" && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => onDemote(m._id, "moderator")}
+                    >
+                      Rétrograder modérateur
+                    </button>
+                  )}
+                  {m.role === "moderator" && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => onDemote(m._id, "member")}
+                    >
+                      Rétrograder membre
+                    </button>
+                  )}
+                  {m.role === "member" && (
+                    <button
+                      className="btn"
+                      onClick={() => onPromote(m._id, "moderator")}
+                    >
+                      Promouvoir modérateur
+                    </button>
+                  )}
+                  {m.role === "guest" && (
+                    <button
+                      className="btn"
+                      onClick={() => onPromote(m._id, "member")}
+                    >
+                      Promouvoir membre
+                    </button>
+                  )}
+                </div>
+              )}
+            </li>
+          ))}
         </ul>
       </div>
     </div>

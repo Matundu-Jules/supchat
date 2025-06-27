@@ -10,7 +10,7 @@ export interface ChannelFormData {
 export async function getChannels(workspaceId: string) {
   try {
     await fetchCsrfToken();
-    const { data } = await api.get('/channels', { params: { workspaceId } });
+    const { data } = await api.get(`/workspaces/${workspaceId}/channels`);
     return data.channels || [];
   } catch (err: any) {
     throw new Error(
@@ -24,7 +24,10 @@ export async function getChannels(workspaceId: string) {
 export async function createChannel(formData: ChannelFormData) {
   try {
     await fetchCsrfToken();
-    const { data } = await api.post('/channels', formData);
+    const { data } = await api.post(
+      `/workspaces/${formData.workspaceId}/channels`,
+      formData
+    );
     return data;
   } catch (err: any) {
     throw new Error(

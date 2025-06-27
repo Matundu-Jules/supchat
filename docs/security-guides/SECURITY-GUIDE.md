@@ -79,7 +79,7 @@ npm run test-connection
 ### 1. **Variables d'environnement production**
 
 ```bash
-# supchat-server/.env.production
+# supchat-server/.env.prod
 NODE_ENV=production
 ALLOWED_ORIGINS=https://votre-domaine.com,https://app.votre-domaine.com
 HTTPS_PORT=443
@@ -93,8 +93,8 @@ SSL_KEY=/path/to/key.pem
 ### 2. **Client-web production**
 
 ```bash
-# client-web/.env.production
-VITE_BACKEND_URL=https://api.votre-domaine.com
+# client-web/.env.prod
+VITE_API_URL=https://api.votre-domaine.com
 VITE_API_URL=https://api.votre-domaine.com/api
 VITE_SOCKET_URL=wss://api.votre-domaine.com
 
@@ -105,7 +105,7 @@ VITE_SOCKET_URL=wss://api.votre-domaine.com
 ### 3. **Client-mobile production**
 
 ```bash
-# client-mobile/.env.production
+# client-mobile/.env.prod
 EXPO_PUBLIC_API_URL=https://api.votre-domaine.com/api
 EXPO_PUBLIC_SOCKET_URL=wss://api.votre-domaine.com
 

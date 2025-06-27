@@ -29,7 +29,6 @@ import PublicRoute from "@components/core/routes/PublicRoute";
 import Loader from "@components/core/ui/Loader";
 
 import WorkspacePage from "@pages/workspaces/WorkspacePage";
-import ChannelChatPageWrapper from "@pages/channels/ChannelChatPage/wrapper";
 import RegisterPage from "@pages/auth/RegisterPage";
 import LoginPage from "@pages/auth/LoginPage";
 import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
@@ -38,6 +37,13 @@ import SetPasswordPage from "@pages/auth/SetPasswordPage";
 import WorkspaceDetailPage from "@pages/workspaces/WorkspaceDetailPage";
 import InviteWorkspacePage from "@pages/workspaces/InviteWorkspacePage";
 import SettingsPage from "@pages/user/SettingsPage";
+import UnifiedChannelPage from "@pages/channels/UnifiedChannelPage";
+import SearchResultsPage from "@pages/search/SearchResultsPage";
+import WebSocketTestPage from "@pages/testing/WebSocketTestPage";
+
+// 🔧 TEMPORAIRE: Composant de test pour diagnostiquer l'authentification WebSocket
+import { WebSocketAuthTester } from "@components/testing/WebSocketAuthTester";
+import { SocketProvider } from "@contexts/SocketContext";
 
 const AppContent = ({
   theme,
@@ -73,15 +79,29 @@ const AppContent = ({
             {/* Route pour la création obligatoire de mot de passe */}
             <Route path="/set-password" element={<SetPasswordPage />} />{" "}
             <Route path="/workspace" element={<WorkspacePage />} />
-            <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
-            <Route path="/channels" element={<ChannelChatPageWrapper />} />
+            <Route
+              path="/workspaces/:id"
+              element={<WorkspaceDetailPage />}
+            />{" "}
+            <Route
+              path="/workspaces/:workspaceId/channels"
+              element={<UnifiedChannelPage />}
+            />
+            <Route
+              path="/workspaces/:workspaceId/channels/:channelId"
+              element={<UnifiedChannelPage />}
+            />{" "}
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/websocket-test" element={<WebSocketTestPage />} />
             {/* Route par défaut - redirection vers workspace */}
             <Route index element={<WorkspacePage />} />
           </Route>
         </Routes>
       </main>
       <Footer theme={theme} toggleTheme={toggleTheme} />
+      {/* 🔧 TEMPORAIRE: Composant de test pour diagnostiquer l'authentification WebSocket */}
+      <WebSocketAuthTester />
     </div>
   );
 };
@@ -173,7 +193,9 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <AppContent theme={theme} toggleTheme={toggleTheme} />
+      <SocketProvider>
+        <AppContent theme={theme} toggleTheme={toggleTheme} />
+      </SocketProvider>
     </Router>
   );
 };

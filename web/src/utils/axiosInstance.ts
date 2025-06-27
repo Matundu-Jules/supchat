@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { store } from '@store/store';
-import { logout, setAuth } from '@store/authSlice';
+import { logout } from '@store/authSlice';
 import { API_BASE_URL } from '../config/api';
 
 const api = axios.create({
@@ -16,14 +16,14 @@ export async function fetchCsrfToken() {
   return res.data.csrfToken;
 }
 
-let refreshSubscribers: Function[] = [];
+let refreshSubscribers: (() => void)[] = [];
 
 function onRefreshed() {
   refreshSubscribers.forEach((callback) => callback());
   refreshSubscribers = [];
 }
 
-function addSubscriber(callback: Function) {
+function addSubscriber(callback: () => void) {
   refreshSubscribers.push(callback);
 }
 
@@ -54,7 +54,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !orig._retry && !isAuthRoute) {
       // Si déjà en cours de rafraîchissement, attendre
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           addSubscriber(() => {
             resolve(api(orig));
           });
@@ -77,30 +77,34 @@ api.interceptors.response.use(
         } else {
           throw new Error('Refresh failed');
         }
-      } catch (refreshError: any) {
-        console.warn(
-          '❌ Token refresh failed:',
-          refreshError.response?.data?.message || refreshError.message
-        );
+      } catch (refreshError: unknown) {
+        // Typage sécurisé de l'erreur
+        interface ApiError {
+          response?: {
+            data?: {
+              message?: string;
+            };
+          };
+          message?: string;
+        }
+
+        const error = refreshError as ApiError;
+        const errorMessage =
+          error.response?.data?.message || error.message || 'Unknown error';
+
+        console.warn('❌ Token refresh failed:', errorMessage);
         isRefreshing = false;
 
         // Ne déconnecter que si c'est vraiment un problème de token invalide
         // Pas si c'est juste "token manquant" (utilisateur pas connecté)
         const isTokenMissing =
-          refreshError.response?.data?.message?.includes('manquant');
+          error.response?.data?.message?.includes('manquant');
         if (!isTokenMissing) {
-          // 🔧 CORRECTION: Mettre à jour le statut à "offline" lors de déconnexion automatique
-          // Uniquement si l'utilisateur était connecté (on a un token qui a expiré)
-          try {
-            const { updatePreferences } = await import('@services/userApi');
-            await updatePreferences({ status: 'offline' });
-          } catch (statusError) {
-            console.warn(
-              '[axiosInstance] Impossible de mettre à jour le statut lors de la déconnexion automatique:',
-              statusError
-            );
-            // Ne pas bloquer la déconnexion
-          }
+          // 🔧 CORRECTION: Ne PAS essayer de mettre à jour le statut pour éviter la boucle infinie
+          // Directement déconnecter l'utilisateur sans appel API supplémentaire
+          console.warn(
+            '🔄 Token refresh échoué - déconnexion automatique sans mise à jour du statut pour éviter la boucle'
+          );
 
           store.dispatch(logout());
 

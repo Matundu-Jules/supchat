@@ -1,0 +1,384 @@
+/* Dashboard de monitoring WebSocket */
+.monitor {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e9ecef;
+
+  h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: white;
+  border: 1px solid #dee2e6;
+}
+
+.indicator {
+  font-weight: 500;
+  font-size: 0.9rem;
+
+  &.connected {
+    color: #28a745;
+  }
+
+  &.disconnected {
+    color: #dc3545;
+  }
+}
+
+.startBtn,
+.stopBtn,
+.clearBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.startBtn {
+  background: #28a745;
+  color: white;
+
+  &:hover {
+    background: #218838;
+  }
+}
+
+.stopBtn {
+  background: #dc3545;
+  color: white;
+
+  &:hover {
+    background: #c82333;
+  }
+}
+
+.clearBtn {
+  background: #6c757d;
+  color: white;
+
+  &:hover {
+    background: #5a6268;
+  }
+}
+
+/* Grid des statistiques */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  text-align: center;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  h3 {
+    margin: 0 0 12px 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 4px;
+
+  &.errorValue {
+    color: #dc3545;
+  }
+}
+
+.statLabel {
+  color: #6c757d;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Classes de latence */
+.latencyGood {
+  color: #28a745 !important;
+}
+
+.latencyOk {
+  color: #ffc107 !important;
+}
+
+.latencyBad {
+  color: #dc3545 !important;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 32px;
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+}
+
+/* Liste des channels */
+.channelList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.channelCard {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+  }
+}
+
+.channelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.userCount {
+  background: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.channelStats {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Log des messages */
+.messageLog {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+
+  /* Scrollbar personnalisée */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+
+    &:hover {
+      background: #777;
+    }
+  }
+}
+
+.logEntry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #333;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.sent {
+    color: #4ade80;
+  }
+
+  &.received {
+    color: #60a5fa;
+  }
+
+  &.error {
+    color: #f87171;
+  }
+}
+
+.timestamp {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  min-width: 80px;
+}
+
+.type {
+  font-size: 1rem;
+}
+
+.channel {
+  color: #fbbf24;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.latency {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.latencyGood {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+  }
+
+  &.latencyOk {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+  }
+
+  &.latencyBad {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+  }
+}
+
+/* État déconnecté */
+.disconnectedState {
+  text-align: center;
+  padding: 48px 20px;
+  color: #6c757d;
+
+  h3 {
+    color: #dc3545;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .monitor {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    h2 {
+      text-align: center;
+    }
+
+    .controls {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .statCard {
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 1.5rem;
+  }
+
+  .channelList {
+    grid-template-columns: 1fr;
+  }
+
+  .messageLog {
+    font-size: 0.8rem;
+    max-height: 300px;
+  }
+
+  .logEntry {
+    gap: 8px;
+  }
+
+  .timestamp {
+    min-width: 70px;
+  }
+
+  .channel {
+    min-width: 70px;
+  }
+}

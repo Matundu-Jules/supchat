@@ -1,33 +1,18 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 
-export function useSocket(channelId?: string, userId?: string) {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  useEffect(() => {
-    const s = io(import.meta.env['VITE_WEBSOCKET_URL'] as string, {
-      withCredentials: true,
-    });
-    setSocket(s);
-    return () => {
-      s.disconnect();
-    };
-  }, []);
+import { useContext } from 'react';
+import { SocketContext, SocketContextType } from '@contexts/SocketContext';
 
-  useEffect(() => {
-    if (!socket || !channelId) return;
-    socket.emit('joinChannel', channelId);
-    return () => {
-      socket.emit('leaveChannel', channelId);
-    };
-  }, [socket, channelId]);
-
-  useEffect(() => {
-    if (!socket || !userId) return;
-    socket.emit('subscribeNotifications', userId);
-    return () => {
-      socket.emit('unsubscribeNotifications', userId);
-    };
-  }, [socket, userId]);
-
-  return socket;
-}
+/**
+ * Hook personnalisé pour accéder au contexte du WebSocket.
+ * Fournit l'instance de la socket et l'état de la connexion.
+ *
+ * @returns {SocketContextType} L'objet contenant la socket et l'état de connexion.
+ * @throws {Error} Si le hook est utilisé en dehors d'un SocketProvider.
+ */
+export const useSocket = (): SocketContextType => {
+  const context = useContext(SocketContext);
+  if (context === undefined) {
+    throw new Error('useSocket must be used within a SocketProvider');
+  }
+  return context;
+};

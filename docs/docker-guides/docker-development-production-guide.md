@@ -153,4 +153,4 @@ docker-compose down -v --rmi all
 ## Variables d'environnement
 
 - **Dev**: Utilise `.env` avec `NODE_ENV=development`
-- **Prod**: Utilise `.env.production` avec `NODE_ENV=production`
+- **Prod**: Utilise `.env.prod` avec `NODE_ENV=production`

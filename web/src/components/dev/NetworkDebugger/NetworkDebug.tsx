@@ -1,7 +1,7 @@
 // src/components/NetworkDebug.tsx
 
 import React from "react";
-import { useApi, useApiDebug } from "../hooks/useApi";
+import { useApi, useApiDebug } from "@hooks/useApi";
 import styles from "./NetworkDebug.module.scss";
 
 interface NetworkDebugProps {

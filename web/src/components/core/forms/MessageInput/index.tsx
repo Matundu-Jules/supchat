@@ -10,9 +10,14 @@ import styles from "./MessageInput.module.scss";
 interface MessageInputProps {
   onSend: (text: string, file?: File | null) => Promise<void> | void;
   loading?: boolean;
+  canWrite?: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSend, loading }) => {
+const MessageInput: React.FC<MessageInputProps> = ({
+  onSend,
+  loading,
+  canWrite = true,
+}) => {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,15 +57,26 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSend, loading }) => {
 
   return (
     <form onSubmit={handleSubmit} className={styles["form"]}>
-      <input
+      <textarea
         className={styles["inputText"]}
-        type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Tapez votre message..."
-        disabled={loading}
+        placeholder={
+          canWrite
+            ? "Tapez votre message..."
+            : "Vous n'avez pas la permission d'écrire."
+        }
+        disabled={loading || !canWrite}
+        rows={1}
+        aria-label="Saisir un message"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+          }
+        }}
+        style={{ resize: "none" }}
       />
-
       {/* Input file caché */}
       <input
         ref={fileInputRef}
@@ -69,19 +85,20 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSend, loading }) => {
         accept={getAllAcceptedTypes().join(",")}
         disabled={loading}
         style={{ display: "none" }}
+        aria-label="Joindre un fichier"
       />
-
       {/* Bouton rond pour sélectionner un fichier */}
       <button
         type="button"
         className={styles["fileButton"]}
         onClick={handleFileButtonClick}
         disabled={loading}
-        title="Ajouter un fichier"
+        title="Joindre un fichier"
+        aria-label="Joindre un fichier"
+        tabIndex={0}
       >
-        <i className="fa-solid fa-plus" />
+        <i className="fa-solid fa-paperclip" aria-hidden="true" />
       </button>
-
       {/* Affichage du fichier sélectionné */}
       {file && (
         <div className={styles["filePreview"]}>
@@ -99,14 +116,19 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSend, loading }) => {
             className={styles["removeFileButton"]}
             onClick={removeFile}
             title="Supprimer le fichier"
+            aria-label="Supprimer le fichier joint"
           >
             <i className="fa-solid fa-times" />
           </button>
         </div>
       )}
-
-      <button className={styles["sendButton"]} type="submit" disabled={loading}>
-        <i className="fa-solid fa-paper-plane" />
+      <button
+        className={styles["sendButton"]}
+        type="submit"
+        disabled={loading || !canWrite || !text.trim()}
+        aria-label="Envoyer le message"
+      >
+        <i className="fa-solid fa-paper-plane" aria-hidden="true" />
       </button>
     </form>
   );

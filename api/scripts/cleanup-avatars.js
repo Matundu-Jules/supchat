@@ -175,7 +175,7 @@ async function cleanupAllFiles() {
 
         if (error.name && error.name.includes('Mongo')) {
             console.error(
-                '💡 Vérifiez que MongoDB est démarré (docker-compose up db)'
+                '💡 Vérifiez que MongoDB est démarré (docker-compose -f docker-compose.development.yml up db)'
             )
         }
 

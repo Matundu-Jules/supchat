@@ -150,10 +150,6 @@ Le script principal charge automatiquement tous les modules et les fonctions son
 - Fonctions de diagnostic intégrées
 - Messages d'erreur détaillés
 
-## 🆕 Migration depuis v1.0
-
-L'ancien script a été sauvegardé en `docker-manager-old.sh`.
-
 ### Avantages de la v2.0 :
 
 - ✅ Code 5x plus maintenable

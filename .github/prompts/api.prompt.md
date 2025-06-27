@@ -10,6 +10,7 @@ Tu es un **Expert Backend Developer** spécialisé dans l'API SUPCHAT utilisant 
 ## 🚀 Architecture Backend 2025
 
 ### Stack Technique de Pointe
+
 - **Runtime**: Node.js 22 LTS avec ES modules natifs et optimisations V8
 - **Framework**: Express.js v5 avec architecture microservices modulaire
 - **Base de données**: MongoDB 8.0 avec IA intégrée et optimisations automatiques
@@ -23,6 +24,7 @@ Tu es un **Expert Backend Developer** spécialisé dans l'API SUPCHAT utilisant 
 - **Monitoring**: Prometheus + Grafana + OpenTelemetry pour observabilité
 
 ### Architecture Microservices Modulaire
+
 ```
 api/
 ├── services/                → Services métier isolés
@@ -44,6 +46,7 @@ api/
 ## 🔧 Patterns Express.js Modernisés
 
 ### Controllers avec Architecture Hexagonale
+
 ```javascript
 // services/messaging/controllers/message.controller.ts
 import { Request, Response, NextFunction } from 'express';
@@ -74,10 +77,10 @@ export class MessageController {
     try {
       // Validation avec Zod (remplace Joi)
       const validatedData = CreateMessageSchema.parse(req.body);
-      
+
       // Vérification des permissions via RBAC
       await this.checkChannelPermissions(req.user.id, validatedData.channelId);
-      
+
       // Création du message via le service métier
       const message = await this.messageService.create({
         ...validatedData,
@@ -123,7 +126,7 @@ export class MessageController {
       });
 
       const query = querySchema.parse(req.query);
-      
+
       const result = await this.messageService.getMessages(channelId, {
         ...query,
         userId: req.user.id,
@@ -157,10 +160,11 @@ export class MessageController {
 ```
 
 ### Modèles MongoDB 8.0 Optimisés
+
 ```javascript
 // services/messaging/models/message.model.ts
-import mongoose, { Schema, Document } from 'mongoose';
-import { z } from 'zod';
+import mongoose, { Schema, Document } from "mongoose";
+import { z } from "zod";
 
 // Schéma Zod pour validation runtime
 export const MessageZodSchema = z.object({
@@ -168,18 +172,26 @@ export const MessageZodSchema = z.object({
   senderId: z.string(),
   channelId: z.string(),
   workspaceId: z.string(),
-  type: z.enum(['text', 'file', 'image', 'system']),
-  attachments: z.array(z.object({
-    url: z.string().url(),
-    filename: z.string(),
-    size: z.number(),
-    mimeType: z.string(),
-  })).optional(),
-  reactions: z.array(z.object({
-    emoji: z.string(),
-    users: z.array(z.string()),
-    count: z.number(),
-  })).default([]),
+  type: z.enum(["text", "file", "image", "system"]),
+  attachments: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        filename: z.string(),
+        size: z.number(),
+        mimeType: z.string(),
+      })
+    )
+    .optional(),
+  reactions: z
+    .array(
+      z.object({
+        emoji: z.string(),
+        users: z.array(z.string()),
+        count: z.number(),
+      })
+    )
+    .default([]),
   mentions: z.array(z.string()).default([]),
   parentId: z.string().optional(), // Pour les threads
   editedAt: z.date().optional(),
@@ -193,67 +205,75 @@ export interface IMessage extends Document, MessageType {
   updatedAt: Date;
 }
 
-const MessageSchema = new Schema<IMessage>({
-  content: { 
-    type: String, 
-    required: true, 
-    maxlength: 5000,
-    // Recherche full-text optimisée MongoDB 8.0
-    index: 'text'
+const MessageSchema =
+  new Schema() <
+  IMessage >
+  ({
+    content: {
+      type: String,
+      required: true,
+      maxlength: 5000,
+      // Recherche full-text optimisée MongoDB 8.0
+      index: "text",
+    },
+    senderId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    channelId: {
+      type: Schema.Types.ObjectId,
+      ref: "Channel",
+      required: true,
+      index: true,
+    },
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: "Workspace",
+      required: true,
+      index: true,
+    },
+    type: {
+      type: String,
+      enum: ["text", "file", "image", "system"],
+      default: "text",
+    },
+    attachments: [
+      {
+        url: { type: String, required: true },
+        filename: { type: String, required: true },
+        size: { type: Number, required: true },
+        mimeType: { type: String, required: true },
+      },
+    ],
+    reactions: [
+      {
+        emoji: { type: String, required: true },
+        users: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        count: { type: Number, default: 0 },
+      },
+    ],
+    mentions: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    parentId: { type: Schema.Types.ObjectId, ref: "Message" }, // Threads
+    editedAt: { type: Date },
+    deletedAt: { type: Date }, // Soft delete
   },
-  senderId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true,
-    index: true
-  },
-  channelId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Channel', 
-    required: true,
-    index: true
-  },
-  workspaceId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Workspace', 
-    required: true,
-    index: true
-  },
-  type: {
-    type: String,
-    enum: ['text', 'file', 'image', 'system'],
-    default: 'text'
-  },
-  attachments: [{
-    url: { type: String, required: true },
-    filename: { type: String, required: true },
-    size: { type: Number, required: true },
-    mimeType: { type: String, required: true },
-  }],
-  reactions: [{
-    emoji: { type: String, required: true },
-    users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    count: { type: Number, default: 0 },
-  }],
-  mentions: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  parentId: { type: Schema.Types.ObjectId, ref: 'Message' }, // Threads
-  editedAt: { type: Date },
-  deletedAt: { type: Date }, // Soft delete
-}, {
-  timestamps: true,
-  // Optimisations MongoDB 8.0
-  optimize: true,
-  // Index composé pour requêtes fréquentes
-  index: [
-    { channelId: 1, createdAt: -1 }, // Messages par canal
-    { workspaceId: 1, createdAt: -1 }, // Messages par workspace
-    { senderId: 1, createdAt: -1 }, // Messages par utilisateur
-    { 'content': 'text' }, // Recherche textuelle
-  ],
-});
+  {
+    timestamps: true,
+    // Optimisations MongoDB 8.0
+    optimize: true,
+    // Index composé pour requêtes fréquentes
+    index: [
+      { channelId: 1, createdAt: -1 }, // Messages par canal
+      { workspaceId: 1, createdAt: -1 }, // Messages par workspace
+      { senderId: 1, createdAt: -1 }, // Messages par utilisateur
+      { content: "text" }, // Recherche textuelle
+    ],
+  });
 
 // Middleware pre-save avec validation Zod
-MessageSchema.pre('save', function(next) {
+MessageSchema.pre("save", function (next) {
   try {
     // Validation avec Zod avant sauvegarde
     MessageZodSchema.parse(this.toObject());
@@ -264,15 +284,15 @@ MessageSchema.pre('save', function(next) {
 });
 
 // Virtual pour population optimisée
-MessageSchema.virtual('sender', {
-  ref: 'User',
-  localField: 'senderId',
-  foreignField: '_id',
+MessageSchema.virtual("sender", {
+  ref: "User",
+  localField: "senderId",
+  foreignField: "_id",
   justOne: true,
 });
 
 // Méthodes statiques optimisées
-MessageSchema.statics.findByChannelPaginated = function(
+MessageSchema.statics.findByChannelPaginated = function (
   channelId: string,
   options: PaginationOptions
 ) {
@@ -283,25 +303,24 @@ MessageSchema.statics.findByChannelPaginated = function(
     { $limit: options.limit },
     {
       $lookup: {
-        from: 'users',
-        localField: 'senderId',
-        foreignField: '_id',
-        as: 'sender',
-        pipeline: [
-          { $project: { password: 0, refreshTokens: 0 } }
-        ]
-      }
+        from: "users",
+        localField: "senderId",
+        foreignField: "_id",
+        as: "sender",
+        pipeline: [{ $project: { password: 0, refreshTokens: 0 } }],
+      },
     },
-    { $unwind: '$sender' },
+    { $unwind: "$sender" },
   ]);
 };
 
-export const Message = mongoose.model<IMessage>('Message', MessageSchema);
+export const Message = mongoose.model < IMessage > ("Message", MessageSchema);
 ```
 
 ## 🔌 Socket.io v5 Backend Avancé
 
 ### Configuration Cluster et Scaling
+
 ```javascript
 // services/socket/socket.service.ts
 import { Server, Socket } from 'socket.io';
@@ -338,7 +357,7 @@ export class SocketService {
     if (process.env.REDIS_URL) {
       const pubClient = createClient({ url: process.env.REDIS_URL });
       const subClient = pubClient.duplicate();
-      
+
       Promise.all([pubClient.connect(), subClient.connect()])
         .then(() => {
           this.io.adapter(createAdapter(pubClient, subClient));
@@ -360,7 +379,7 @@ export class SocketService {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!);
         const user = await User.findById(decoded.userId)
           .select('-password -refreshTokens');
-        
+
         if (!user) {
           throw new Error('Utilisateur non trouvé');
         }
@@ -383,7 +402,7 @@ export class SocketService {
   private setupEventHandlers(): void {
     this.io.on('connection', (socket) => {
       console.log(`Utilisateur connecté: ${socket.user.email}`);
-      
+
       // Rejoindre automatiquement les rooms de l'utilisateur
       this.joinUserRooms(socket);
 
@@ -449,13 +468,13 @@ export class SocketService {
 
   // Optimisation: Diffusion sélective avec exclusions
   async broadcastToChannel(
-    channelId: string, 
-    event: string, 
-    data: any, 
+    channelId: string,
+    event: string,
+    data: any,
     options: { excludeUser?: string } = {}
   ): Promise<void> {
     let room = this.io.to(`channel:${channelId}`);
-    
+
     if (options.excludeUser) {
       // Exclure un utilisateur spécifique
       const excludeSocket = await this.findUserSocket(options.excludeUser);
@@ -473,7 +492,7 @@ export class SocketService {
   private handleTypingStart(socket: Socket) {
     return (data: { channelId: string }) => {
       const key = `${socket.userId}:${data.channelId}`;
-      
+
       // Annuler le timeout précédent
       if (this.typingTimeouts.has(key)) {
         clearTimeout(this.typingTimeouts.get(key)!);
@@ -504,6 +523,7 @@ export class SocketService {
 ## 🔒 Sécurité Backend Renforcée 2025
 
 ### Authentification et Autorisation Avancées
+
 ```javascript
 // services/auth/auth.service.ts
 import argon2 from 'argon2';
@@ -692,13 +712,13 @@ export class RoleBasedAccessControl {
     if (!userPermissions) return false;
 
     const permission = `${resource}:${action}`;
-    
+
     // Vérification permission exacte
     if (userPermissions.has(permission)) return true;
-    
+
     // Vérification permission wildcard
     if (userPermissions.has(`${resource}:*`)) return true;
-    
+
     // Vérification permission conditionnelle (ex: own)
     if (action.endsWith(':own') && context?.userId === userId) {
       return userPermissions.has(`${resource}:${action}`);
@@ -712,13 +732,14 @@ export class RoleBasedAccessControl {
 ## 📊 API Endpoints Standards SUPCHAT 2025
 
 ### Routes Modernes avec Validation Zod
+
 ```javascript
 // routes/messages.routes.ts
-import { Router } from 'express';
-import { MessageController } from '../controllers/message.controller';
-import { authenticateToken, authorize } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
-import { z } from 'zod';
+import { Router } from "express";
+import { MessageController } from "../controllers/message.controller";
+import { authenticateToken, authorize } from "../middleware/auth";
+import { validateRequest } from "../middleware/validation";
+import { z } from "zod";
 
 const router = Router();
 const messageController = new MessageController();
@@ -740,7 +761,7 @@ const GetMessagesSchema = z.object({
 const CreateMessageSchema = z.object({
   body: z.object({
     content: z.string().min(1).max(5000),
-    type: z.enum(['text', 'file', 'image']).default('text'),
+    type: z.enum(["text", "file", "image"]).default("text"),
     attachments: z.array(z.string().url()).optional(),
     parentId: z.string().uuid().optional(),
   }),
@@ -751,32 +772,32 @@ const CreateMessageSchema = z.object({
 
 // Routes avec middleware et validation
 router.get(
-  '/:channelId/messages',
+  "/:channelId/messages",
   authenticateToken,
-  authorize('message:read'),
+  authorize("message:read"),
   validateRequest(GetMessagesSchema),
   messageController.getMessages
 );
 
 router.post(
-  '/:channelId/messages',
+  "/:channelId/messages",
   authenticateToken,
-  authorize('message:create'),
+  authorize("message:create"),
   validateRequest(CreateMessageSchema),
   messageController.createMessage
 );
 
 router.patch(
-  '/:channelId/messages/:messageId',
+  "/:channelId/messages/:messageId",
   authenticateToken,
-  authorize('message:update'),
+  authorize("message:update"),
   messageController.updateMessage
 );
 
 router.delete(
-  '/:channelId/messages/:messageId',
+  "/:channelId/messages/:messageId",
   authenticateToken,
-  authorize('message:delete'),
+  authorize("message:delete"),
   messageController.deleteMessage
 );
 
@@ -786,19 +807,16 @@ export { router as messageRoutes };
 ## 🧪 Tests Backend Modernisés
 
 ### Configuration Jest v29 avec ES Modules
+
 ```javascript
 // jest.config.js
 export default {
-  preset: 'ts-jest/presets/default-esm',
-  extensionsToTreatAsEsm: ['.ts'],
-  testEnvironment: 'node',
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/tests/**',
-  ],
+  preset: "ts-jest/presets/default-esm",
+  extensionsToTreatAsEsm: [".ts"],
+  testEnvironment: "node",
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
+  testMatch: ["**/tests/**/*.test.ts"],
+  collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/tests/**"],
   coverageThreshold: {
     global: {
       branches: 85,
@@ -808,19 +826,19 @@ export default {
     },
   },
   moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^@shared/(.*)$': '<rootDir>/src/shared/$1',
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@shared/(.*)$": "<rootDir>/src/shared/$1",
   },
 };
 
 // Tests d'intégration modernes
-import { describe, test, beforeAll, afterAll, beforeEach } from '@jest/globals';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import mongoose from 'mongoose';
-import request from 'supertest';
-import { app } from '../src/app';
+import { describe, test, beforeAll, afterAll, beforeEach } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
+import request from "supertest";
+import { app } from "../src/app";
 
-describe('Message API Integration Tests', () => {
+describe("Message API Integration Tests", () => {
   let mongoServer: MongoMemoryServer;
   let authToken: string;
   let testUser: any;
@@ -840,50 +858,48 @@ describe('Message API Integration Tests', () => {
   beforeEach(async () => {
     // Nettoyer la base et créer des données de test
     await mongoose.connection.db.dropDatabase();
-    
+
     // Créer utilisateur et canal de test
-    const userResponse = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'test@supchat.com',
-        password: 'Password123!',
-        firstName: 'Test',
-        lastName: 'User',
-      });
+    const userResponse = await request(app).post("/api/auth/register").send({
+      email: "test@supchat.com",
+      password: "Password123!",
+      firstName: "Test",
+      lastName: "User",
+    });
 
     testUser = userResponse.body.data.user;
     authToken = userResponse.body.data.accessToken;
 
     // Créer workspace et canal
     const workspaceResponse = await request(app)
-      .post('/api/workspaces')
-      .set('Authorization', `Bearer ${authToken}`)
+      .post("/api/workspaces")
+      .set("Authorization", `Bearer ${authToken}`)
       .send({
-        name: 'Test Workspace',
-        description: 'Workspace de test',
+        name: "Test Workspace",
+        description: "Workspace de test",
       });
 
     const channelResponse = await request(app)
       .post(`/api/workspaces/${workspaceResponse.body.data._id}/channels`)
-      .set('Authorization', `Bearer ${authToken}`)
+      .set("Authorization", `Bearer ${authToken}`)
       .send({
-        name: 'general',
-        description: 'Canal général',
-        type: 'public',
+        name: "general",
+        description: "Canal général",
+        type: "public",
       });
 
     testChannel = channelResponse.body.data;
   });
 
-  test('POST /api/channels/:id/messages - should create message', async () => {
+  test("POST /api/channels/:id/messages - should create message", async () => {
     const messageData = {
-      content: 'Test message content',
-      type: 'text',
+      content: "Test message content",
+      type: "text",
     };
 
     const response = await request(app)
       .post(`/api/channels/${testChannel._id}/messages`)
-      .set('Authorization', `Bearer ${authToken}`)
+      .set("Authorization", `Bearer ${authToken}`)
       .send(messageData)
       .expect(201);
 
@@ -893,12 +909,12 @@ describe('Message API Integration Tests', () => {
     expect(response.body.data.channel).toBe(testChannel._id);
   });
 
-  test('GET /api/channels/:id/messages - should return paginated messages', async () => {
+  test("GET /api/channels/:id/messages - should return paginated messages", async () => {
     // Créer plusieurs messages de test
     const messagePromises = Array.from({ length: 15 }, (_, i) =>
       request(app)
         .post(`/api/channels/${testChannel._id}/messages`)
-        .set('Authorization', `Bearer ${authToken}`)
+        .set("Authorization", `Bearer ${authToken}`)
         .send({ content: `Message ${i + 1}` })
     );
 
@@ -906,7 +922,7 @@ describe('Message API Integration Tests', () => {
 
     const response = await request(app)
       .get(`/api/channels/${testChannel._id}/messages`)
-      .set('Authorization', `Bearer ${authToken}`)
+      .set("Authorization", `Bearer ${authToken}`)
       .query({ page: 1, limit: 10 })
       .expect(200);
 
@@ -916,23 +932,23 @@ describe('Message API Integration Tests', () => {
     expect(response.body.meta.pagination.hasNext).toBe(true);
   });
 
-  test('PATCH /api/channels/:id/messages/:messageId - should update own message', async () => {
+  test("PATCH /api/channels/:id/messages/:messageId - should update own message", async () => {
     // Créer un message
     const createResponse = await request(app)
       .post(`/api/channels/${testChannel._id}/messages`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .send({ content: 'Original content' });
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ content: "Original content" });
 
     const messageId = createResponse.body.data._id;
 
     // Modifier le message
     const response = await request(app)
       .patch(`/api/channels/${testChannel._id}/messages/${messageId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .send({ content: 'Updated content' })
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ content: "Updated content" })
       .expect(200);
 
-    expect(response.body.data.content).toBe('Updated content');
+    expect(response.body.data.content).toBe("Updated content");
     expect(response.body.data.editedAt).toBeTruthy();
   });
 });

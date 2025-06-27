@@ -7,7 +7,7 @@ services:
     networks:
       - supchat-test-network
     ports:
-      - "127.0.0.1:27018:27017" # Port différent pour éviter les conflits
+      - "127.0.0.1:27018:27017" # Port différent pour éviter les conflits avec dev
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -24,6 +24,8 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile.dev
+    ports:
+      - "127.0.0.1:3001:3000" # Port externe différent, interne standard
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
@@ -31,7 +33,7 @@ services:
       - supchat-test-network
     environment:
       - NODE_ENV=test
-      - PORT=3001
+      - PORT=3000 # Port interne standard dans le container
       - CSRF_DEV_MODE=true
 
       # Configuration de la base de données de test
@@ -40,19 +42,58 @@ services:
       - MONGO_DB=supchat_test
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=rootpassword
-      - MONGO_AUTH_SOURCE=admin # Secrets pour les tests
-      - JWT_SECRET=test_jwt_secret
-      - JWT_REFRESH=test_jwt_refresh
-      - CSRF_SECRET=test_csrf_secret # Configuration des emails pour les tests
+      - MONGO_AUTH_SOURCE=admin
+
+      # Secrets pour les tests (valeurs de test fixes)
+      - JWT_SECRET=test_jwt_secret_2025_secure
+      - JWT_REFRESH=test_jwt_refresh_2025_secure
+      - CSRF_SECRET=test_csrf_secret_2025_secure
+
+      # Configuration des emails pour les tests
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
-      - FRONTEND_URL=${FRONTEND_URL}
-
+      - FRONTEND_URL=http://localhost:81
+    env_file:
+      - .env.test
     depends_on:
       db-test:
         condition: service_healthy
-    restart: "no" # Ne pas redémarrer automatiquement pour les tests
-    command: npm test -- tests/routes/user.test.js
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    command: ["npm", "run", "dev"] # Démarrage standard, tests lancés séparément
+
+  # Service Web pour les tests
+  web-test:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "127.0.0.1:81:8080" # Port externe différent pour éviter conflit
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    networks:
+      - supchat-test-network
+    environment:
+      - NODE_ENV=test
+      - VITE_API_URL=http://localhost:3001/api # URL vers API test
+      - VITE_SOCKET_URL=http://localhost:3001 # Socket vers API test
+      - VITE_APP_NAME=SupChat-Test
+      - DOCKER_ENV=true
+    depends_on:
+      - api-test
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 networks:
   supchat-test-network:

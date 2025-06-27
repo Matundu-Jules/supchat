@@ -171,7 +171,7 @@ function displaySecureNetworkInfo(port = 3000) {
         }
 
         console.log("\n🎯 Variables d'environnement suggérées:")
-        console.log(`   VITE_BACKEND_URL=http://${localIP}:${port}`)
+        console.log(`   VITE_API_URL=http://${localIP}:${port}`)
         console.log(`   EXPO_PUBLIC_HOST=${localIP}`)
     } else {
         console.log('\n🔒 Mode production - Configuration manuelle requise')

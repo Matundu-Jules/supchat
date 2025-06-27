@@ -226,12 +226,48 @@ exports.sendMessage = async (req, res) => {
                 uploader: req.user.id,
             })
             await meta.save()
-        }
-        const io = getIo()
+        }        const io = getIo()
         try {
-            io.to(channelId).emit('newMessage', message)
+            console.log(
+                '🚀 [MessageController] Émission event new-message pour channel:',
+                channelId,
+                'message ID:',
+                message._id
+            )
+            
+            // 🔧 CORRECTION: Créer un objet JSON simple pour l'émission WebSocket
+            const messageData = {
+                _id: message._id,
+                text: message.text,
+                content: message.content,
+                userId: message.userId,
+                channelId: message.channelId || channelId,
+                channel: message.channel || channelId,
+                createdAt: message.createdAt,
+                updatedAt: message.updatedAt,
+                type: message.type || 'text',
+                hashtags: message.hashtags || [],
+                mentions: message.mentions || [],
+                reactions: message.reactions || [],
+                edited: message.edited || false,
+                // Inclure les données de fichier si présentes
+                file: message.file,
+                filename: message.filename,
+                mimetype: message.mimetype,
+                size: message.size
+            }
+            
+            console.log(
+                '🚀 [MessageController] Structure du message émis:',
+                JSON.stringify(messageData, null, 2)
+            )
+
+            io.to(channelId).emit('new-message', messageData)
+            console.log(
+                '✅ [MessageController] Event new-message émis avec succès'
+            )
         } catch (e) {
-            console.error('Socket emit error', e)
+            console.error('❌ [MessageController] Socket emit error', e)
         } // Envoyer les notifications aux utilisateurs mentionnés
         const mentionedUsers = messageData.mentions
             ? await User.find({ _id: { $in: messageData.mentions } })

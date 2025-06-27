@@ -15,10 +15,14 @@
     "paths": {
       "@components/*": ["components/*"],
       "@pages/*": ["pages/*"],
-      "@hooks/*": ["hooks/*"],
       "@store/*": ["store/*"],
+      "@hooks/*": ["hooks/*"],
       "@services/*": ["services/*"],
-      "@utils/*": ["utils/*"]
+      "@styles/*": ["styles/*"],
+      "@utils/*": ["utils/*"],
+      "@contexts/*": ["contexts/*"],
+      "@tests/*": ["tests/*"],
+      "@ts_types/*": ["types/*"]
     },
 
     /* Module resolution */
@@ -42,7 +46,7 @@
   "exclude": [
     "src/**/*.test.tsx",
     "src/**/*.test.ts",
-    "src/__tests__",
-    "src/**/__tests__"
+    "src/tests",
+    "src/**/tests"
   ]
 }

@@ -355,3 +355,36 @@ reset_test_data() {
     esac
     pause
 }
+
+# Fonction pour supprimer TOUT Docker (option destructrice simple)
+nuclear_cleanup() {
+    echo -e "\n${RED}💥 SUPPRESSION TOTALE DOCKER${NC}"
+    echo -e "${RED}Cette option va supprimer TOUS les containers, images, volumes et réseaux Docker !${NC}"
+    echo ""
+    read -p "Voulez-vous continuer ? (y/N): " confirm
+    
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "\n${YELLOW}🧹 Suppression en cours...${NC}"
+        
+        # Arrêter et supprimer tous les containers
+        docker stop $(docker ps -aq) 2>/dev/null || true
+        docker rm -f $(docker ps -aq) 2>/dev/null || true
+        
+        # Supprimer toutes les images
+        docker rmi -f $(docker images -aq) 2>/dev/null || true
+        
+        # Supprimer tous les volumes
+        docker volume rm $(docker volume ls -q) 2>/dev/null || true
+        
+        # Supprimer tous les réseaux personnalisés
+        docker network rm $(docker network ls | grep -v "bridge\|host\|none" | awk 'NR>1 {print $1}') 2>/dev/null || true
+        
+        # Nettoyage système complet
+        docker system prune -a -f --volumes 2>/dev/null || true
+        
+        echo -e "${GREEN}✅ Suppression terminée !${NC}"
+    else
+        echo -e "${YELLOW}Suppression annulée${NC}"
+    fi
+    pause
+}

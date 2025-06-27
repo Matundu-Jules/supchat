@@ -58,7 +58,7 @@ Configuration spécifique par environnement :
 #### Production (`docker-compose.prod.yml`)
 
 ```yaml
-# Frontend URL définie dans .env.production
+# Frontend URL définie dans .env.prod
 - FRONTEND_URL=${FRONTEND_URL}
 ```
 
@@ -88,7 +88,7 @@ La solution utilise une logique intelligente qui s'adapte automatiquement :
 ### 🚀 Production (`NODE_ENV=production`)
 
 - **URL par défaut**: `https://supchat.com`
-- **Configuration**: Via variable `FRONTEND_URL` dans `.env.production`
+- **Configuration**: Via variable `FRONTEND_URL` dans `.env.prod`
 - **Exemple**: `https://votre-domaine.com`
 
 ## Fallbacks de sécurité

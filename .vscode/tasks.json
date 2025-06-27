@@ -28,7 +28,7 @@
     {
       "label": "Start DB (Docker Compose)",
       "type": "shell",
-      "command": "docker-compose up db",
+      "command": "docker-compose -f docker-compose.development.yml up db",
       "problemMatcher": [],
       "group": "build",
       "presentation": {
@@ -108,7 +108,7 @@
     {
       "label": "📋 Logs: API (Dev)",
       "type": "shell",
-      "command": "docker-compose logs -f api",
+      "command": "docker-compose -f docker-compose.development.yml logs -f api",
       "group": "build",
       "isBackground": true,
       "presentation": {
@@ -122,7 +122,7 @@
     {
       "label": "📋 Logs: Web (Dev)",
       "type": "shell",
-      "command": "docker-compose logs -f web",
+      "command": "docker-compose -f docker-compose.development.yml logs -f web",
       "group": "build",
       "isBackground": true,
       "presentation": {
@@ -136,7 +136,7 @@
     {
       "label": "📋 Logs: Database (Dev)",
       "type": "shell",
-      "command": "docker-compose logs -f db",
+      "command": "docker-compose -f docker-compose.development.yml logs -f db",
       "group": "build",
       "isBackground": true,
       "presentation": {
@@ -150,7 +150,7 @@
     {
       "label": "📋 Logs: Mobile (Dev)",
       "type": "shell",
-      "command": "docker-compose logs -f mobile",
+      "command": "docker-compose -f docker-compose.development.yml logs -f mobile",
       "group": "build",
       "isBackground": true,
       "presentation": {
@@ -164,7 +164,7 @@
     {
       "label": "📋 Logs: cAdvisor (Dev)",
       "type": "shell",
-      "command": "docker-compose logs -f cadvisor",
+      "command": "docker-compose -f docker-compose.development.yml logs -f cadvisor",
       "group": "build",
       "isBackground": true,
       "presentation": {

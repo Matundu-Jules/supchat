@@ -4,6 +4,7 @@
 
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+// import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,19 +22,25 @@ export default defineConfig({
       '@services': path.resolve(__dirname, 'src/services'),
       '@styles': path.resolve(__dirname, 'src/styles'),
       '@utils': path.resolve(__dirname, 'src/utils'),
+      '@tests': path.resolve(__dirname, 'src/tests'),
+      '@ts_types': path.resolve(__dirname, 'src/types'),
+      '@contexts': path.resolve(__dirname, 'src/contexts'),
     },
   },
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/__tests__/setup.ts'],
+    setupFiles: [path.resolve(__dirname, 'src/tests/setup.ts')],
+    typecheck: {
+      tsconfig: './tsconfig.test.json',
+    },
     css: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'src/__tests__/',
+        'src/tests/',
         'src/tests/fixtures/',
         '**/*.d.ts',
         '**/*.config.*',

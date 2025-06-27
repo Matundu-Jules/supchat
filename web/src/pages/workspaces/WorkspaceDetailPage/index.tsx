@@ -394,7 +394,7 @@ const WorkspaceDetailPage: React.FC = () => {
                   <span>
                     <button
                       className={styles["linkButton"]}
-                      onClick={() => navigate(`/channels?workspace=${id}`)}
+                      onClick={() => navigate(`/workspaces/${id}/channels`)}
                     >
                       Voir tous les canaux
                     </button>
@@ -446,7 +446,7 @@ const WorkspaceDetailPage: React.FC = () => {
           <div className={styles["headerActions"]}>
             <button
               className={styles["channelsButton"]}
-              onClick={() => navigate(`/channels?workspace=${id}`)}
+              onClick={() => navigate(`/workspaces/${id}/channels`)}
               title="Accéder aux canaux"
             >
               Accéder aux Canaux

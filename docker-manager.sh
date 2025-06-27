@@ -35,34 +35,35 @@ main() {
         show_header
         show_status
         show_menu
-        
-        # Nettoyer le buffer d'entrée avant de lire
+          # Nettoyer le buffer d'entrée avant de lire
         clear_input_buffer
         read -p "Votre choix: " choice
         
         case $choice in
             1) start_development ;;
             2) start_production ;;
-            3) quick_start_development ;;
-            4) quick_start_production ;;
-            5) quick_start_tests ;;
-            6) start_service ;;
-            7) stop_service ;;
-            8) restart_service ;;
-            9) build_service ;;
-            10) show_status; pause ;;
-            11) view_logs ;;
-            12) follow_logs ;;
-            13) open_shell ;;
-            14) stop_all ;;
-            15) cleanup ;;
-            16) full_restart ;;
-            17) backup_database ;;
-            18) show_resources ;;
-            19) open_urls ;;
-            20) diagnostic_services ;;
-            21) run_tests ;;
-            22) reset_test_data ;;
+            3) start_test_environment ;;
+            4) quick_start_development ;;
+            5) quick_start_production ;;
+            6) quick_start_tests ;;
+            7) start_service ;;
+            8) stop_service ;;
+            9) restart_service ;;
+            10) build_service ;;
+            11) show_status; pause ;;
+            12) view_logs ;;
+            13) follow_logs ;;
+            14) open_shell ;;
+            15) stop_all ;;
+            16) cleanup ;;
+            17) full_restart ;;
+            18) backup_database ;;
+            19) show_resources ;;
+            20) open_urls ;;
+            21) diagnostic_services ;;
+            22) run_tests ;;
+            23) reset_test_data ;;
+            24) nuclear_cleanup ;;
             0) 
                 echo -e "\n${GREEN}👋 Au revoir !${NC}"
                 exit 0

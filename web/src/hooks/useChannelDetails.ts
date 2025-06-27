@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { getChannelById, updateChannel } from "@services/channelApi";
-import { removeChannel } from "@store/channelsSlice";
-import type { AppDispatch } from "@store/store";
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { getChannelById, updateChannel } from '@services/channelApi';
+import { removeChannel } from '@store/channelsSlice';
+import type { AppDispatch } from '@store/store';
 
 export function useChannelDetails(channelId: string) {
   const dispatch = useDispatch<AppDispatch>();
@@ -11,7 +11,6 @@ export function useChannelDetails(channelId: string) {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
-
   const fetchDetails = async () => {
     if (!channelId) return;
     setLoading(true);
@@ -20,13 +19,27 @@ export function useChannelDetails(channelId: string) {
       const data = await getChannelById(channelId);
       setChannel(data);
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement");
+      console.error('❌ Erreur lors du chargement du canal:', err);
+
+      // Gestion spécifique des erreurs 403 (Forbidden)
+      if (err.response?.status === 403) {
+        setError(
+          "Accès refusé - Vous n'avez pas les permissions pour accéder à ce canal"
+        );
+      } else if (err.response?.status === 404) {
+        setError('Canal introuvable');
+      } else {
+        setError(err.message || 'Erreur lors du chargement du canal');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdate = async (payload: { name?: string; description?: string }) => {
+  const handleUpdate = async (payload: {
+    name?: string;
+    description?: string;
+  }) => {
     if (!channelId) return;
     setUpdating(true);
     setUpdateError(null);
@@ -34,7 +47,7 @@ export function useChannelDetails(channelId: string) {
       await updateChannel(channelId, payload);
       await fetchDetails();
     } catch (err: any) {
-      setUpdateError(err.message || "Erreur lors de la mise à jour");
+      setUpdateError(err.message || 'Erreur lors de la mise à jour');
     } finally {
       setUpdating(false);
     }
@@ -50,7 +63,7 @@ export function useChannelDetails(channelId: string) {
       ).unwrap();
       return channel.workspace;
     } catch (err: any) {
-      setUpdateError(err.message || "Erreur lors de la suppression");
+      setUpdateError(err.message || 'Erreur lors de la suppression');
       throw err;
     } finally {
       setUpdating(false);

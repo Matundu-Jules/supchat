@@ -1,7 +1,7 @@
 // src/hooks/useApi.ts
 
 import { useEffect, useState } from 'react';
-import { API_BASE_URL, SOCKET_URL, HOST_IP } from '../config/api';
+import { API_BASE_URL, WEBSOCKET_URL, HOST_IP } from '../config/api';
 
 interface ApiStatus {
   isConnected: boolean;
@@ -21,7 +21,7 @@ export const useApi = () => {
     lastChecked: null,
     error: null,
     apiUrl: API_BASE_URL,
-    socketUrl: SOCKET_URL,
+    socketUrl: WEBSOCKET_URL,
     hostIp: HOST_IP,
   });
 
@@ -75,7 +75,7 @@ export const useApiDebug = () => {
       console.log('\n🔗 SupChat Client Web - Configuration API:');
       console.log('==========================================');
       console.log('API Base URL:', API_BASE_URL);
-      console.log('Socket URL:', SOCKET_URL);
+      console.log('Socket URL:', WEBSOCKET_URL);
       console.log('Host IP:', HOST_IP);
       console.log('Environment:', import.meta.env.MODE);
 
@@ -97,7 +97,7 @@ export const useApiDebug = () => {
 
   return {
     apiUrl: API_BASE_URL,
-    socketUrl: SOCKET_URL,
+    socketUrl: WEBSOCKET_URL,
     hostIp: HOST_IP,
     isDev: import.meta.env.DEV,
   };

@@ -1,16 +1,16 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@store/store";
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@store/store';
 import {
   fetchNotifications,
   markRead,
   pushNotification,
-} from "@store/notificationsSlice";
-import { useSocket } from "@hooks/useSocket";
+} from '@store/notificationsSlice';
+import { useSocket } from '@hooks/useSocket';
 
 export function useNotifications(userId?: string) {
   const dispatch = useDispatch<AppDispatch>();
-  const socket = useSocket(undefined, userId);
+  const { socket, isConnected } = useSocket(undefined, userId);
 
   const notifications = useSelector(
     (state: RootState) => state.notifications.items
@@ -25,17 +25,20 @@ export function useNotifications(userId?: string) {
     dispatch(fetchNotifications());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) {
+      console.log('[useNotifications] Socket non disponible ou non connecté');
+      return;
+    }
+
     const handler = (n: any) => {
       dispatch(pushNotification(n));
     };
-    socket.on("notification", handler);
+    socket.on('notification', handler);
     return () => {
-      socket.off("notification", handler);
+      socket.off('notification', handler);
     };
-  }, [socket, dispatch]);
+  }, [socket, isConnected, dispatch]);
 
   return { notifications, unread, markAsRead };
 }

@@ -22,6 +22,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ## 🔧 Stack Technique Complète 2025
 
 ### Backend API
+
 - **Runtime**: Node.js 22 LTS avec ES modules natifs
 - **Base de données**: MongoDB 8.0 avec optimisations performance
 - **Authentification**: JWT avec refresh tokens + OAuth2 (Google, Facebook) avec PKCE
@@ -31,7 +32,8 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 - **Tests**: Jest 29+ avec support ES modules
 - **Documentation**: OpenAPI 3.1/Swagger
 
-### Frontend Web  
+### Frontend Web
+
 - **Framework**: React 18 avec Concurrent Features (Suspense, useTransition)
 - **Build**: Vite 5 avec optimisations bundle et HMR amélioré
 - **Styles**: SCSS + modules CSS
@@ -41,6 +43,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 - **Types**: TypeScript 5.x strict
 
 ### Mobile
+
 - **Framework**: React Native 0.74 + Expo SDK 51 + New Architecture
 - **Navigation**: Expo Router v3 (file-based routing)
 - **État local**: AsyncStorage avec SQLite pour données complexes
@@ -48,6 +51,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 - **Bridgeless**: Activé par défaut avec JSI
 
 ### Infrastructure 2025
+
 - **Containerisation**: Docker + Docker Compose v2
 - **4 Environnements**: dev, test, prod, secure
 - **Reverse proxy**: Nginx (en production)
@@ -55,25 +59,29 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 
 ## 🐳 Environnements Docker Compose v2 (CRUCIAL)
 
-### Développement (`docker-compose.yml`)
+### Développement (`docker-compose.development.yml`)
+
 - Hot-reload activé avec Vite 5 HMR ultra-rapide
 - Ports exposés: Web (3000), API (3001), MongoDB (27017)
 - Volumes montés pour développement en temps réel
 - Support GPU pour développement AI (optionnel)
 
-### Tests (`docker-compose.test.yml`) 
+### Tests (`docker-compose.test.yml`)
+
 - Environnement isolé avec MongoDB 8.0 test sur port 27018
 - Base de données éphémère pour tests automatisés
 - Réseau séparé `supchat-test-network`
 - Jest 29+ avec coverage améliorée
 
 ### Production (`docker-compose.prod.yml`)
+
 - Images optimisées multi-stage avec Node.js 22
 - Health checks configurés pour tous services
 - Réseaux privés internes sécurisés
 - MongoDB 8.0 avec réplicas pour haute disponibilité
 
 ### Production Sécurisée (`docker-compose-secure.yml`)
+
 - HTTPS obligatoire avec certificats SSL/TLS 1.3
 - Secrets Docker pour données sensibles
 - Rate limiting renforcé et monitoring avancé
@@ -81,6 +89,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ## 📋 Conventions de Code OBLIGATOIRES 2025
 
 ### API Backend (Node.js 22)
+
 - **ES modules natifs** avec import/export (plus de require())
 - **async/await** systématique avec gestion d'erreurs appropriée
 - **Validation côté serveur** obligatoire avec Zod (recommandé) ou Joi
@@ -89,13 +98,15 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 - **Logs structurés** avec Winston + correlationId
 
 ### Frontend (Web + Mobile)
+
 - **TypeScript 5.x strict** activé avec noImplicitAny
 - **Composants fonctionnels** uniquement avec hooks React 18
 - **Props typées** avec interfaces TypeScript strictes
 - **Nommage**: PascalCase pour composants, camelCase pour fonctions
-- **Imports relatifs** avec alias configurés (@/, ~/*)
+- **Imports relatifs** avec alias configurés (@/, ~/\*)
 
 ### Base de Données (MongoDB 8.0)
+
 - **Collections**: users, workspaces, channels, messages, invitations, notifications
 - **Schémas Mongoose** avec validation stricte et types TypeScript
 - **Index optimisés** pour les requêtes fréquentes MongoDB 8.0
@@ -114,6 +125,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ## 🔌 Socket.io Temps Réel avec New Architecture
 
 ### Événements Standards
+
 - `notification` → Notifications utilisateur temps réel
 - `message` → Messages instantanés avec typing indicators
 - `workspace_update` → Changements workspace en temps réel
@@ -121,6 +133,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 - `user_status` → Statuts en ligne/hors ligne/occupé
 
 ### Rooms Automatiques Optimisées
+
 - `user_${userId}` → Notifications personnelles
 - `workspace_${workspaceId}` → Événements workspace
 - `channel_${channelId}` → Messages channel + typing
@@ -146,6 +159,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ## 🛠️ Scripts de Gestion v2
 
 ### Docker Manager v2 (Recommandé)
+
 ```bash
 ./docker-manager.sh
 # Options rapides: 1-3 pour démarrage
@@ -155,6 +169,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ```
 
 ### Scripts NPM Principaux 2025
+
 - `npm run secure-env` → Configuration sécurisée avec validation
 - `npm test` → Tests via Docker avec coverage Jest 29
 - `npm run dev` → API en mode dev avec hot-reload
@@ -176,24 +191,28 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 ## 🚀 Nouvelles Fonctionnalités 2025
 
 ### New Architecture React Native
+
 - **Bridgeless mode** : Communication directe JS ↔ Native via JSI
 - **Fabric renderer** : UI rendering optimisé et concurrent
 - **TurboModules** : Modules natifs chargés à la demande
 - **Codegen** : Génération automatique d'interfaces
 
 ### Expo SDK 51 Spécifique
+
 - **Expo Router v3** : File-based routing amélioré
 - **Expo Dev Tools** : Debugging intégré dans VS Code
 - **New Architecture ready** : Tous les modules Expo compatibles
 - **Push Notifications v2** : Système amélioré avec meilleure fiabilité
 
 ### MongoDB 8.0 Nouvelles Capacités
+
 - **Query optimization** : Performance améliorée automatiquement
 - **Time series collections** : Optimisées pour données temporelles
 - **Vector search** : Recherche sémantique (si applicable)
 - **Improved aggregation** : Nouveaux opérateurs et optimisations
 
 ### Node.js 22 LTS Avantages
+
 - **ES modules natifs** : Plus besoin de flags expérimentaux
 - **Test runner intégré** : Alternative à Jest pour tests simples
 - **Fetch API native** : Plus besoin de node-fetch

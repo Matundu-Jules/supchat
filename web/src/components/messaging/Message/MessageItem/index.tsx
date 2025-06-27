@@ -111,11 +111,14 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 className={styles["file"]}
                 title={`Télécharger ${message.filename || "ce fichier"}`}
               >
-                {message.filename || "Fichier"}
+                {message.filename || "Fichier"}{" "}
               </a>
             )
           )}
-          <ReactionBar messageId={message._id} />
+          {/* Ne pas afficher la ReactionBar pour les messages temporaires */}
+          {message._id && !message._id.startsWith("temp-") && (
+            <ReactionBar messageId={message._id} />
+          )}
           {canEdit && (
             <div className={styles["actions"]}>
               <button
@@ -123,16 +126,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 type="button"
                 onClick={() => setEditing(true)}
                 title="Modifier ce message"
+                aria-label="Modifier ce message"
+                tabIndex={0}
               >
-                Éditer
+                <i className="fa-solid fa-pen" aria-hidden="true" />
               </button>
               <button
                 className={styles["btn-delete"]}
                 type="button"
                 onClick={() => onDelete?.()}
                 title="Supprimer ce message"
+                aria-label="Supprimer ce message"
+                tabIndex={0}
               >
-                Supprimer
+                <i className="fa-solid fa-trash" aria-hidden="true" />
               </button>
             </div>
           )}

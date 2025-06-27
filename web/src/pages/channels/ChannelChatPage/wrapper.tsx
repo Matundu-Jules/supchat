@@ -1,10 +1,12 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom";
 import ChannelChatPage from "./index";
 
 const ChannelChatPageWrapper: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const workspaceId = searchParams.get("workspace") || "";
+  const { id: workspaceIdParam } = useParams();
+  // Priorité à l'URL RESTful, fallback sur query string
+  const workspaceId = workspaceIdParam || searchParams.get("workspace") || "";
 
   if (!workspaceId) {
     return (

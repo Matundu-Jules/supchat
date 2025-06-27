@@ -10,6 +10,7 @@ Tu es un **Expert Mobile Developer** spécialisé dans l'application mobile SUPC
 ## 📱 Architecture Mobile App 2025
 
 ### Structure des Dossiers Mobile Expo SDK 51
+
 ```
 mobile/
 ├── app/                 → Expo Router v3 file-based routing
@@ -37,6 +38,7 @@ mobile/
 ```
 
 ### Technologies Mobile SUPCHAT 2025
+
 - **Framework**: React Native 0.74 + Expo SDK 51 avec New Architecture
 - **Langage**: TypeScript 5.x strict activé avec noImplicitAny
 - **Navigation**: Expo Router v3 (File-based routing amélioré)
@@ -51,34 +53,36 @@ mobile/
 ## 📱 New Architecture React Native 0.74
 
 ### Configuration New Architecture
+
 ```typescript
 // metro.config.js
-const { getDefaultConfig } = require('expo/metro-config');
+const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 
 // New Architecture support
 config.resolver.unstable_enablePackageExports = true;
 config.resolver.unstable_conditionNames = [
-  'react-native',
-  'browser',
-  'require'
+  "react-native",
+  "browser",
+  "require",
 ];
 
 module.exports = config;
 ```
 
 ### Babel Configuration
+
 ```javascript
 // babel.config.js
-module.exports = function(api) {
+module.exports = function (api) {
   api.cache(true);
   return {
-    presets: ['babel-preset-expo'],
+    presets: ["babel-preset-expo"],
     plugins: [
       // New Architecture support
-      'react-native-reanimated/plugin'
-    ]
+      "react-native-reanimated/plugin",
+    ],
   };
 };
 ```
@@ -86,29 +90,30 @@ module.exports = function(api) {
 ## 📱 Conventions Mobile Spécifiques 2025
 
 ### Structure des Composants Mobile New Architecture
+
 ```typescript
 // Toujours cette structure pour les composants mobile optimisés
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ComponentNameProps } from './ComponentName.types';
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { ComponentNameProps } from "./ComponentName.types";
 
-const ComponentName: React.FC<ComponentNameProps> = ({ 
-  prop1, 
+const ComponentName: React.FC<ComponentNameProps> = ({
+  prop1,
   prop2,
-  onAction 
+  onAction,
 }) => {
   // 1. Hooks d'état avec TypeScript strict
   const [state, setState] = useState<StateType>(initialState);
-  
+
   // 2. Hooks personnalisés mobile avec New Architecture
   const { data, loading, error } = useMobileHook();
-  
+
   // 3. Handlers mobile optimisés JSI
   const handlePress = useCallback(() => {
     // Mobile-specific logic optimisé New Architecture
     onAction?.(data);
   }, [data, onAction]);
-  
+
   // 4. Early returns avec composants mobile
   if (loading) {
     return (
@@ -117,12 +122,12 @@ const ComponentName: React.FC<ComponentNameProps> = ({
       </View>
     );
   }
-  
+
   // 5. Render mobile avec TouchableOpacity optimisé
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{prop1}</Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.button}
         onPress={handlePress}
         activeOpacity={0.7}
@@ -140,29 +145,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1e293b',
+    fontWeight: "bold",
+    color: "#1e293b",
     marginBottom: 12,
   },
   button: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingText: {
-    textAlign: 'center',
-    color: '#64748b',
+    textAlign: "center",
+    color: "#64748b",
     fontSize: 16,
   },
 });
@@ -171,6 +176,7 @@ export default ComponentName;
 ```
 
 ### Types Mobile SUPCHAT 2025
+
 ```typescript
 // types/mobile.types.ts
 export interface MobileNavigationProps {
@@ -205,34 +211,35 @@ export interface MobileMessage extends Message {
 // Navigation types Expo Router v3
 export type RootStackParamList = {
   index: undefined;
-  '(auth)/login': undefined;
-  '(auth)/register': undefined;
-  '(tabs)': undefined;
-  '(tabs)/workspaces': undefined;
-  '(tabs)/workspace/[id]': { workspaceId: string };
-  '(tabs)/channel/[id]': { workspaceId: string; channelId: string };
-  'modals/profile': undefined;
-  'modals/settings': undefined;
+  "(auth)/login": undefined;
+  "(auth)/register": undefined;
+  "(tabs)": undefined;
+  "(tabs)/workspaces": undefined;
+  "(tabs)/workspace/[id]": { workspaceId: string };
+  "(tabs)/channel/[id]": { workspaceId: string; channelId: string };
+  "modals/profile": undefined;
+  "modals/settings": undefined;
 };
 ```
 
 ## 🚀 Navigation Expo Router v3
 
 ### Structure des Routes File-Based
+
 ```typescript
 // app/_layout.tsx - Layout racine
-import { Stack } from 'expo-router';
-import { AuthProvider } from '../src/contexts/AuthContext';
-import { ThemeProvider } from '../src/contexts/ThemeContext';
+import { Stack } from "expo-router";
+import { AuthProvider } from "../src/contexts/AuthContext";
+import { ThemeProvider } from "../src/contexts/ThemeContext";
 
 export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="modals" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="modals" options={{ presentation: "modal" }} />
         </Stack>
       </AuthProvider>
     </ThemeProvider>
@@ -240,32 +247,32 @@ export default function RootLayout() {
 }
 
 // app/(auth)/_layout.tsx
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function AuthLayout() {
   return (
     <Stack>
-      <Stack.Screen 
-        name="login" 
-        options={{ 
-          title: 'Connexion',
-          headerShown: false 
-        }} 
+      <Stack.Screen
+        name="login"
+        options={{
+          title: "Connexion",
+          headerShown: false,
+        }}
       />
-      <Stack.Screen 
-        name="register" 
-        options={{ 
-          title: 'Inscription',
-          headerShown: false 
-        }} 
+      <Stack.Screen
+        name="register"
+        options={{
+          title: "Inscription",
+          headerShown: false,
+        }}
       />
     </Stack>
   );
 }
 
 // app/(tabs)/_layout.tsx avec onglets optimisés
-import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Tabs } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function TabsLayout() {
   return (
@@ -273,7 +280,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="workspaces"
         options={{
-          title: 'Workspaces',
+          title: "Workspaces",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="work" size={size} color={color} />
           ),
@@ -282,7 +289,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="workspace/[id]"
         options={{
-          title: 'Workspace',
+          title: "Workspace",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="chat" size={size} color={color} />
           ),
@@ -294,11 +301,12 @@ export default function TabsLayout() {
 ```
 
 ### Navigation Guards avec Expo Router v3
+
 ```typescript
 // hooks/useAuthGuard.ts
-import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from "react";
+import { useRouter, useSegments } from "expo-router";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useAuthGuard = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -308,12 +316,12 @@ export const useAuthGuard = () => {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)/workspaces');
+      router.replace("/(tabs)/workspaces");
     }
   }, [isAuthenticated, isLoading, segments]);
 
@@ -324,16 +332,17 @@ export const useAuthGuard = () => {
 ## 💾 Storage Mobile SUPCHAT 2025
 
 ### AsyncStorage + SQLite Service
+
 ```typescript
 // services/storage.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SQLite from 'expo-sqlite';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SQLite from "expo-sqlite";
 
 class StorageService {
   private db: SQLite.SQLiteDatabase | null = null;
 
   async init() {
-    this.db = await SQLite.openDatabaseAsync('supchat.db');
+    this.db = await SQLite.openDatabaseAsync("supchat.db");
     await this.createTables();
   }
 
@@ -360,15 +369,15 @@ class StorageService {
   // Tokens JWT avec sécurité renforcée
   async setTokens(accessToken: string, refreshToken: string) {
     await Promise.all([
-      AsyncStorage.setItem('accessToken', accessToken),
-      AsyncStorage.setItem('refreshToken', refreshToken),
+      AsyncStorage.setItem("accessToken", accessToken),
+      AsyncStorage.setItem("refreshToken", refreshToken),
     ]);
   }
 
   async getTokens() {
     const [accessToken, refreshToken] = await Promise.all([
-      AsyncStorage.getItem('accessToken'),
-      AsyncStorage.getItem('refreshToken'),
+      AsyncStorage.getItem("accessToken"),
+      AsyncStorage.getItem("refreshToken"),
     ]);
     return { accessToken, refreshToken };
   }
@@ -376,29 +385,35 @@ class StorageService {
   // Cache messages pour mode hors ligne
   async cacheMessages(messages: MobileMessage[]) {
     if (!this.db) await this.init();
-    
+
     for (const message of messages) {
       await this.db!.runAsync(
-        'INSERT OR REPLACE INTO cached_messages (id, content, channel_id, sender_id, created_at) VALUES (?, ?, ?, ?, ?)',
-        [message._id, message.content, message.channel, message.sender.id, Date.now()]
+        "INSERT OR REPLACE INTO cached_messages (id, content, channel_id, sender_id, created_at) VALUES (?, ?, ?, ?, ?)",
+        [
+          message._id,
+          message.content,
+          message.channel,
+          message.sender.id,
+          Date.now(),
+        ]
       );
     }
   }
 
   async getCachedMessages(channelId: string): Promise<MobileMessage[]> {
     if (!this.db) await this.init();
-    
+
     const result = await this.db!.getAllAsync(
-      'SELECT * FROM cached_messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 50',
+      "SELECT * FROM cached_messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 50",
       [channelId]
     );
-    
-    return result.map(row => ({
+
+    return result.map((row) => ({
       _id: row.id,
       content: row.content,
       channel: row.channel_id,
       sender: { id: row.sender_id },
-      createdAt: new Date(row.created_at).toISOString()
+      createdAt: new Date(row.created_at).toISOString(),
     })) as MobileMessage[];
   }
 }
@@ -409,41 +424,44 @@ export const storageService = new StorageService();
 ## 🔔 Notifications Push Expo SDK 51
 
 ### Configuration Expo Notifications v2
+
 ```typescript
 // services/notifications.ts
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
 
 class NotificationService {
   async registerForPushNotifications() {
     if (!Device.isDevice) {
-      throw new Error('Must use physical device for Push Notifications');
+      throw new Error("Must use physical device for Push Notifications");
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
+    if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
-    if (finalStatus !== 'granted') {
-      throw new Error('Permission notifications refusée');
+    if (finalStatus !== "granted") {
+      throw new Error("Permission notifications refusée");
     }
 
     // Nouveau système Expo SDK 51
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId }))
+      .data;
 
     // Configuration canal Android
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
+        lightColor: "#FF231F7C",
       });
     }
 
@@ -455,7 +473,7 @@ class NotificationService {
       content: {
         title,
         body,
-        sound: 'default',
+        sound: "default",
         data,
       },
       trigger: { seconds: 1 },
@@ -473,14 +491,14 @@ class NotificationService {
     });
 
     // Notification cliquée
-    Notifications.addNotificationResponseReceivedListener(response => {
+    Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
       this.handleNotificationClick(data);
     });
   }
 
   private handleNotificationClick(data: any) {
-    if (data.type === 'message' && data.channelId) {
+    if (data.type === "message" && data.channelId) {
       router.push(`/(tabs)/channel/${data.channelId}`);
     }
   }
@@ -492,25 +510,29 @@ export const notificationService = new NotificationService();
 ## 📸 Image Picker + Camera Expo SDK 51
 
 ### Service Upload Mobile Optimisé
+
 ```typescript
 // services/imagePicker.ts
-import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
-import { Alert } from 'react-native';
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Alert } from "react-native";
 
 class ImagePickerService {
   async requestPermissions() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
+    if (status !== "granted") {
       Alert.alert(
-        'Permission requise',
-        'L\'accès à la galerie est nécessaire pour partager des images.'
+        "Permission requise",
+        "L'accès à la galerie est nécessaire pour partager des images."
       );
-      throw new Error('Permission galerie refusée');
+      throw new Error("Permission galerie refusée");
     }
   }
 
-  async pickImage(options?: { allowsEditing?: boolean; aspect?: [number, number] }) {
+  async pickImage(options?: {
+    allowsEditing?: boolean;
+    aspect?: [number, number];
+  }) {
     await this.requestPermissions();
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -530,12 +552,12 @@ class ImagePickerService {
 
   async takePhoto() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
+    if (status !== "granted") {
       Alert.alert(
-        'Permission requise',
-        'L\'accès à la caméra est nécessaire pour prendre des photos.'
+        "Permission requise",
+        "L'accès à la caméra est nécessaire pour prendre des photos."
       );
-      throw new Error('Permission caméra refusée');
+      throw new Error("Permission caméra refusée");
     }
 
     const result = await ImagePicker.launchCameraAsync({
@@ -555,26 +577,26 @@ class ImagePickerService {
     const optimized = await ImageManipulator.manipulateAsync(
       uri,
       [{ resize: { width: 800 } }], // Largeur max 800px
-      { 
-        compress: 0.7, 
-        format: ImageManipulator.SaveFormat.JPEG 
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.JPEG,
       }
     );
 
     return optimized.uri;
   }
 
-  async uploadImage(uri: string, type: 'avatar' | 'message' | 'attachment') {
+  async uploadImage(uri: string, type: "avatar" | "message" | "attachment") {
     const formData = new FormData();
-    formData.append('file', {
+    formData.append("file", {
       uri,
-      type: 'image/jpeg',
+      type: "image/jpeg",
       name: `${type}-${Date.now()}.jpg`,
     } as any);
 
-    const response = await apiClient.post('/api/upload', formData, {
+    const response = await apiClient.post("/api/upload", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
 
@@ -588,11 +610,12 @@ export const imagePickerService = new ImagePickerService();
 ## 🔌 Socket.io Mobile avec New Architecture
 
 ### Socket Mobile Service Optimisé
+
 ```typescript
 // services/socketMobile.ts
-import io, { Socket } from 'socket.io-client';
-import { storageService } from './storage';
-import { AppState } from 'react-native';
+import io, { Socket } from "socket.io-client";
+import { storageService } from "./storage";
+import { AppState } from "react-native";
 
 class SocketMobileService {
   private socket: Socket | null = null;
@@ -600,12 +623,12 @@ class SocketMobileService {
 
   async connect() {
     const { accessToken } = await storageService.getTokens();
-    
+
     if (!accessToken) return;
 
     this.socket = io(process.env.EXPO_PUBLIC_API_URL, {
       auth: { token: accessToken },
-      transports: ['websocket'],
+      transports: ["websocket"],
       autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
@@ -620,37 +643,37 @@ class SocketMobileService {
   private setupListeners() {
     if (!this.socket) return;
 
-    this.socket.on('connect', () => {
-      console.log('Socket mobile connecté');
+    this.socket.on("connect", () => {
+      console.log("Socket mobile connecté");
     });
 
-    this.socket.on('message', (message) => {
+    this.socket.on("message", (message) => {
       // Notification locale si app en background
-      if (AppState.currentState !== 'active') {
+      if (AppState.currentState !== "active") {
         notificationService.scheduleLocalNotification(
           `${message.sender.profile.firstName} ${message.sender.profile.lastName}`,
           message.content,
-          { 
-            type: 'message',
+          {
+            type: "message",
             channelId: message.channel,
-            workspaceId: message.workspace 
+            workspaceId: message.workspace,
           }
         );
       }
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Socket mobile déconnecté');
+    this.socket.on("disconnect", () => {
+      console.log("Socket mobile déconnecté");
     });
   }
 
   private setupAppStateHandling() {
-    AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
+    AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
         this.socket?.connect();
-      } else if (nextAppState === 'background') {
+      } else if (nextAppState === "background") {
         // Garder la connexion mais réduire l'activité
-        this.socket?.emit('user_background');
+        this.socket?.emit("user_background");
       }
     });
   }
@@ -666,11 +689,11 @@ class SocketMobileService {
   }
 
   joinWorkspace(workspaceId: string) {
-    this.socket?.emit('join-workspace', workspaceId);
+    this.socket?.emit("join-workspace", workspaceId);
   }
 
   sendMessage(channelId: string, content: string) {
-    this.socket?.emit('send-message', { channelId, content });
+    this.socket?.emit("send-message", { channelId, content });
   }
 }
 
@@ -680,32 +703,33 @@ export const socketMobileService = new SocketMobileService();
 ## 🎨 Design System Mobile 2025
 
 ### Theme avec Design Tokens
+
 ```typescript
 // styles/theme.ts
 export const theme = {
   colors: {
     primary: {
-      50: '#eff6ff',
-      100: '#dbeafe',
-      500: '#3b82f6',
-      600: '#2563eb',
-      900: '#1e3a8a',
+      50: "#eff6ff",
+      100: "#dbeafe",
+      500: "#3b82f6",
+      600: "#2563eb",
+      900: "#1e3a8a",
     },
     gray: {
-      50: '#f9fafb',
-      100: '#f3f4f6',
-      500: '#6b7280',
-      800: '#1f2937',
-      900: '#111827',
+      50: "#f9fafb",
+      100: "#f3f4f6",
+      500: "#6b7280",
+      800: "#1f2937",
+      900: "#111827",
     },
     semantic: {
-      success: '#10b981',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      info: '#3b82f6',
-    }
+      success: "#10b981",
+      warning: "#f59e0b",
+      error: "#ef4444",
+      info: "#3b82f6",
+    },
   },
-  
+
   spacing: {
     xs: 4,
     sm: 8,
@@ -714,7 +738,7 @@ export const theme = {
     xl: 32,
     xxl: 48,
   },
-  
+
   typography: {
     sizes: {
       xs: 12,
@@ -722,17 +746,17 @@ export const theme = {
       base: 16,
       lg: 18,
       xl: 20,
-      '2xl': 24,
-      '3xl': 30,
+      "2xl": 24,
+      "3xl": 30,
     },
     weights: {
-      normal: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
+      normal: "400",
+      medium: "500",
+      semibold: "600",
+      bold: "700",
     },
   },
-  
+
   borderRadius: {
     sm: 4,
     md: 8,
@@ -740,17 +764,17 @@ export const theme = {
     xl: 16,
     full: 999,
   },
-  
+
   shadows: {
     sm: {
-      shadowColor: '#000',
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
       elevation: 2,
     },
     md: {
-      shadowColor: '#000',
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.1,
       shadowRadius: 6,
@@ -768,48 +792,47 @@ export const useTheme = () => {
 ## 🧪 Tests Mobile SUPCHAT 2025
 
 ### Tests React Native avec New Architecture
+
 ```typescript
-// __tests__/ComponentName.test.tsx
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { ComponentName } from '../ComponentName';
+// tests/ComponentName.test.tsx
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { ComponentName } from "../ComponentName";
 
 // Mock Expo modules
-jest.mock('expo-router', () => ({
+jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
   }),
 }));
 
-describe('ComponentName Mobile - New Architecture', () => {
-  test('rend correctement sur mobile', () => {
+describe("ComponentName Mobile - New Architecture", () => {
+  test("rend correctement sur mobile", () => {
     const { getByText, getByLabelText } = render(
       <ComponentName prop1="test" />
     );
-    
-    expect(getByText('test')).toBeTruthy();
-    expect(getByLabelText('Bouton test')).toBeTruthy();
+
+    expect(getByText("test")).toBeTruthy();
+    expect(getByLabelText("Bouton test")).toBeTruthy();
   });
 
-  test('gère les interactions tactiles', async () => {
+  test("gère les interactions tactiles", async () => {
     const mockPress = jest.fn();
     const { getByLabelText } = render(
       <ComponentName prop1="test" onPress={mockPress} />
     );
-    
-    fireEvent.press(getByLabelText('Bouton test'));
-    
+
+    fireEvent.press(getByLabelText("Bouton test"));
+
     await waitFor(() => {
       expect(mockPress).toHaveBeenCalledTimes(1);
     });
   });
 
-  test('affiche état de chargement', () => {
-    const { getByText } = render(
-      <ComponentName prop1="test" loading={true} />
-    );
-    
-    expect(getByText('Chargement...')).toBeTruthy();
+  test("affiche état de chargement", () => {
+    const { getByText } = render(<ComponentName prop1="test" loading={true} />);
+
+    expect(getByText("Chargement...")).toBeTruthy();
   });
 });
 ```

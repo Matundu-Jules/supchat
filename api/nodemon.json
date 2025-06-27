@@ -1,8 +1,22 @@
 {
-  "watch": ["src"],
+  "watch": [
+    "src",
+    "controllers",
+    "models",
+    "services",
+    "routes",
+    "middlewares",
+    "validators"
+  ],
   "ext": "js,json",
-  "ignore": ["src/**/*.test.js"],
-  "delay": "2000",
+  "ignore": [
+    "src/**/*.test.js",
+    "tests/",
+    "public/",
+    "uploads/",
+    "node_modules/"
+  ],
+  "delay": "500",
   "env": {
     "NODE_ENV": "development"
   },

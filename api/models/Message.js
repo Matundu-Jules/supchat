@@ -2,42 +2,90 @@ const mongoose = require('mongoose')
 
 const MessageSchema = new mongoose.Schema(
     {
-        text: String,
-        content: String,
+        // 🔧 CORRECTION: Champ unique pour le contenu textuel
+        content: { type: String, required: true },
+        text: { type: String }, // Garder pour compatibilité descendante - synchronisé avec content
+
         type: { type: String, default: 'text' },
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        channelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },
-        channel: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },
-        createdAt: { type: Date, default: Date.now },
+
+        // 🔧 CORRECTION: Champs utilisateur unifiés
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Alias pour compatibilité
+
+        // 🔧 CORRECTION: Champs channel unifiés
+        channel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Channel',
+            required: true,
+        },
+        channelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' }, // Alias pour compatibilité
+
+        // Fichiers
         file: String,
         filename: String,
-        fileUrl: String, // Ajouté pour compatibilité avec les tests
-        fileName: String, // Ajouté pour compatibilité avec les tests
-        fileSize: Number, // Ajouté pour compatibilité avec les tests
+        fileUrl: String,
+        fileName: String,
+        fileSize: Number,
         mimetype: String,
-        mimeType: String, // Ajouté pour compatibilité avec les tests
+        mimeType: String,
         size: Number,
+
+        // Métadonnées
         hashtags: [String],
         mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         edited: { type: Boolean, default: false },
         editedAt: Date,
+
+        // Réactions (nouveau champ pour les émojis)
+        reactions: [
+            {
+                emoji: String,
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
     },
     { timestamps: true }
 )
 
-// Index textuel seulement sur le champ text
-MessageSchema.index({ text: 'text' })
-// Index simple sur hashtags (pas d'index de texte sur les tableaux)
+// Index pour les recherches
+MessageSchema.index({ content: 'text' })
 MessageSchema.index({ hashtags: 1 })
-// Index pour les requêtes par canal
-MessageSchema.index({ channelId: 1, createdAt: -1 })
+MessageSchema.index({ channel: 1, createdAt: -1 })
+MessageSchema.index({ userId: 1 })
 
-// Middleware pour éviter les tableaux vides qui peuvent causer des problèmes avec les index
+// 🔧 MIDDLEWARE: Synchroniser les champs pour compatibilité
 MessageSchema.pre('save', function (next) {
+    // Synchroniser content et text
+    if (this.content && !this.text) {
+        this.text = this.content
+    } else if (this.text && !this.content) {
+        this.content = this.text
+    }
+
+    // Synchroniser userId et sender
+    if (this.userId && !this.sender) {
+        this.sender = this.userId
+    } else if (this.sender && !this.userId) {
+        this.userId = this.sender
+    }
+
+    // Synchroniser channel et channelId
+    if (this.channel && !this.channelId) {
+        this.channelId = this.channel
+    } else if (this.channelId && !this.channel) {
+        this.channel = this.channelId
+    }
+
+    // Nettoyer les tableaux vides
     if (this.hashtags && this.hashtags.length === 0) {
         this.hashtags = undefined
     }
+
     next()
 })
 
