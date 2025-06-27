@@ -120,6 +120,32 @@ export function useChannelsPageLogic({
     setOptimisticMessages([]);
   }, [activeChannelId]);
 
+  // Sélecteurs Redux pour les nouveaux slices (doivent être déclarés AVANT toute fonction qui les utilise)
+  const invitations =
+    useAppSelector((state) => state.channelInvitations.items) ?? [];
+  const invitationsLoading = useAppSelector(
+    (state) => state.channelInvitations.loading
+  );
+  const invitationsError = useAppSelector(
+    (state) => state.channelInvitations.error
+  );
+
+  const joinRequests = useAppSelector(
+    (state) => state.channelJoinRequests.items
+  );
+  const joinRequestsLoading = useAppSelector(
+    (state) => state.channelJoinRequests.loading
+  );
+  const joinRequestsError = useAppSelector(
+    (state) => state.channelJoinRequests.error
+  );
+
+  const channelRoles = useAppSelector((state) => state.channelRoles.items);
+  const channelRolesLoading = useAppSelector(
+    (state) => state.channelRoles.loading
+  );
+  const channelRolesError = useAppSelector((state) => state.channelRoles.error);
+
   // Logique permissions
   const getCurrentUserRole = (): ChannelRole => {
     if (!user) return 'guest';
@@ -280,31 +306,6 @@ export function useChannelsPageLogic({
       );
     }
   };
-
-  // Sélecteurs Redux pour les nouveaux slices
-  const invitations = useAppSelector((state) => state.channelInvitations.items);
-  const invitationsLoading = useAppSelector(
-    (state) => state.channelInvitations.loading
-  );
-  const invitationsError = useAppSelector(
-    (state) => state.channelInvitations.error
-  );
-
-  const joinRequests = useAppSelector(
-    (state) => state.channelJoinRequests.items
-  );
-  const joinRequestsLoading = useAppSelector(
-    (state) => state.channelJoinRequests.loading
-  );
-  const joinRequestsError = useAppSelector(
-    (state) => state.channelJoinRequests.error
-  );
-
-  const channelRoles = useAppSelector((state) => state.channelRoles.items);
-  const channelRolesLoading = useAppSelector(
-    (state) => state.channelRoles.loading
-  );
-  const channelRolesError = useAppSelector((state) => state.channelRoles.error);
 
   // Helpers permissions métier (basés sur channelRoles et user)
   const currentUserRole = channelRoles.find(

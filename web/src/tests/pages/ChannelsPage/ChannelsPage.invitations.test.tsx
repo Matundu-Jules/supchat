@@ -26,7 +26,7 @@ import { store as mainStore } from "@store/store";
 const invitations = [
   {
     _id: "inv1",
-    channelId: "chan1",
+    channelId: "ch1", // unified ID
     channelName: "Général",
     invitedBy: {
       _id: "admin1",
@@ -44,7 +44,7 @@ const invitations = [
 
 const channels = [
   {
-    _id: "chan1",
+    _id: "ch1", // unified ID
     name: "Général",
     type: "public",
     members: [],

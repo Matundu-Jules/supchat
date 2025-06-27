@@ -3,7 +3,7 @@ import React, { ReactElement } from "react";
 import { render as rtlRender, RenderOptions } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { store } from "@store/store";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { renderHook } from "@testing-library/react";
 import { vi } from "vitest";
 
@@ -133,7 +133,22 @@ function render(
     wrapper: ({ children }) => (
       <Provider store={usedStore}>
         <MockSocketProvider>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          <MemoryRouter initialEntries={[route]}>
+            <Routes>
+              {/* Route ChannelsPage avec params */}
+              <Route
+                path="/workspaces/:workspaceId/channels/:channelId"
+                element={children}
+              />
+              {/* Route ChannelsPage sans channelId (liste canaux) */}
+              <Route
+                path="/workspaces/:workspaceId/channels"
+                element={children}
+              />
+              {/* Route fallback pour compatibilité */}
+              <Route path="*" element={children} />
+            </Routes>
+          </MemoryRouter>
         </MockSocketProvider>
       </Provider>
     ),
