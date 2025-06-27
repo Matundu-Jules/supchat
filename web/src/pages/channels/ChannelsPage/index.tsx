@@ -481,9 +481,10 @@ const ChannelsPage: React.FC<ChannelsPageProps> = () => {
                 );
                 const joinRequest = logic.joinRequests?.find(
                   (req) =>
-                    req.channelId === channel._id &&
-                    req.userId === user?._id &&
-                    req.status === "pending"
+                    // Optional chaining guards against undefined entries
+                    req?.channelId === channel._id &&
+                    req?.userId === user?._id &&
+                    req?.status === "pending"
                 );
                 return (
                   <div
