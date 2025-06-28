@@ -1,4 +1,4 @@
-import { renderWithProviders } from "@tests/test-utils";
+import { render } from "@tests/test-utils";
 import ChannelsPage from "@pages/channels/ChannelsPage";
 import { screen } from "@testing-library/react";
 
@@ -7,7 +7,7 @@ import { screen } from "@testing-library/react";
 describe("ChannelsPage - UI conditionnelle selon permissions", () => {
   test("N’affiche pas les boutons d’action pour un utilisateur sans droits", async () => {
     // Simule un utilisateur sans droits (ex: viewer)
-    renderWithProviders(<ChannelsPage />);
+    render(<ChannelsPage />);
     // Les boutons d’invitation, promotion, suppression ne doivent pas être présents
     expect(screen.queryByRole("button", { name: /inviter/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /promouvoir/i })).not.toBeInTheDocument();
@@ -16,7 +16,7 @@ describe("ChannelsPage - UI conditionnelle selon permissions", () => {
 
   test("Affiche les boutons d’action uniquement pour les admins/modérateurs", async () => {
     // Simule un utilisateur admin
-    renderWithProviders(<ChannelsPage />);
+    render(<ChannelsPage />);
     expect(await screen.findByRole("button", { name: /inviter/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /promouvoir/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /supprimer/i })).toBeInTheDocument();
