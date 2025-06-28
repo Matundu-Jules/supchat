@@ -8,22 +8,11 @@ import { renderHook } from "@testing-library/react";
 import { vi } from "vitest";
 // Ajout React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// ...existing code...
+import { SocketContext, type SocketContextType } from "@contexts/SocketContext";
+import type { Socket } from "socket.io-client";
 
 // Création d'un QueryClient unique partagé pour tous les tests
 const queryClient = new QueryClient();
-
-// ...existing code...
-
-import type { SocketContextType } from "@contexts/SocketContext";
-import type { Socket } from "socket.io-client";
-
-const MockSocketContext = React.createContext<SocketContextType | undefined>(
-  undefined
-);
-
-// ...existing code...
 
 const MockSocketProvider = ({ children }: { children: React.ReactNode }) => {
   // Définition du contexte mocké pour les tests
@@ -39,13 +28,11 @@ const MockSocketProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <MockSocketContext.Provider value={mockSocketContext}>
+    <SocketContext.Provider value={mockSocketContext}>
       {children}
-    </MockSocketContext.Provider>
+    </SocketContext.Provider>
   );
 };
-
-// ...existing code...
 
 export function renderHookWithProviders<T>(
   hook: () => T,
