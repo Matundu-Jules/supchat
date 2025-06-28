@@ -40,12 +40,12 @@ if [ ! -f "package.json" ]; then
 fi
 
 # Vérifier que Node.js et npm sont installés
-if ! command -v node &> /dev/null; then
+if ! command -v node &>/dev/null; then
     log_error "Node.js n'est pas installé"
     exit 1
 fi
 
-if ! command -v npm &> /dev/null; then
+if ! command -v npm &>/dev/null; then
     log_error "npm n'est pas installé"
     exit 1
 fi
@@ -53,31 +53,31 @@ fi
 # Fonction pour vérifier que MongoDB est accessible
 check_mongodb() {
     log_info "Vérification de la connexion MongoDB..."
-    
-    if command -v mongosh &> /dev/null; then
+
+    if command -v mongosh &>/dev/null; then
         MONGO_CMD="mongosh"
-    elif command -v mongo &> /dev/null; then
+    elif command -v mongo &>/dev/null; then
         MONGO_CMD="mongo"
     else
         log_warning "Client MongoDB non trouvé, en supposant que la base est accessible"
         return 0
     fi
-    
+
     # Test de connexion simple
-    if timeout 5 $MONGO_CMD --eval "db.runCommand('ping')" --quiet > /dev/null 2>&1; then
+    if timeout 5 $MONGO_CMD --eval "db.runCommand('ping')" --quiet >/dev/null 2>&1; then
         log_success "MongoDB accessible"
     else
         log_warning "MongoDB pourrait ne pas être accessible"
-        log_info "Assurez-vous que MongoDB est démarré (docker-compose -f docker-compose.development.yml up db)"
+        log_info "Assurez-vous que MongoDB est démarré (docker-compose -f docker-compose.dev.yml up db)"
     fi
 }
 
 # Fonction pour exécuter les tests unitaires
 run_unit_tests() {
     log_info "Exécution des tests unitaires..."
-    
+
     npm test -- --testPathPattern="tests/unit" --verbose
-    
+
     if [ $? -eq 0 ]; then
         log_success "Tests unitaires terminés avec succès"
     else
@@ -89,12 +89,12 @@ run_unit_tests() {
 # Fonction pour exécuter les tests d'intégration
 run_integration_tests() {
     log_info "Exécution des tests d'intégration WebSocket..."
-    
+
     # Vérifier que MongoDB est accessible pour les tests d'intégration
     check_mongodb
-    
+
     npm test -- --testPathPattern="tests/integration/websocket-messaging.test.js" --verbose --detectOpenHandles
-    
+
     if [ $? -eq 0 ]; then
         log_success "Tests d'intégration WebSocket terminés avec succès"
     else
@@ -107,11 +107,11 @@ run_integration_tests() {
 run_load_tests() {
     log_info "Exécution des tests de charge..."
     log_warning "Les tests de charge peuvent prendre plusieurs minutes..."
-    
+
     check_mongodb
-    
+
     npm test -- --testPathPattern="tests/load/websocket-load.test.js" --verbose --detectOpenHandles --maxWorkers=1
-    
+
     if [ $? -eq 0 ]; then
         log_success "Tests de charge terminés avec succès"
     else
@@ -123,15 +123,15 @@ run_load_tests() {
 # Fonction pour générer un rapport de couverture
 generate_coverage() {
     log_info "Génération du rapport de couverture..."
-    
+
     npm test -- --coverage --testPathPattern="tests/(unit|integration)/.*\.test\.js" --collectCoverageFrom="socket.js,models/**/*.js,services/**/*.js" --coverageDirectory="coverage/messaging"
-    
+
     if [ $? -eq 0 ]; then
         log_success "Rapport de couverture généré dans coverage/messaging/"
-        
-        if command -v xdg-open &> /dev/null; then
+
+        if command -v xdg-open &>/dev/null; then
             xdg-open coverage/messaging/lcov-report/index.html
-        elif command -v open &> /dev/null; then
+        elif command -v open &>/dev/null; then
             open coverage/messaging/lcov-report/index.html
         else
             log_info "Ouvrez coverage/messaging/lcov-report/index.html dans votre navigateur"
@@ -145,11 +145,11 @@ generate_coverage() {
 # Fonction pour nettoyer les artefacts de test
 cleanup() {
     log_info "Nettoyage des artefacts de test..."
-    
+
     # Supprimer les fichiers temporaires
     rm -rf .nyc_output
     rm -rf node_modules/.cache
-    
+
     log_success "Nettoyage terminé"
 }
 
@@ -157,60 +157,60 @@ cleanup() {
 main() {
     local test_type=${1:-"all"}
     local failed_tests=()
-    
+
     log_info "Type de test: $test_type"
     echo ""
-    
+
     case $test_type in
-        "unit")
-            run_unit_tests || failed_tests+=("unit")
-            ;;
-        "integration")
-            run_integration_tests || failed_tests+=("integration")
-            ;;
-        "load")
+    "unit")
+        run_unit_tests || failed_tests+=("unit")
+        ;;
+    "integration")
+        run_integration_tests || failed_tests+=("integration")
+        ;;
+    "load")
+        run_load_tests || failed_tests+=("load")
+        ;;
+    "coverage")
+        generate_coverage || failed_tests+=("coverage")
+        ;;
+    "all")
+        log_info "🚀 Exécution de tous les tests de messagerie..."
+        echo ""
+
+        run_unit_tests || failed_tests+=("unit")
+        echo ""
+
+        run_integration_tests || failed_tests+=("integration")
+        echo ""
+
+        log_warning "Les tests de charge sont optionnels et peuvent être longs"
+        read -p "Voulez-vous exécuter les tests de charge ? (y/N): " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
             run_load_tests || failed_tests+=("load")
-            ;;
-        "coverage")
-            generate_coverage || failed_tests+=("coverage")
-            ;;
-        "all")
-            log_info "🚀 Exécution de tous les tests de messagerie..."
             echo ""
-            
-            run_unit_tests || failed_tests+=("unit")
-            echo ""
-            
-            run_integration_tests || failed_tests+=("integration")
-            echo ""
-            
-            log_warning "Les tests de charge sont optionnels et peuvent être longs"
-            read -p "Voulez-vous exécuter les tests de charge ? (y/N): " -n 1 -r
-            echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                run_load_tests || failed_tests+=("load")
-                echo ""
-            fi
-            
-            generate_coverage || failed_tests+=("coverage")
-            ;;
-        *)
-            log_error "Type de test non reconnu: $test_type"
-            echo "Types disponibles: unit, integration, load, coverage, all"
-            exit 1
-            ;;
+        fi
+
+        generate_coverage || failed_tests+=("coverage")
+        ;;
+    *)
+        log_error "Type de test non reconnu: $test_type"
+        echo "Types disponibles: unit, integration, load, coverage, all"
+        exit 1
+        ;;
     esac
-    
+
     echo ""
     echo "============================================"
-    
+
     if [ ${#failed_tests[@]} -eq 0 ]; then
         log_success "🎉 Tous les tests ont réussi !"
     else
         log_error "❌ Tests échoués: ${failed_tests[*]}"
         exit 1
     fi
-    
+
     cleanup
 }
 

@@ -12,12 +12,12 @@
 
 ## 🚨 IMPORTANT - CONFIGURATION DOCKER OBLIGATOIRE
 
-> **⚠️ RÈGLES STRICTES :** Ce projet utilise **EXCLUSIVEMENT** Docker Compose. 
-> 
+> **⚠️ RÈGLES STRICTES :** Ce projet utilise **EXCLUSIVEMENT** Docker Compose.
+>
 > **❌ INTERDIT :** `.env` dans `web/`, `api/`, `mobile/` - **✅ SEUL** `.env` à la racine
-> 
+>
 > **❌ INTERDIT :** `npm start`, `node script.js` - **✅ SEUL** Docker Compose autorisé
-> 
+>
 > **📖 Lisez :** [RULES-DOCKER-ENV.md](./RULES-DOCKER-ENV.md) pour les règles complètes
 
 ---
@@ -29,7 +29,7 @@
 ├── 📱 web/              → Application Web React + TypeScript + Vite
 ├── 📱 mobile/           → Application Mobile React Native + Expo
 ├── 🚀 api/              → Serveur API Node.js + Express + MongoDB
-├── 🐳 docker-compose.development.yml → Orchestration des services (DÉVELOPPEMENT)
+├── 🐳 docker-compose.dev.yml → Orchestration des services (DÉVELOPPEMENT)
 ├── 🧪 docker-compose.test.yml → Environnement de tests isolé
 ├── 🏭 docker-compose.prod.yml → Configuration PRODUCTION optimisée
 ├── � docker-compose-secure.yml → Production avec sécurité renforcée
@@ -41,10 +41,10 @@
 
 SUPCHAT utilise **4 environnements Docker** distincts selon le contexte d'utilisation :
 
-### 🔧 **Développement** - `docker-compose.development.yml`
+### 🔧 **Développement** - `docker-compose.dev.yml`
 
 ```bash
-docker-compose -f docker-compose.development.yml up --build
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
 **Caractéristiques :**
@@ -99,12 +99,12 @@ docker-compose -f docker-compose-secure.yml up -d
 
 ### 🎯 **Comparaison Rapide**
 
-| Environnement | Fichier                          | Usage               | Ports Exposés       | Hot-Reload | Sécurité    |
-| ------------- | -------------------------------- | ------------------- | ------------------- | ---------- | ----------- |
-| 🔧 **Dev**    | `docker-compose.development.yml` | Développement local | ✅ Tous             | ✅ Oui     | ⚠️ Basique  |
-| 🧪 **Test**   | `docker-compose.test.yml`        | Tests automatisés   | ❌ Aucun            | ❌ Non     | ✅ Isolé    |
-| 🏭 **Prod**   | `docker-compose.prod.yml`        | Déploiement         | ⚠️ Essentiels       | ❌ Non     | ✅ Standard |
-| 🔐 **Secure** | `docker-compose-secure.yml`      | Production critique | 🔒 HTTPS uniquement | ❌ Non     | 🛡️ Maximum  |
+| Environnement | Fichier                     | Usage               | Ports Exposés       | Hot-Reload | Sécurité    |
+| ------------- | --------------------------- | ------------------- | ------------------- | ---------- | ----------- |
+| 🔧 **Dev**    | `docker-compose.dev.yml`    | Développement local | ✅ Tous             | ✅ Oui     | ⚠️ Basique  |
+| 🧪 **Test**   | `docker-compose.test.yml`   | Tests automatisés   | ❌ Aucun            | ❌ Non     | ✅ Isolé    |
+| 🏭 **Prod**   | `docker-compose.prod.yml`   | Déploiement         | ⚠️ Essentiels       | ❌ Non     | ✅ Standard |
+| 🔐 **Secure** | `docker-compose-secure.yml` | Production critique | 🔒 HTTPS uniquement | ❌ Non     | 🛡️ Maximum  |
 
 ## 🚀 Démarrage Rapide
 
@@ -367,7 +367,7 @@ cd supchat
 ./docker-manager.sh  # Option 3: Démarrer TOUT
 
 # Ou manuellement
-docker-compose -f docker-compose.development.yml up --build  # Utilise docker-compose.development.yml (DEV)
+docker-compose -f docker-compose.dev.yml up --build  # Utilise docker-compose.dev.yml (DEV)
 ```
 
 ### 2. 🧪 **Tests** (Environnement TEST isolé)
@@ -418,12 +418,12 @@ docker-compose -f docker-compose-secure.yml logs nginx
 
 ### 📋 **Sélection de l'Environnement**
 
-| Contexte                    | Commande                                                 | Fichier Docker                   | Caractéristiques                              |
-| --------------------------- | -------------------------------------------------------- | -------------------------------- | --------------------------------------------- |
-| 💻 **Développement local**  | `docker-compose -f docker-compose.development.yml up -d` | `docker-compose.development.yml` | Hot-reload, debug, ports exposés              |
-| 🧪 **Tests automatisés**    | `docker-compose -f docker-compose.test.yml up`           | `docker-compose.test.yml`        | DB isolée (port 27018), environnement jetable |
-| 🏭 **Production simple**    | `docker-compose -f docker-compose.prod.yml up -d`        | `docker-compose.prod.yml`        | Images optimisées, healthchecks               |
-| 🔐 **Production sécurisée** | `docker-compose -f docker-compose-secure.yml up -d`      | `docker-compose-secure.yml`      | HTTPS, secrets, monitoring                    |
+| Contexte                    | Commande                                            | Fichier Docker              | Caractéristiques                              |
+| --------------------------- | --------------------------------------------------- | --------------------------- | --------------------------------------------- |
+| 💻 **Développement local**  | `docker-compose -f docker-compose.dev.yml up -d`    | `docker-compose.dev.yml`    | Hot-reload, debug, ports exposés              |
+| 🧪 **Tests automatisés**    | `docker-compose -f docker-compose.test.yml up`      | `docker-compose.test.yml`   | DB isolée (port 27018), environnement jetable |
+| 🏭 **Production simple**    | `docker-compose -f docker-compose.prod.yml up -d`   | `docker-compose.prod.yml`   | Images optimisées, healthchecks               |
+| 🔐 **Production sécurisée** | `docker-compose -f docker-compose-secure.yml up -d` | `docker-compose-secure.yml` | HTTPS, secrets, monitoring                    |
 
 ---
 

@@ -14,7 +14,7 @@ Tu es un **Expert DevOps** spécialisé dans l'infrastructure Docker pour le pro
 ```
 docker/
 ├── compose/                → Fichiers Docker Compose par environnement
-│   ├── docker-compose.development.yml        → Configuration développement par défaut
+│   ├── docker-compose.dev.yml        → Configuration développement par défaut
 │   ├── docker-compose.test.yml   → Configuration tests automatisés
 │   ├── docker-compose.staging.yml → Configuration préproduction
 │   ├── docker-compose.prod.yml   → Configuration production
@@ -45,7 +45,7 @@ docker/
 ### Docker Compose Base (Développement)
 
 ```yaml
-# docker-compose.development.yml
+# docker-compose.dev.yml
 version: "3.9"
 name: supchat-dev
 

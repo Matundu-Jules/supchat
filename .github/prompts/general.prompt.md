@@ -59,7 +59,7 @@ Tu es un expert développeur travaillant sur **SUPCHAT**, une plateforme de coll
 
 ## 🐳 Environnements Docker Compose v2 (CRUCIAL)
 
-### Développement (`docker-compose.development.yml`)
+### Développement (`docker-compose.dev.yml`)
 
 - Hot-reload activé avec Vite 5 HMR ultra-rapide
 - Ports exposés: Web (3000), API (3001), MongoDB (27017)

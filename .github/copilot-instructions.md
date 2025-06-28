@@ -133,7 +133,7 @@
 ### **🔧 ARCHITECTURE CORRECTE - CONFIGURATION ACTUELLE**
 
 - **Configuration** : Fichiers `.env.*` multiples à la racine selon l'environnement, lus par Docker Compose
-- **Développement** : `docker compose -f docker-compose.development.yml --env-file .env.development up`
+- **Développement** : `docker compose -f docker-compose.dev.yml --env-file .env.development up`
 - **Tests** : `docker compose -f docker-compose.test.yml --env-file .env.test up --build`
 - **Débogage** : `docker compose logs -f [service]`
 - **Gestion** : `./docker-manager.sh` (menu interactif modulaire)
@@ -161,13 +161,13 @@ SUPCHAT est une plateforme de collaboration d'équipe moderne avec workspaces, c
 
 Le projet utilise **2 environnements Docker distincts** actuellement :
 
-1. **Développement** (`docker-compose.development.yml`):
+1. **Développement** (`docker-compose.dev.yml`):
 
    - Hot-reload activé avec Vite 5 HMR
    - Volumes de développement montés
    - Ports exposés : web (80), api (3000), db (27017), cadvisor (8080)
    - Nodemon pour redémarrage automatique backend
-   - **COMMANDE** : `docker compose -f docker-compose.development.yml up`
+   - **COMMANDE** : `docker compose -f docker-compose.dev.yml up`
 
 2. **Tests** (`docker-compose.test.yml`):
 

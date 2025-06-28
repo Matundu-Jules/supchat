@@ -2,31 +2,28 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@hooks/redux';
 import {
   connectSocket,
-  getSocket,
   joinRoom,
   leaveRoom,
-  disconnectSocket,
 } from '@services/socket';
 import {
   pushMessage,
   replaceMessage,
   removeMessageLocal,
 } from '@store/messagesSlice';
-import { addChannel, editChannel, removeChannel } from '@store/channelsSlice';
+import type { User } from '@ts_types/user';
 
 /**
  * Hook pour brancher les listeners Socket.io et dispatcher Redux
  * @param workspaceId string
  * @param channelId string | undefined
  */
-export function useSocketEvents(workspaceId: string, channelId?: string) {
   const dispatch = useAppDispatch();
-  const user = useAppSelector((s) => s.auth.user);
+  const user = useAppSelector((s) => s.auth.user) as User | null;
 
   useEffect(() => {
     if (!user) return;
     // Connexion socket (token JWT dans localStorage ou user)
-    const token = (user as any).token || localStorage.getItem('token');
+    const token = user.token || localStorage.getItem('token');
     if (!token) return;
     const socket = connectSocket(token);
     // Join workspace room

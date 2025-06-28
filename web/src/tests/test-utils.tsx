@@ -6,44 +6,35 @@ import { store } from "@store/store";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { renderHook } from "@testing-library/react";
 import { vi } from "vitest";
+// Ajout React Query
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Import relatif pour éviter les problèmes d'alias dans les tests
-interface MockSocket {
-  on: (event: string, listener: (...args: unknown[]) => void) => void;
-  off: (event: string, listener?: (...args: unknown[]) => void) => void;
-  emit: (...args: unknown[]) => void;
-  connect: () => void;
-  disconnect: () => void;
-  connected: boolean;
-  id?: string;
-  io?: object;
-}
+// ...existing code...
 
-interface SocketContextType {
-  socket: MockSocket;
-  isConnected: boolean;
-}
+// Création d'un QueryClient unique partagé pour tous les tests
+const queryClient = new QueryClient();
 
-// Mock SocketContext
+// ...existing code...
+
+import type { SocketContextType } from "@contexts/SocketContext";
+import type { Socket } from "socket.io-client";
+
 const MockSocketContext = React.createContext<SocketContextType | undefined>(
   undefined
 );
 
-// Mock SocketProvider pour les tests - simule le contexte Socket réel
-const MockSocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const mockSocket = {
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    connected: true,
-    id: "test-socket-id",
-    io: {},
-  };
+// ...existing code...
 
+const MockSocketProvider = ({ children }: { children: React.ReactNode }) => {
+  // Définition du contexte mocké pour les tests
   const mockSocketContext: SocketContextType = {
-    socket: mockSocket,
+    socket: {
+      id: "mock-socket-id",
+      connected: true,
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn(),
+    } as unknown as Socket, // Cast to match the expected type
     isConnected: true,
   };
 
@@ -54,37 +45,8 @@ const MockSocketProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Mock du socket pour les tests
-vi.mock("socket.io-client", () => ({
-  io: vi.fn(() => ({
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    connected: true,
-  })),
-}));
+// ...existing code...
 
-// Mock du hook useSocket
-vi.mock("@hooks/useSocket", () => ({
-  useSocket: () => ({
-    socket: {
-      on: vi.fn(),
-      off: vi.fn(),
-      emit: vi.fn(),
-      connect: vi.fn(),
-      disconnect: vi.fn(),
-      connected: true,
-    },
-    isConnected: true,
-  }),
-}));
-
-/**
- * Helper pour tester les hooks avec tous les providers globaux (Redux, Router, etc.)
- * Permet de passer un store custom si besoin (ex: pour les tests de slice)
- */
 export function renderHookWithProviders<T>(
   hook: () => T,
   {
@@ -95,15 +57,16 @@ export function renderHookWithProviders<T>(
 ) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={storeOverride || store}>
-      <MockSocketProvider>
-        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-      </MockSocketProvider>
+      <QueryClientProvider client={queryClient}>
+        <MockSocketProvider>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </MockSocketProvider>
+      </QueryClientProvider>
     </Provider>
   );
   return renderHook(hook, { wrapper: Wrapper, ...options });
 }
 
-// Fournit tous les providers globaux pour les tests (Redux, Router, Socket, etc.)
 export const TestProvider = ({
   children,
   route = "/",
@@ -112,13 +75,14 @@ export const TestProvider = ({
   route?: string;
 }) => (
   <Provider store={store}>
-    <MockSocketProvider>
-      <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-    </MockSocketProvider>
+    <QueryClientProvider client={queryClient}>
+      <MockSocketProvider>
+        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+      </MockSocketProvider>
+    </QueryClientProvider>
   </Provider>
 );
 
-// Permet d'utiliser le store Redux typé et le router dans tous les tests
 function render(
   ui: ReactElement,
   {
@@ -127,37 +91,32 @@ function render(
     ...renderOptions
   }: { route?: string; storeOverride?: typeof store } & RenderOptions = {}
 ) {
-  // Si un store custom est fourni, l'utiliser, sinon store par défaut
   const usedStore = storeOverride || store;
   return rtlRender(ui, {
     wrapper: ({ children }) => (
       <Provider store={usedStore}>
-        <MockSocketProvider>
-          <MemoryRouter initialEntries={[route]}>
-            <Routes>
-              {/* Route ChannelsPage avec params */}
-              <Route
-                path="/workspaces/:workspaceId/channels/:channelId"
-                element={children}
-              />
-              {/* Route ChannelsPage sans channelId (liste canaux) */}
-              <Route
-                path="/workspaces/:workspaceId/channels"
-                element={children}
-              />
-              {/* Route fallback pour compatibilité */}
-              <Route path="*" element={children} />
-            </Routes>
-          </MemoryRouter>
-        </MockSocketProvider>
+        <QueryClientProvider client={queryClient}>
+          <MockSocketProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <Routes>
+                <Route
+                  path="/workspaces/:workspaceId/channels/:channelId"
+                  element={children}
+                />
+                <Route
+                  path="/workspaces/:workspaceId/channels"
+                  element={children}
+                />
+                <Route path="*" element={children} />
+              </Routes>
+            </MemoryRouter>
+          </MockSocketProvider>
+        </QueryClientProvider>
       </Provider>
     ),
     ...renderOptions,
   });
 }
 
-// Réexporte tout pour compatibilité avec règles Fast Refresh
 export * from "@testing-library/react";
-
-// Fonction render personnalisée avec providers
 export { render };

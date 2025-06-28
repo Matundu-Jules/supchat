@@ -22,7 +22,8 @@
       "@utils/*": ["utils/*"],
       "@contexts/*": ["contexts/*"],
       "@tests/*": ["tests/*"],
-      "@ts_types/*": ["types/*"]
+      "@ts_types/*": ["types/*"],
+      "@tanstack/react-query": ["node_modules/@tanstack/react-query"]
     },
 
     /* Module resolution */
