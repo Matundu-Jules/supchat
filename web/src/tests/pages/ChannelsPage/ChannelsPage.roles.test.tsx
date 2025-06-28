@@ -6,7 +6,8 @@ import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 
 // Mocks et fixtures
-import { channels, roles, users } from "@tests/fixtures/channels";
+import { channels, users } from "@tests/fixtures/channels";
+import { roles } from "@tests/fixtures/channelRoles";
 
 // MSW handlers pour gestion des rôles
 beforeEach(() => {
