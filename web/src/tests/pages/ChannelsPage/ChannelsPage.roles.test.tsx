@@ -1,4 +1,4 @@
-import { renderWithProviders } from "@tests/test-utils";
+import { render } from "@tests/test-utils";
 import { server } from "@tests/mocks/server";
 import { rest } from "msw";
 import ChannelsPage from "@pages/channels/ChannelsPage";
@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe("ChannelsPage - Gestion des rôles (promotion/rétrogradation)", () => {
   test("Affiche les boutons Promouvoir/Rétrograder pour les admins et permet l’action", async () => {
-    renderWithProviders(<ChannelsPage />);
+    render(<ChannelsPage />);
     // Boutons présents
     expect(await screen.findByRole("button", { name: /promouvoir/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /rétrograder/i })).toBeInTheDocument();
