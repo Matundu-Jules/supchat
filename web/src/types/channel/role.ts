@@ -1,6 +1,8 @@
 // src/types/channel/role.ts
 
-export type ChannelRole = 'admin' | 'membre' | 'invité';
+// Rôle d'un utilisateur au sein d'un canal
+// Harmonisé avec utils/channelPermissions.ts
+export type ChannelRole = 'admin' | 'member' | 'guest' | 'invité';
 
 export interface ChannelMemberRole {
   userId: string;

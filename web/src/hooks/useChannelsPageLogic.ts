@@ -312,7 +312,7 @@ export function useChannelsPageLogic({
     (r) => r.userId === user?._id
   )?.role;
   const isAdmin = currentUserRole === 'admin';
-  const isMember = currentUserRole === 'membre';
+  const isMember = currentUserRole === 'member';
   const isInvite = currentUserRole === 'invité';
 
   const canInvite = isAdmin || isMember;
@@ -466,7 +466,7 @@ export function useChannelsPageLogic({
         updateChannelMemberRole({
           channelId: activeChannelId!,
           userId,
-          role: 'membre',
+          role: 'member',
         })
       ).unwrap();
       setRoleFeedback('Administrateur rétrogradé membre.');
