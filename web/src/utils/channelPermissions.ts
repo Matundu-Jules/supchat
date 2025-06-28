@@ -1,6 +1,8 @@
 // Types et utilitaires pour la gestion des rôles et permissions des canaux
 
-export type ChannelRole = 'admin' | 'member' | 'guest' | 'invité';
+// Réutilisation du type métier défini dans src/types/channel
+import type { ChannelRole } from '@ts_types/channel';
+export type { ChannelRole };
 
 export interface ChannelPermissions {
   // Permissions de lecture
