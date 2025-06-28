@@ -26,8 +26,6 @@ import {
 import type { User } from '@ts_types/user';
 import type { Message } from '@ts_types/message';
 import type { WorkspaceMember } from '@ts_types/workspace';
-// NOTE: Channel n'est plus importé car non utilisé
-
 import type {
   ChannelCreatePayload,
   ChannelUpdatePayload,
