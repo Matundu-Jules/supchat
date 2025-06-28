@@ -493,7 +493,7 @@ export function useChannelsPageLogic({
     setJoinRequestTarget(channelId);
     try {
       await dispatch(sendChannelJoinRequest({ channelId })).unwrap();
-      setJoinRequestFeedback('Demande d’adhésion envoyée.');
+      setJoinRequestFeedback('Demande envoyée.');
     } catch (err) {
       setJoinRequestFeedback(
         (err as Error).message || 'Erreur lors de la demande d’adhésion'
