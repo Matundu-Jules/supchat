@@ -92,6 +92,7 @@
 
 - Toute modification de la mémoire doit être consignée dans le fichier de config et documentée.
 - Les conventions doivent être rappelées en début de fichier de config.
+- La cartographie complète et à jour de tous les endpoints REST de l’API SUPCHAT (Express) est documentée dans le fichier : docs/documentation_api/endpoints-supchat.md (chemin absolu : C:/dev/supchat/docs/documentation_api/endpoints-supchat.md). Ce fichier est la référence officielle pour toute question sur les endpoints API, leur organisation, et les conventions d’accès.
 
 ---
 
