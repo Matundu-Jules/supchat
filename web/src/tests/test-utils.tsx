@@ -83,6 +83,29 @@ export const TestProvider = ({
   </Provider>
 );
 
+function renderWithProviders(
+  ui: ReactElement,
+  {
+    route = "/",
+    storeOverride,
+    ...renderOptions
+  }: { route?: string; storeOverride?: typeof store } & RenderOptions = {}
+) {
+  const usedStore = storeOverride || store;
+  return rtlRender(ui, {
+    wrapper: ({ children }) => (
+      <Provider store={usedStore}>
+        <QueryClientProvider client={queryClient}>
+          <MockSocketProvider>
+            <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          </MockSocketProvider>
+        </QueryClientProvider>
+      </Provider>
+    ),
+    ...renderOptions,
+  });
+}
+
 function render(
   ui: ReactElement,
   {
@@ -119,4 +142,4 @@ function render(
 }
 
 export * from "@testing-library/react";
-export { render };
+export { render, renderWithProviders };
